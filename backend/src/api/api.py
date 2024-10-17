@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
 from starlette import status
+from starlette.requests import Request
 
 from ..services.auth import hash_password, verify_password, generate_jwt
 from .schemas import *
@@ -38,3 +39,9 @@ async def login_user(user_credentials: UserLoginIn, session: Session = Depends(g
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Incorrect username or password")
     access_token = generate_jwt(data={'sub': user.email})
     return {'access_token': access_token, 'token_type': 'bearer'}
+
+
+@router.post('/me')
+async def me(request: Request):
+    user_email = request.state.user_id
+    print("user_email", user_email)

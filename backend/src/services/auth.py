@@ -4,6 +4,13 @@ from cryptography.hazmat.primitives import serialization
 from datetime import datetime, timedelta
 from pathlib import Path
 from passlib.context import CryptContext
+from jwt import ExpiredSignatureError, ImmatureSignatureError, InvalidAlgorithmError, InvalidAudienceError, \
+    InvalidKeyError, InvalidSignatureError, InvalidTokenError, MissingRequiredClaimError
+from starlette import status
+from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
+from starlette.requests import Request
+from starlette.responses import Response, JSONResponse
+from cryptography.x509 import load_pem_x509_certificate
 
 pwd_context = CryptContext(schemes=['bcrypt'], deprecated='auto')
 
@@ -26,10 +33,86 @@ def generate_jwt(data):
         "exp": (now + timedelta(hours=24)).timestamp(),
         "scope": "openid"
     }
-    private_key_path = Path(os.path.dirname(os.path.abspath(__file__))).parent.parent / 'jwt_keys/private_key.pem'
+    private_key_path = Path(__file__).parent.parent.parent / 'jwt_keys/private_key.pem'
     private_key_text = private_key_path.read_text()
     private_key = serialization.load_pem_private_key(
         private_key_text.encode(encoding='utf-8'),  # utf-8 is default
         password=None
     )
     return jwt.encode(payload=payload, key=private_key, algorithm="RS256")
+
+
+public_key_text = (Path(__file__).parent.parent.parent / "jwt_keys/public_key.pem").read_text()
+public_key = load_pem_x509_certificate(public_key_text.encode()).public_key()
+
+
+def decode_and_validate_token(access_token: str) -> dict:
+    """
+    validate access_token and return payload
+    :param access_token:
+    :return: payload i.e. dict containing decoded jwt claims, if token is valid
+    """
+    return jwt.decode(
+        access_token,
+        key=public_key,
+        algorithms=["RS256"],
+        audience=["http://127.0.0.1:8000/"]
+    )
+
+
+class AuthorizeRequestMiddleware(BaseHTTPMiddleware):
+
+    async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
+        """
+        entrypoint for the middleware to authenticate request
+        :param request: incoming request
+        :param call_next: callable that calls next middleware
+        :return:
+        """
+        # logger.info('hello form dispatch')
+        if os.getenv("AUTH_ON", "False") != "True":  # no authentication required
+            request.state.user_id = "test"
+            return await call_next(request)
+        no_auth_paths = [
+            "/docs/app",
+            "/openapi/app.json",
+            "/register",
+            "/login"
+        ]
+        if request.url.path in no_auth_paths \
+                or request.method == "OPTIONS":  # no authentication required
+            return await call_next(request)
+
+        # authenticate user
+        bearer_token = request.headers.get('Authorization')
+        if not bearer_token:
+            return JSONResponse(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                content={
+                    "detail": "Missing access token",
+                    "body": "Missing access token"
+                }
+            )
+        try:
+            auth_token = bearer_token.split(" ")[1].strip()  # remove "Bearer"
+            # logger.info(auth_token)
+            token_payload = decode_and_validate_token(auth_token)
+        except (
+                ExpiredSignatureError,
+                ImmatureSignatureError,
+                InvalidAlgorithmError,
+                InvalidAudienceError,
+                InvalidKeyError,
+                InvalidSignatureError,
+                InvalidTokenError,
+                MissingRequiredClaimError
+        ) as error:
+            return JSONResponse(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                content={
+                    "detail": str(error),
+                    "body": str(error)
+                }
+            )
+        request.state.user_id = token_payload['sub']  # capture user ID form subject field
+        return await call_next(request)
