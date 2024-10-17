@@ -12,6 +12,7 @@ sqlalchemy = "*"
 asyncpg = "*"
 python-dotenv = "*"
 alembic = "*"
+passlib = {extras = ["bcrypt"], version = "*"}
 
 [dev-packages]
 jupyter = "*"
