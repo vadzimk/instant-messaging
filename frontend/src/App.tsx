@@ -1,21 +1,29 @@
-import { useState } from 'react'
+import {createBrowserRouter, RouterProvider} from 'react-router-dom';
+import ErrorPage from './pages/ErrorPage.tsx';
+import Layout from './Layout.tsx';
+import Home from './pages/Home.tsx';
+import Signup from './pages/Signup.tsx';
 
-
+const router = createBrowserRouter([
+    {
+        path: '/',
+        element: <Layout/>,
+        errorElement: <ErrorPage/>,
+        children: [
+            {index: true, element: <Home/>},
+            {path: 'signup/', element: <Signup/>},
+        ]
+    }
+])
 
 function App() {
-  const [count, setCount] = useState(0)
 
-  return (
-      <>
-          <div className="text-3xl font-bold underline text-blue-500">
-              hello
-          </div>
-          <button className="btn btn-neutral">
-              submit
-          </button>
-      </>
+    return (
+        <>
+            <RouterProvider router={router} />
+        </>
 
-  )
+    )
 }
 
 export default App
