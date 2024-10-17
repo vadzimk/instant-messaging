@@ -8,8 +8,13 @@ fastapi = {extras = ["standard"], version = "*"}
 uvicorn = "*"
 pytest = "*"
 pytest-asyncio = "*"
+sqlalchemy = "*"
+asyncpg = "*"
+python-dotenv = "*"
+alembic = "*"
 
 [dev-packages]
+jupyter = "*"
 
 [requires]
 python_version = "3.10"
