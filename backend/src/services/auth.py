@@ -3,6 +3,8 @@ import os
 from cryptography.hazmat.primitives import serialization
 from datetime import datetime, timedelta
 from pathlib import Path
+
+from fastapi import HTTPException
 from passlib.context import CryptContext
 from jwt import ExpiredSignatureError, ImmatureSignatureError, InvalidAlgorithmError, InvalidAudienceError, \
     InvalidKeyError, InvalidSignatureError, InvalidTokenError, MissingRequiredClaimError
@@ -89,9 +91,9 @@ class AuthorizeRequestMiddleware(BaseHTTPMiddleware):
             return JSONResponse(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 content={
-                    "detail": "Missing access token",
-                    "body": "Missing access token"
-                }
+                    "detail": "Missing access token"
+                },
+                headers={"WWW-Authenticate": "Bearer"},
             )
         try:
             auth_token = bearer_token.split(" ")[1].strip()  # remove "Bearer"
@@ -111,8 +113,8 @@ class AuthorizeRequestMiddleware(BaseHTTPMiddleware):
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 content={
                     "detail": str(error),
-                    "body": str(error)
-                }
+                },
+                headers={"WWW-Authenticate": "Bearer"},
             )
         request.state.user_id = token_payload['sub']  # capture user ID form subject field
         return await call_next(request)
