@@ -8,3 +8,12 @@ class UserCreateOut(BaseModel):
 class UserCreateIn(UserCreateOut):
     password: str
 
+
+class UserLoginIn(BaseModel):
+    email: EmailStr
+    password: str
+
+
+class UserLoginOut(BaseModel):
+    access_token: str
+    token_type: str

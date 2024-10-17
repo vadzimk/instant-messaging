@@ -13,6 +13,8 @@ asyncpg = "*"
 python-dotenv = "*"
 alembic = "*"
 passlib = {extras = ["bcrypt"], version = "*"}
+cryptography = "*"
+pyjwt = "*"
 
 [dev-packages]
 jupyter = "*"
