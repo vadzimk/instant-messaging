@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
 from starlette import status
 
-from .schemas import UserCreate
+from .schemas import *
 from ..db import Session
 from .. import models as m
 
@@ -25,8 +25,8 @@ def hash_password(password: str):
     return pwd_context.hash(password)
 
 
-@router.post('/register', status_code=status.HTTP_201_CREATED)
-async def register_user(user: UserCreate, session: Session = Depends(get_db)):
+@router.post('/register', response_model=UserCreateOut, status_code=status.HTTP_201_CREATED)
+async def register_user(user: UserCreateIn, session: Session = Depends(get_db)):
     existing_user = await session.scalar(select(m.User).where(m.User.email == user.email))
     if existing_user:
         raise HTTPException(status_code=400, detail="Email already registered")
@@ -35,4 +35,4 @@ async def register_user(user: UserCreate, session: Session = Depends(get_db)):
     session.add(new_user)
     await session.commit()
     await session.refresh(new_user)
-    return {"msg": "User registered successfully"}
+    return new_user
