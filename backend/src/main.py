@@ -15,4 +15,4 @@ app.add_middleware(CORSMiddleware,
 # last middleware is executed first on requests
 
 
-app.include_router(router)
+app.include_router(router, prefix='/api')

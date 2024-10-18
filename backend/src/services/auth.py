@@ -78,8 +78,8 @@ class AuthorizeRequestMiddleware(BaseHTTPMiddleware):
         no_auth_paths = [
             "/docs/app",
             "/openapi/app.json",
-            "/register",
-            "/login"
+            "/api/signup",
+            "/api/login"
         ]
         if request.url.path in no_auth_paths \
                 or request.method == "OPTIONS":  # no authentication required

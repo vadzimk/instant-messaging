@@ -23,10 +23,10 @@ def event_loop(request):
 
 
 @pytest.fixture(scope='session')
-async def registered_user_response():
+async def signup_user_response():
     user_to_create = test_user
     async with AsyncClient(transport=ASGITransport(app=app), base_url='http://test') as client:
-        res = await client.post('/register', json=user_to_create)
+        res = await client.post('/api/signup', json=user_to_create)
         yield res
         async with Session() as session:
             async with session.begin():
@@ -35,22 +35,22 @@ async def registered_user_response():
                     await session.delete(test_user_from_db)
 
 
-def test_register_user(registered_user_response):
-    assert registered_user_response.status_code == status.HTTP_201_CREATED
-    assert registered_user_response.json().get("email") == test_user.get('email')
-    print(registered_user_response.json())
+def test_signup_user(signup_user_response):
+    assert signup_user_response.status_code == status.HTTP_201_CREATED
+    assert signup_user_response.json().get("email") == test_user.get('email')
+    print(signup_user_response.json())
 
 
 @pytest.fixture(scope='session')
-async def loggedin_user_response(registered_user_response):
+async def login_user_response(signup_user_response):
     user_to_login = test_user
     async with AsyncClient(transport=ASGITransport(app=app), base_url='http://test') as client:
-        res = await client.post('/login', json=user_to_login)
+        res = await client.post('/api/login', json=user_to_login)
         yield res
 
 
-async def test_login_user(loggedin_user_response):
-    data = loggedin_user_response.json()
+async def test_login_user(login_user_response):
+    data = login_user_response.json()
     print(data)
     assert data.get('token_type') == 'bearer'
     # validate token on the client for each request
@@ -66,17 +66,17 @@ async def test_login_user(loggedin_user_response):
 
 
 @pytest.fixture(scope="session")
-async def authenticate_user_response(loggedin_user_response):
+async def authenticate_user_response(login_user_response):
     async with AsyncClient(transport=ASGITransport(app=app), base_url='http://test') as client:
-        auth_header = f'Bearer {loggedin_user_response.json().get("access_token")}'
-        res = await client.post('/me', headers={'Authorization': auth_header})
+        auth_header = f'Bearer {login_user_response.json().get("access_token")}'
+        res = await client.post('/api/me', headers={'Authorization': auth_header})
         yield res
 
 
 async def test_authenticated_request_rejects_if_not_authenticated():
     async with AsyncClient(transport=ASGITransport(app=app), base_url='http://test') as client:
         auth_header = f'Bearer xxx.xxx.xxx'
-        res = await client.post('/me', headers={'Authorization': auth_header})
+        res = await client.post('/api/me', headers={'Authorization': auth_header})
     print(res.status_code)
     print(res.json())
     assert res.status_code == status.HTTP_401_UNAUTHORIZED

@@ -19,8 +19,8 @@ async def get_db():
         await session.close()
 
 
-@router.post('/register', response_model=UserCreateOut, status_code=status.HTTP_201_CREATED)
-async def register_user(user: UserCreateIn, session: Session = Depends(get_db)):
+@router.post('/signup', response_model=UserCreateOut, status_code=status.HTTP_201_CREATED)
+async def signup_user(user: UserCreateIn, session: Session = Depends(get_db)):
     existing_user = await session.scalar(select(m.User).where(m.User.email == user.email))
     if existing_user:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email already registered")
