@@ -13,46 +13,64 @@ export default function Signup() {
     const {
         register,
         handleSubmit,
+        reset,
         // watch,
         formState: {errors},
     } = useForm<Inputs>()
 
-    const onSubmit: SubmitHandler<Inputs> = (data) => console.log(data)
-
-    // console.log(watch("example")) // watch input value by passing the name of it
+    const onSubmit: SubmitHandler<Inputs> = async (data) => {
+        try{
+            const baseUrl = 'http://localhost:8000'
+            const res = await fetch(baseUrl + '/api/signup', {
+                method: "POST",
+                headers:{
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(data),
+            })
+            if (res.status === 201) {
+                console.log("User register success")
+                reset()
+            } else {
+                console.error("Failed to signup user, status: " + res.status)
+            }
+        } catch (e){
+            console.error("An error occurred: " + e)
+        }
+    }
 
     return (
 
-        <form onSubmit={handleSubmit(onSubmit)} className="w-full">
+        <form onSubmit={handleSubmit(onSubmit)} className="w-full flex flex-col gap-4">
             <Field className="flex flex-col">
-                <Label>First name</Label>
+                <Label className="text-sm">First name</Label>
                 <Input type="text" {...register("firstName", {required: true})}
                        className="border data-[hover]:shadow data-[focus]:bg-blue-100" />
-                <Description>{errors.firstName && <span>This field is required</span>}</Description>
+                <Description className="text-xs text-orange-500">{errors.firstName && <span>First name is required</span>}</Description>
             </Field>
 
 
             <Field className="flex flex-col">
-                <Label>Last name</Label>
+                <Label className="text-sm">Last name</Label>
                 <Input type="text" {...register("lastName")}
                        className="border data-[hover]:shadow data-[focus]:bg-blue-100" />
             </Field>
 
             <Field className="flex flex-col">
-                <Label>Email</Label>
+                <Label className="text-sm">Email</Label>
                 <Input type="text" {...register("email", {required: true})}
                        className="border data-[hover]:shadow data-[focus]:bg-blue-100" />
-                <Description>{errors.email && <span>This field is required</span>}</Description>
+                <Description className="text-xs text-orange-500">{errors.email && <span>Email is required</span>}</Description>
             </Field>
 
             <Field className="flex flex-col">
-                <Label>Password</Label>
+                <Label className="text-sm">Password</Label>
                 <Input type="text" {...register("password", {required: true})}
                        className="border data-[hover]:shadow data-[focus]:bg-blue-100" />
-                <Description>{errors.password && <span>This field is required</span>}</Description>
+                <Description className="text-xs text-orange-500">{errors.password && <span>Password is required</span>}</Description>
             </Field>
 
-            <input type="submit" className="btn btn-primary btn-sm"/>
+            <input type="submit" value="Sign up" className="btn btn-primary btn-sm"/>
         </form>
     )
 }
