@@ -1,9 +1,14 @@
+import logging
+
 from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
 
+from .utils import setup_logging
 from .services.auth import AuthorizeRequestMiddleware
 from .api.api import router
 
+setup_logging(logging.INFO)
+logger = logging.getLogger(__name__)
 app = FastAPI(debug=True, openapi_url='/openapi/app.json', docs_url='/docs/app')
 
 app.add_middleware(AuthorizeRequestMiddleware)
