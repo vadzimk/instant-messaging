@@ -6,7 +6,7 @@
     }
 
     .input-base {
-        @apply border data-[hover]:shadow data-[focus]:bg-blue-100 dark:data-[focus]:bg-gray-800;
+        @apply border data-[hover]:shadow data-[focus]:bg-blue-100 dark:data-[focus]:bg-gray-800 h-8 rounded;
     }
 
     .description-error {
