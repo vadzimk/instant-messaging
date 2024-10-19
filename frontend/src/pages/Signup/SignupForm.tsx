@@ -3,6 +3,7 @@ import {Input, Label, Field, Description, Fieldset} from '@headlessui/react'
 import auth from '../../services/auth.ts';
 import {useState} from 'react';
 import EyeIcon from '../../components/icons/EyeIcon.tsx';
+import {Link} from 'react-router-dom';
 
 export type SignupInputs = {
     firstName: string
@@ -98,6 +99,14 @@ export default function SignupForm({setSignup}: SignupFormProps) {
                     <input type="submit" value="Sign up" className="btn btn-primary btn-sm"/>
                 </Fieldset>
             </form>
+            <div className="mt-6">
+                <p className="text-center text-sm">Already on Messaging? &nbsp;
+                    <Link to="/"
+                          className="underline text-blue-600 dark:text-blue-500">
+                        Log in
+                    </Link>
+                </p>
+            </div>
         </>
 
     )
