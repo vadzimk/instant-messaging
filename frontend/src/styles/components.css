@@ -1,0 +1,15 @@
+@tailwind components;
+
+@layer components {
+    .btn {
+        @apply rounded no-animation
+    }
+
+    .input-base {
+        @apply border data-[hover]:shadow data-[focus]:bg-blue-100 dark:data-[focus]:bg-gray-800;
+    }
+
+    .description-error {
+        @apply text-xs text-orange-500 min-h-4;
+    }
+}

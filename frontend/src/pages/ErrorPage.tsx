@@ -11,7 +11,7 @@ export default function ErrorPage() {
     return (
         <div className="flex flex-col items-center justify-center h-screen p-5">
             <h1>Ah...</h1>
-            <p>Got Unexpected error</p>
+            <p>Got an error</p>
             <p>{error.statusText || error.message}</p>
         </div>
     );

@@ -1,0 +1,7 @@
+@tailwind utilities;
+
+@layer utilities {
+    .screen-height {
+        @apply min-h-[calc(100vh)] max-h-[1100px]
+    }
+}

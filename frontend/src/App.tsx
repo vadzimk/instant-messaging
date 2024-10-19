@@ -2,7 +2,7 @@ import {createBrowserRouter, RouterProvider} from 'react-router-dom';
 import ErrorPage from './pages/ErrorPage.tsx';
 import Layout from './Layout.tsx';
 import Home from './pages/Home.tsx';
-import Signup from './pages/Signup.tsx';
+import Index from './pages/Signup';
 
 const router = createBrowserRouter([
     {
@@ -11,7 +11,7 @@ const router = createBrowserRouter([
         errorElement: <ErrorPage/>,
         children: [
             {index: true, element: <Home/>},
-            {path: 'signup/', element: <Signup/>},
+            {path: 'signup/', element: <Index/>},
         ]
     }
 ])
