@@ -1,6 +1,7 @@
+import LoginForm from './Login/LoginForm.tsx';
 
 export default function Home(){
     return(
-        <div>login</div>
+        <LoginForm/>
     )
 }

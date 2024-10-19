@@ -6,9 +6,7 @@ import Index from './pages/Signup';
 
 const router = createBrowserRouter([
     {
-        path: '/',
-        element: <Layout/>,
-        errorElement: <ErrorPage/>,
+        path: '/', element: <Layout/>, errorElement: <ErrorPage/>,
         children: [
             {index: true, element: <Home/>},
             {path: 'signup/', element: <Index/>},
@@ -20,7 +18,7 @@ function App() {
 
     return (
         <>
-            <RouterProvider router={router} />
+            <RouterProvider router={router}/>
         </>
 
     )

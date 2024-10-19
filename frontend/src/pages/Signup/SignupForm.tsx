@@ -1,9 +1,9 @@
 import {useForm, SubmitHandler} from "react-hook-form"
 import {Input, Label, Field, Description, Fieldset} from '@headlessui/react'
 import auth from '../../services/auth.ts';
-import {useState} from 'react';
-import EyeIcon from '../../components/icons/EyeIcon.tsx';
 import {Link} from 'react-router-dom';
+import EmailField from '../../components/EmailField.tsx';
+import PasswordField from '../../components/PasswordField.tsx';
 
 export type SignupInputs = {
     firstName: string
@@ -17,7 +17,6 @@ type SignupFormProps = {
 }
 
 export default function SignupForm({setSignup}: SignupFormProps) {
-    const [showPassword, setShowPassword] = useState<boolean>(false)
 
     const {
         register,
@@ -54,48 +53,14 @@ export default function SignupForm({setSignup}: SignupFormProps) {
                                 {errors.firstName && <span>{errors.firstName.message}</span>}
                             </Description>
                         </Field>
-
                         <Field className="flex flex-col">
                             <Label className="text-sm">Last name</Label>
                             <Input type="text" {...register("lastName")}
                                    className="input-base"/>
                         </Field>
                     </div>
-                    <Field className="flex flex-col">
-                        <Label className="text-sm">Email</Label>
-                        <Input type="text" {...register('email', {
-                            required: 'Email is required',
-                            pattern: {
-                                value: /^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$/,
-                                message: 'Please enter a valid email address',
-                            },
-                        })}
-                               className="input-base"/>
-                        <Description className="description-error">
-                            {errors.email && <span>{errors.email.message}</span>}
-                        </Description>
-                    </Field>
-
-                    <Field className="flex flex-col">
-                        <Label className="text-sm">Password</Label>
-                        <div className="relative">
-                            <Input type={showPassword ? "text" : "password"}
-                                   {...register("password", {required: 'Password is required'})}
-                                   className="input-base w-full"
-                            />
-                            <div
-                                className="flex flex-col justify-center mr-2 p-1 absolute top-0 right-0"
-                                onMouseDown={() => setShowPassword(true)}
-                                onMouseUp={() => setShowPassword(false)}
-                                onMouseLeave={() => setShowPassword(false)}
-                            >
-                                <EyeIcon/>
-                            </div>
-                        </div>
-                        <Description className="description-error">
-                            {errors.password && <span>{errors.password && errors.password.message}</span>}
-                        </Description>
-                    </Field>
+                    <EmailField register={register} errors={errors}/>
+                    <PasswordField register={register} errors={errors}/>
                     <input type="submit" value="Sign up" className="btn btn-primary btn-sm"/>
                 </Fieldset>
             </form>
