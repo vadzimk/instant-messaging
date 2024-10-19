@@ -2,6 +2,7 @@ import {Fieldset} from '@headlessui/react';
 import EmailField from '../../components/EmailField.tsx';
 import PasswordField from '../../components/PasswordField.tsx';
 import {useForm, SubmitHandler} from "react-hook-form"
+import {Link} from 'react-router-dom';
 
 export type LoginInputs = {
     email: string;
@@ -23,12 +24,20 @@ export default function LoginForm() {
         <>
             <h1 className="text-4xl mb-6">Log in</h1>
             <form onSubmit={handleSubmit(onSubmit)}>
-                <Fieldset>
+                <Fieldset className="w-full flex flex-col gap-4 min-w-96">
                     <EmailField register={register} errors={errors}/>
                     <PasswordField register={register} errors={errors}/>
                     <input type="submit" value='Log in' className="btn btn-primary btn-sm"/>
                 </Fieldset>
             </form>
+            <div className="mt-6">
+                <p className="text-center text-sm">New to Messaging? &nbsp;
+                    <Link to="/signup"
+                          className="underline text-blue-600 dark:text-blue-500">
+                        Sign up
+                    </Link>
+                </p>
+            </div>
         </>
 
     )
