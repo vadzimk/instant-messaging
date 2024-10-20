@@ -6,8 +6,8 @@ import EmailField from '../../components/EmailField.tsx';
 import PasswordField from '../../components/PasswordField.tsx';
 
 export type SignupInputs = {
-    firstName: string
-    lastName: string
+    first_name: string
+    last_name: string
     email: string
     password: string
 }
@@ -47,15 +47,15 @@ export default function SignupForm({setSignup}: SignupFormProps) {
                     <div className="flex flex-row justify-between gap-4">
                         <Field className="flex flex-col">
                             <Label className="text-sm">First name</Label>
-                            <Input type="text" {...register("firstName", {required: 'First name is required'})}
+                            <Input type="text" {...register("first_name", {required: 'First name is required'})}
                                    className="input-base"/>
                             <Description className="description-error">
-                                {errors.firstName && <span>{errors.firstName.message}</span>}
+                                {errors.first_name && <span>{errors.first_name.message}</span>}
                             </Description>
                         </Field>
                         <Field className="flex flex-col">
                             <Label className="text-sm">Last name</Label>
-                            <Input type="text" {...register("lastName")}
+                            <Input type="text" {...register("last_name")}
                                    className="input-base"/>
                         </Field>
                     </div>

@@ -19,12 +19,12 @@ const signup = async (formData: SignupInputs) => {
 
 const login = async (formData: LoginInputs) => {
     try {
+        const form  = new FormData()
+        form.append("username", formData.email)
+        form.append("password", formData.password)
         return await fetch(baseUrl + '/api/login', {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify(formData),
+            body: form,  // send as FormData
         })
     } catch (e) {
         console.log("An error occured: " + e)
