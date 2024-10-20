@@ -14,7 +14,7 @@ from cryptography.x509 import load_pem_x509_certificate
 test_user = {"first_name": "testname", "last_name": "", "email": "test@mail.com", "password": "secret"}
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope='module')
 def event_loop(request):
     """Create an instance of the default event loop for each test case."""
     loop = asyncio.get_event_loop_policy().new_event_loop()
@@ -22,7 +22,7 @@ def event_loop(request):
     loop.close()
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope='module')
 async def signup_user_response():
     user_to_create = test_user
     async with AsyncClient(transport=ASGITransport(app=app), base_url='http://test') as client:
@@ -41,7 +41,7 @@ def test_signup_user(signup_user_response):
     assert signup_user_response.json().get("email") == test_user.get('email')
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope='module')
 async def login_user_response(signup_user_response):
     user_to_login = {
         'username': test_user.get('email'),
@@ -73,7 +73,7 @@ async def test_login_user_using_authorization_header(login_user_response):
     assert validated_result_payload.get('sub') == test_user.get('email'), "token subject not set to email"
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="module")
 async def authenticate_user_with_header_response(login_user_response):
     async with AsyncClient(transport=ASGITransport(app=app), base_url='http://test') as client:
         auth_header = f'Bearer {login_user_response.json().get("access_token")}'
