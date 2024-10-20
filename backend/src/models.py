@@ -1,3 +1,5 @@
+from typing import Optional
+
 from sqlalchemy import MetaData, event, inspect, String, Boolean
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
@@ -17,7 +19,9 @@ class User(Model):
     id: Mapped[int] = mapped_column(primary_key=True)
     email: Mapped[str] = mapped_column(unique=True, index=True)
     hashed_password: Mapped[str] = mapped_column(String(64))
-    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True, index=True)
+    first_name: Mapped[str] = mapped_column(String(64), index=True)
+    last_name: Mapped[Optional[str]] = mapped_column(String(64), index=True)
 
     def __repr__(self):
         return f'User({self.id}, "{self.email}")'
