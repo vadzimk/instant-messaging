@@ -14,6 +14,11 @@ class UserLoginIn(BaseModel):
     password: str
 
 
+class User(UserCreateOut):
+    id: int
+    is_active: bool
+
+
 class UserLoginOut(BaseModel):
     access_token: str
     token_type: str

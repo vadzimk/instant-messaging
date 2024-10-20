@@ -9,3 +9,10 @@ db_path = f'postgresql+asyncpg://' + f'{os.getenv("POSTGRES_USER")}:{os.getenv("
 
 engine = create_async_engine(db_path)
 Session = async_sessionmaker(engine, expire_on_commit=False)
+
+async def get_db():
+    session = Session()
+    try:
+        yield session
+    finally:
+        await session.close()

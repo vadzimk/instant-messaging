@@ -22,6 +22,12 @@ class User(Model):
     def __repr__(self):
         return f'User({self.id}, "{self.email}")'
 
+    def dict(self):
+        return {
+            'id': self.id,
+            'email': self.email,
+            'is_active': self.is_active,
+        }
 
 # ==================================== BOTTOM OF FILE =====================================================
 @event.listens_for(Model, 'init', propagate=True)
