@@ -1,4 +1,5 @@
-from typing import Annotated
+import logging
+from typing import Annotated, Optional
 
 import jwt
 # import os
@@ -6,7 +7,7 @@ from cryptography.hazmat.primitives import serialization
 from datetime import datetime, timedelta
 from pathlib import Path
 
-from fastapi import HTTPException, Depends
+from fastapi import HTTPException, Depends, Cookie
 from fastapi.security import OAuth2PasswordBearer
 from passlib.context import CryptContext
 from jwt import ExpiredSignatureError, ImmatureSignatureError, InvalidAlgorithmError, InvalidAudienceError, \
@@ -21,6 +22,8 @@ from cryptography.x509 import load_pem_x509_certificate
 from .. import models as m
 from ..db import Session, get_db
 from ..api import schemas as p
+
+logger = logging.getLogger(__name__)
 
 pwd_context = CryptContext(schemes=['bcrypt'], deprecated='auto')
 
@@ -82,9 +85,15 @@ class CouldNotValidateCredentials(HTTPException):
         )
 
 
-def get_current_user_id(token: Annotated[str, Depends(oauth2_scheme)]):
+def get_current_user_id(token: Annotated[str, Depends(oauth2_scheme)],
+                        access_token: Optional[str] = Cookie(None)) -> str:
+    logger.info(f"token========== {token}")
+    logger.info(f"access-token================ {access_token}")
+
+    if token is None and access_token is None:
+        raise HTTPException(status_code=403, detail="Not authenticated")
     try:
-        token_payload = decode_and_validate_token(token)
+        token_payload = decode_and_validate_token(token or access_token)
         user_email = token_payload['sub']
         print(user_email)
     except (
@@ -103,7 +112,8 @@ def get_current_user_id(token: Annotated[str, Depends(oauth2_scheme)]):
     return user_email
 
 
-async def get_user(user_email: str = Depends(get_current_user_id), session: Session = Depends(get_db)) -> p.User:
+async def get_user(user_email: Annotated[str, Depends(get_current_user_id)],
+                   session: Annotated[Session, Depends(get_db)]) -> p.User:
     user = await session.scalar(select(m.User).where(m.User.email == user_email))
     if user is None:
         raise CouldNotValidateCredentials()

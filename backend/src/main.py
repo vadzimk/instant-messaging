@@ -13,7 +13,7 @@ app = FastAPI(debug=True, openapi_url='/openapi/app.json', docs_url='/docs/app')
 
 # app.add_middleware(AuthorizeRequestMiddleware)
 app.add_middleware(CORSMiddleware,
-                   allow_origins=["*"],  # allow all origins
+                   allow_origins=["http://localhost:5173"],  # allow all origins
                    allow_credentials=True,  # support cookies for cross-origin requests
                    allow_methods=["*"],  # allow all http methods
                    allow_headers=["*"],)  # allow all headers

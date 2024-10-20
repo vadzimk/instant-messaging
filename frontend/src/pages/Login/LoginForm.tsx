@@ -3,6 +3,7 @@ import EmailField from '../../components/EmailField.tsx';
 import PasswordField from '../../components/PasswordField.tsx';
 import {useForm, SubmitHandler} from "react-hook-form"
 import {Link} from 'react-router-dom';
+import auth from '../../services/auth.ts';
 
 export type LoginInputs = {
     email: string;
@@ -16,9 +17,17 @@ export default function LoginForm() {
         formState: {errors}
     } = useForm<LoginInputs>()
 
-    const onSubmit: SubmitHandler<LoginInputs> = async (data: LoginInputs)=>{
+    const onSubmit: SubmitHandler<LoginInputs> = async (data: LoginInputs) => {
         console.log(data)
-        reset()
+        const res = await auth.login(data)
+        if (res && res.status === 200) {
+            console.log("User login success")
+            console.dir(await res.json())
+            reset()
+        } else {
+            const errorDetail = res ? await res.json() : {detail: 'Unknown error'}
+            console.error("Failed to login user, error detail: " + errorDetail.detail)
+        }
     }
     return (
         <>

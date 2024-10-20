@@ -30,12 +30,12 @@ export default function SignupForm({setSignup}: SignupFormProps) {
         const res = await auth.signup(data)
         if (res && res.status === 201) {
             console.log("User register success")
-            console.dir(res)
+            console.dir(await res.json())
             reset()
             setSignup(true)
         } else {
             const errorDetail = res ? await res.json() : {detail: "Unknown error"}
-            console.error("Failed to signup user, error detail: " + errorDetail)
+            console.error("Failed to signup user, error detail: " + errorDetail.detail)
         }
     }
 
