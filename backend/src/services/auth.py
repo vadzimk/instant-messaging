@@ -1,23 +1,16 @@
 import logging
-from typing import Annotated, Optional
-
+from typing import Annotated
 import jwt
-# import os
 from cryptography.hazmat.primitives import serialization
 from datetime import datetime, timedelta
 from pathlib import Path
-
-from fastapi import HTTPException, Depends, Cookie
+from fastapi import HTTPException, Depends
 from fastapi.security import OAuth2PasswordBearer
 from passlib.context import CryptContext
-from jwt import ExpiredSignatureError, ImmatureSignatureError, InvalidAlgorithmError, InvalidAudienceError, \
-    InvalidKeyError, InvalidSignatureError, InvalidTokenError, MissingRequiredClaimError
+from jwt import (ExpiredSignatureError, ImmatureSignatureError, InvalidAlgorithmError, InvalidAudienceError,
+                 InvalidKeyError, InvalidSignatureError, InvalidTokenError, MissingRequiredClaimError)
 from sqlalchemy import select
-
 from starlette import status
-# from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
-# from starlette.requests import Request
-# from starlette.responses import Response, JSONResponse
 from cryptography.x509 import load_pem_x509_certificate
 from .. import models as m
 from ..db import Session, get_db
@@ -85,15 +78,11 @@ class CouldNotValidateCredentials(HTTPException):
         )
 
 
-def get_current_user_id(token: Annotated[str, Depends(oauth2_scheme)],
-                        access_token: Optional[str] = Cookie(None)) -> str:
-    logger.info(f"token========== {token}")
-    logger.info(f"access-token================ {access_token}")
-
-    if token is None and access_token is None:
+def get_current_user_id(token: Annotated[str, Depends(oauth2_scheme)]) -> str:
+    if token is None:
         raise HTTPException(status_code=403, detail="Not authenticated")
     try:
-        token_payload = decode_and_validate_token(token or access_token)
+        token_payload = decode_and_validate_token(token)
         user_email = token_payload['sub']
         print(user_email)
     except (
@@ -118,60 +107,3 @@ async def get_user(user_email: Annotated[str, Depends(get_current_user_id)],
     if user is None:
         raise CouldNotValidateCredentials()
     return p.User(**user.dict())
-
-# class AuthorizeRequestMiddleware(BaseHTTPMiddleware):
-#
-#     async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
-#         """
-#         entrypoint for the middleware to authenticate request
-#         :param request: incoming request
-#         :param call_next: callable that calls next middleware
-#         :return:
-#         """
-#         # logger.info('hello form dispatch')
-#         if os.getenv("AUTH_ON", "False") != "True":  # no authentication required
-#             request.state.user_id = "test"
-#             return await call_next(request)
-#         no_auth_paths = [
-#             "/docs/app",
-#             "/openapi/app.json",
-#             "/api/signup",
-#             "/api/login"
-#         ]
-#         if request.url.path in no_auth_paths \
-#                 or request.method == "OPTIONS":  # no authentication required
-#             return await call_next(request)
-#
-#         # authenticate user
-#         bearer_token = request.headers.get('Authorization')
-#         if not bearer_token:
-#             return JSONResponse(
-#                 status_code=status.HTTP_401_UNAUTHORIZED,
-#                 content={
-#                     "detail": "Missing access token"
-#                 },
-#                 headers={"WWW-Authenticate": "Bearer"},
-#             )
-#         try:
-#             auth_token = bearer_token.split(" ")[1].strip()  # remove "Bearer"
-#             # logger.info(auth_token)
-#             token_payload = decode_and_validate_token(auth_token)
-#         except (
-#                 ExpiredSignatureError,
-#                 ImmatureSignatureError,
-#                 InvalidAlgorithmError,
-#                 InvalidAudienceError,
-#                 InvalidKeyError,
-#                 InvalidSignatureError,
-#                 InvalidTokenError,
-#                 MissingRequiredClaimError
-#         ) as error:
-#             return JSONResponse(
-#                 status_code=status.HTTP_401_UNAUTHORIZED,
-#                 content={
-#                     "detail": str(error),
-#                 },
-#                 headers={"WWW-Authenticate": "Bearer"},
-#             )
-#         request.state.user_id = token_payload['sub']  # capture user ID form subject field
-#         return await call_next(request)
