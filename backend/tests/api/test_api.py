@@ -11,7 +11,7 @@ from src.db import Session
 from src import models as m
 from cryptography.x509 import load_pem_x509_certificate
 
-test_user = {"email": "test@mail.com", "password": "secret"}
+test_user = {"first_name": "testname", "last_name": "", "email": "test@mail.com", "password": "secret"}
 
 
 @pytest.fixture(scope='session')
@@ -36,16 +36,19 @@ async def signup_user_response():
 
 
 def test_signup_user(signup_user_response):
+    print(signup_user_response.json())
     assert signup_user_response.status_code == status.HTTP_201_CREATED
     assert signup_user_response.json().get("email") == test_user.get('email')
-    print(signup_user_response.json())
 
 
 @pytest.fixture(scope='session')
 async def login_user_response(signup_user_response):
-    user_to_login = test_user
+    user_to_login = {
+        'username': test_user.get('email'),
+        'password': test_user.get('password')
+    }
     async with AsyncClient(transport=ASGITransport(app=app), base_url='http://test') as client:
-        res = await client.post('/api/login', json=user_to_login)
+        res = await client.post('/api/login', data=user_to_login)  # send as form data
         yield res
 
 
@@ -87,6 +90,7 @@ async def test_authenticated_request_rejects_if_not_authenticated():
     assert res.status_code == status.HTTP_401_UNAUTHORIZED, "unauthenticated request is not rejected on protected path"
 
 
+@pytest.mark.only
 async def test_authenticated_request_accepts_valid_header(authenticate_user_with_header_response):
     print(authenticate_user_with_header_response.status_code)
     print(authenticate_user_with_header_response.json())

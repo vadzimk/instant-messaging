@@ -13,11 +13,6 @@ class UserCreateIn(UserCreateOut):
     password: str
 
 
-class UserLoginIn(BaseModel):
-    email: EmailStr
-    password: str
-
-
 class User(UserCreateOut):
     id: int
     is_active: bool

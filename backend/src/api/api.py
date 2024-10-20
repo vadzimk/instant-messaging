@@ -32,17 +32,11 @@ async def signup_user(user: p.UserCreateIn, session: Session = Depends(get_db)):
 
 @router.post('/login', response_model=p.UserLoginOut)
 async def login_user(
-        form_data: Annotated[OAuth2PasswordRequestForm, Depends()],  # for swagger ui
-        user_credentials: Optional[p.UserLoginIn] = None,  # for the app
+        #  The OAuth2 specification for a password flow the data should be collected using form data (instead of JSON)
+        form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
         session: Session = Depends(get_db)):
-    user_email = None
-    user_password = None
-    if user_credentials:
-        user_email = user_credentials.email
-        user_password = user_credentials.password
-    elif form_data.username and form_data.password:
-        user_email = form_data.username
-        user_password = form_data.password
+    user_email = form_data.username
+    user_password = form_data.password
     user = await session.scalar(select(m.User).where(m.User.email == user_email))
     if not (user and verify_password(user_password, user.hashed_password)):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Incorrect username or password")
