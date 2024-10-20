@@ -18,15 +18,18 @@ export default function LoginForm() {
     } = useForm<LoginInputs>()
 
     const onSubmit: SubmitHandler<LoginInputs> = async (data: LoginInputs) => {
-        console.log(data)
         const res = await auth.login(data)
-        if (res && res.status === 200) {
-            console.log("User login success")
-            console.dir(await res.json())
+        if (!res){
+            console.error("Login failed, no response returned")
+            return // TODO show error message
+        }
+        const body = await res.json()
+        if (res.status === 200) {
             reset()
+            // save token
+            localStorage.setItem('access_token', body.access_token)
         } else {
-            const errorDetail = res ? await res.json() : {detail: 'Unknown error'}
-            console.error("Failed to login user, error detail: " + errorDetail.detail)
+            console.error("Failed to login user, error detail: " + body?.detail || "Unknown error")
         }
     }
     return (

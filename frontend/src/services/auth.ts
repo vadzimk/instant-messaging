@@ -25,7 +25,6 @@ const login = async (formData: LoginInputs) => {
                 "Content-Type": "application/json",
             },
             body: JSON.stringify(formData),
-            credentials: "include" // Ensures cookies are sent and received
         })
     } catch (e) {
         console.log("An error occured: " + e)
