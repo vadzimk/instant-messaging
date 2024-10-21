@@ -29,5 +29,8 @@ async def disconnect(sid):
 async def foo(sid, data):
     msg = f'Client {sid}, data {data}'
     logger.info(msg)
-    return 'bar'
+    return f'bar-{data.get("body")}'
+
+def message(sid, data):
+    pass
 

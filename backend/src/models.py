@@ -1,7 +1,8 @@
+from datetime import datetime
 from typing import Optional
 
-from sqlalchemy import MetaData, event, inspect, String, Boolean
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+from sqlalchemy import MetaData, event, inspect, String, Boolean, Text, ForeignKey
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship, WriteOnlyMapped
 
 
 class Model(DeclarativeBase):
@@ -22,6 +23,12 @@ class User(Model):
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, index=True)
     first_name: Mapped[str] = mapped_column(String(64), index=True)
     last_name: Mapped[Optional[str]] = mapped_column(String(64), index=True)
+    messages_sent: WriteOnlyMapped[list['Message']] = relationship(back_populates='user_from',
+                                                                   foreign_keys='Message.user_from_id',
+                                                                   passive_deletes=True)
+    messages_received: WriteOnlyMapped[list['Message']] = relationship(back_populates='user_to',
+                                                                       foreign_keys='Message.user_to_id',
+                                                                       passive_deletes=True)
 
     def __repr__(self):
         return f'User({self.id}, "{self.email}")'
@@ -35,7 +42,24 @@ class User(Model):
             'is_active': self.is_active,
         }
 
+
+# one-on-one chat
+# storing in rdbms only for demo purposes, such data should be stored in key-value store such as Cassandra
+class Message(Model):
+    __tablename__ = 'messages'
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_from_id: Mapped[int] = mapped_column(ForeignKey('users.id'))
+    user_to_id: Mapped[int] = mapped_column(ForeignKey('users.id'))
+    content: Mapped[str] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(default=datetime.utcnow, index=True)
+    user_from: Mapped['User'] = relationship(lazy='joined', back_populates='messages_sent', innerjoin=True,
+                                             foreign_keys=[user_from_id])
+    user_to: Mapped['User'] = relationship(lazy='joined', back_populates='messages_received', innerjoin=True,
+                                           foreign_keys=[user_to_id])
+
+
 # ==================================== BOTTOM OF FILE =====================================================
+# this avoids lazy loading of relationships after the session is flushed, needed for asynchronous sqlalchemy
 @event.listens_for(Model, 'init', propagate=True)
 def init_relationships(tgt, arg, kw):
     mapper = inspect(tgt.__class__)
