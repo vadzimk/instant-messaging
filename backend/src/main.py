@@ -1,12 +1,9 @@
 import logging
-
 import socketio
 from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
-
 from .api.sio import sio
 from .utils import setup_logging
-# from .services.auth import AuthorizeRequestMiddleware
 from .api.api import router
 
 setup_logging(logging.INFO)
@@ -18,7 +15,7 @@ app.add_middleware(CORSMiddleware,
                    allow_origins=["*"],  # allow all origins
                    allow_credentials=True,  # support cookies for cross-origin requests
                    allow_methods=["*"],  # allow all http methods
-                   allow_headers=["*"],)  # allow all headers
+                   allow_headers=["*"], )  # allow all headers
 # last middleware is executed first on requests
 
 

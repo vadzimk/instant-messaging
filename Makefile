@@ -17,3 +17,6 @@ jwt.keys:
 	-out jwt_keys/public_key.pem \
     -days 365 \
     -subj "/CN=messaging.vadzimk.com"
+
+# pre-commit is running at .git/hooks/pre-commit
+# will not allow commit if tests inside /backend did not pass

@@ -10,3 +10,4 @@ def setup_logging(loglevel):
     logger = logging.getLogger()
     logger.addHandler(handler)
     logger.setLevel(loglevel)
+

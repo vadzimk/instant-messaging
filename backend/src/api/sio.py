@@ -1,6 +1,9 @@
 import logging
 import socketio
 
+from ..db import get_db
+from ..services.auth import get_current_user_id, get_user
+
 logger = logging.getLogger(__name__)
 
 redis_manager = socketio.AsyncRedisManager(url='redis://localhost:6379/0')
@@ -15,8 +18,23 @@ sio.instrument(auth=False, mode='development')  # only in development admin ui
 
 @sio.event
 async def connect(sid, environ, auth):
-    msg = f'Client {sid} connected, environ {environ}, auth {auth}'
-    logger.info(msg)
+    if not auth:
+        raise socketio.exceptions.ConnectionRefusedError('Socketio Authentication failed')
+    token = auth.get('token')
+    logger.info(f'token {token}')
+    user_email = get_current_user_id(token)
+    logger.info(f'user_email {user_email}')
+    async for session in get_db():  # consume async generator
+        user = await get_user(user_email, session)
+    username = user.email
+    await sio.save_session(sid, {'username': username})
+    logger.info(f'sid: {sid}, auth: {auth}, username: {username}')
+
+
+@sio.event
+async def message(sid, data):
+    session = await sio.get_session(sid)
+    return f'your username: {session.get("username")}'
 
 
 @sio.event
@@ -29,8 +47,4 @@ async def disconnect(sid):
 async def foo(sid, data):
     msg = f'Client {sid}, data {data}'
     logger.info(msg)
-    return f'bar-{data.get("body")}'
-
-def message(sid, data):
-    pass
-
+    return data
