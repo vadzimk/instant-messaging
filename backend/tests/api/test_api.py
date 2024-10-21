@@ -1,55 +1,20 @@
-import asyncio
 from pathlib import Path
 
 import jwt
 import pytest
 from httpx import AsyncClient, ASGITransport
-from sqlalchemy import select
+
 from starlette import status
 from src.main import app
-from src.db import Session
-from src import models as m
+
 from cryptography.x509 import load_pem_x509_certificate
-
-test_user = {"first_name": "testname", "last_name": "", "email": "test@mail.com", "password": "secret"}
-
-
-@pytest.fixture(scope='module')
-def event_loop(request):
-    """Create an instance of the default event loop for each test case."""
-    loop = asyncio.get_event_loop_policy().new_event_loop()
-    yield loop
-    loop.close()
-
-
-@pytest.fixture(scope='module')
-async def signup_user_response():
-    user_to_create = test_user
-    async with AsyncClient(transport=ASGITransport(app=app), base_url='http://test') as client:
-        res = await client.post('/api/signup', json=user_to_create)
-        yield res
-        async with Session() as session:
-            async with session.begin():
-                test_user_from_db = await session.scalar(select(m.User).where(m.User.email == user_to_create['email']))
-                if test_user_from_db:
-                    await session.delete(test_user_from_db)
+from .conftest import test_user
 
 
 def test_signup_user(signup_user_response):
     print(signup_user_response.json())
     assert signup_user_response.status_code == status.HTTP_201_CREATED
     assert signup_user_response.json().get("email") == test_user.get('email')
-
-
-@pytest.fixture(scope='module')
-async def login_user_response(signup_user_response):
-    user_to_login = {
-        'username': test_user.get('email'),
-        'password': test_user.get('password')
-    }
-    async with AsyncClient(transport=ASGITransport(app=app), base_url='http://test') as client:
-        res = await client.post('/api/login', data=user_to_login)  # send as form data
-        yield res
 
 
 def decode_access_token(access_token):
@@ -90,7 +55,7 @@ async def test_authenticated_request_rejects_if_not_authenticated():
     assert res.status_code == status.HTTP_401_UNAUTHORIZED, "unauthenticated request is not rejected on protected path"
 
 
-@pytest.mark.only
+# @pytest.mark.only
 async def test_authenticated_request_accepts_valid_header(authenticate_user_with_header_response):
     print(authenticate_user_with_header_response.status_code)
     print(authenticate_user_with_header_response.json())

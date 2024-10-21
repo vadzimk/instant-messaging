@@ -4,7 +4,7 @@ import pytest
 import socketio
 
 @pytest.fixture
-async def socketio_client():
+async def socketio_client(login_user_response):
     client = socketio.AsyncClient()
     await client.connect('http://localhost:8000')
     yield client
