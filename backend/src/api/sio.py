@@ -21,14 +21,14 @@ async def connect(sid, environ, auth):
     if not auth:
         raise socketio.exceptions.ConnectionRefusedError('Socketio Authentication failed')
     token = auth.get('token')
-    logger.info(f'token {token}')
+    # logger.info(f'token {token}')
     user_email = get_current_user_id(token)
-    logger.info(f'user_email {user_email}')
+    # logger.info(f'user_email {user_email}')
     async for session in get_db():  # consume async generator
         user = await get_user(user_email, session)
     username = user.email
     await sio.save_session(sid, {'username': username})
-    logger.info(f'sid: {sid}, auth: {auth}, username: {username}')
+    # logger.info(f'sid: {sid}, auth: {auth}, username: {username}')
 
 
 @sio.event
@@ -44,7 +44,7 @@ async def disconnect(sid):
 
 
 @sio.event
-async def foo(sid, data):
+async def ping(sid, data):
     msg = f'Client {sid}, data {data}'
     logger.info(msg)
     return data
