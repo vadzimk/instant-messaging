@@ -84,7 +84,6 @@ def get_current_user_id(token: Annotated[str, Depends(oauth2_scheme)]) -> str:
     try:
         token_payload = decode_and_validate_token(token)
         user_email = token_payload['sub']
-        print(user_email)
     except (
             ExpiredSignatureError,
             ImmatureSignatureError,
