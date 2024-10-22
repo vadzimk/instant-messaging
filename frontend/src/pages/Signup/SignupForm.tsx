@@ -1,9 +1,11 @@
 import {useForm, SubmitHandler} from "react-hook-form"
 import {Input, Label, Field, Description, Fieldset} from '@headlessui/react'
-import auth from '../../services/auth.ts';
+// import auth from '../../services/auth.ts';
 import {Link} from 'react-router-dom';
 import EmailField from '../../components/EmailField.tsx';
 import PasswordField from '../../components/PasswordField.tsx';
+import {signupUser} from '../../reducers/userSlice.ts';
+import {useAppDispatch, useAppSelector} from '../../hooks.ts';
 
 export type SignupInputs = {
     first_name: string
@@ -17,6 +19,8 @@ type SignupFormProps = {
 }
 
 export default function SignupForm({setSignup}: SignupFormProps) {
+    const dispatch = useAppDispatch()  // ts setup requires typed dispatch
+    const userId = useAppSelector(state => state.user.id)
 
     const {
         register,
@@ -27,15 +31,10 @@ export default function SignupForm({setSignup}: SignupFormProps) {
     } = useForm<SignupInputs>()
 
     const onSubmit: SubmitHandler<SignupInputs> = async (data) => {
-        const res = await auth.signup(data)
-        if (res && res.status === 201) {
-            console.log("User register success")
-            console.dir(await res.json())
+        dispatch(signupUser(data))
+        if (userId) {
             reset()
             setSignup(true)
-        } else {
-            const errorDetail = res ? await res.json() : {detail: "Unknown error"}
-            console.error("Failed to signup user, error detail: " + errorDetail.detail)
         }
     }
 
