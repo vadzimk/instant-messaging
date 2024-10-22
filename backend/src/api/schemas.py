@@ -18,6 +18,6 @@ class User(UserCreateOut):
     is_active: bool
 
 
-class UserLoginOut(BaseModel):
+class UserLoginOut(UserCreateOut):
     access_token: str
     token_type: str

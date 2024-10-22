@@ -41,7 +41,13 @@ async def login_user(
     if not (user and verify_password(user_password, user.hashed_password)):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Incorrect username or password")
     access_token = generate_jwt(data={'sub': user.email})
-    return {'access_token': access_token, 'token_type': 'bearer'}
+    return p.UserLoginOut(
+        email=user.email,
+        first_name=user.first_name,
+        last_name=user.last_name,
+        access_token=access_token,
+        token_type='bearer'
+    )
 
 
 @router.post('/me')

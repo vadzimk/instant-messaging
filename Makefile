@@ -7,7 +7,7 @@ backend.test:
 
 backend.dev:
 	@cd backend \
-	&& uvicorn src.main:app --reload
+	&& pipenv run uvicorn src.main:app --reload
 
 # generate public private key pair
 jwt.keys:

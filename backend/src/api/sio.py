@@ -40,8 +40,8 @@ async def message(sid, data):
     user_email_to = data.get("to")
     content = data.get("content")
     async for db_session in get_db():
-        user_from = await db_session.scalar(select(m.User).where(m.User.email==user_email_from))
-        user_to = await db_session.scalar(select(m.User).where(m.User.email==user_email_to))
+        user_from = await db_session.scalar(select(m.User).where(m.User.email == user_email_from))
+        user_to = await db_session.scalar(select(m.User).where(m.User.email == user_email_to))
         msg = m.Message(user_from=user_from, user_to=user_to, content=content)
         db_session.add(msg)
         await db_session.commit()
