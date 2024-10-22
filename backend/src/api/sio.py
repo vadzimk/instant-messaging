@@ -1,8 +1,10 @@
 import logging
 import socketio
+from sqlalchemy import select
 
 from ..db import get_db
 from ..services.auth import get_current_user_id, get_user
+from .. import models as m
 
 logger = logging.getLogger(__name__)
 
@@ -33,8 +35,17 @@ async def connect(sid, environ, auth):
 
 @sio.event
 async def message(sid, data):
-    session = await sio.get_session(sid)
-    return f'your username: {session.get("username")}'
+    sio_session = await sio.get_session(sid)
+    user_email_from = sio_session.get("username")
+    user_email_to = data.get("to")
+    content = data.get("content")
+    async for db_session in get_db():
+        user_from = await db_session.scalar(select(m.User).where(m.User.email==user_email_from))
+        user_to = await db_session.scalar(select(m.User).where(m.User.email==user_email_to))
+        msg = m.Message(user_from=user_from, user_to=user_to, content=content)
+        db_session.add(msg)
+        await db_session.commit()
+    return f'Msg from: {user_from.email} to: {user_to.email} content: {content}'
 
 
 @sio.event

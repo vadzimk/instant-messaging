@@ -25,9 +25,11 @@ class User(Model):
     last_name: Mapped[Optional[str]] = mapped_column(String(64), index=True)
     messages_sent: WriteOnlyMapped[list['Message']] = relationship(back_populates='user_from',
                                                                    foreign_keys='Message.user_from_id',
+                                                                   cascade='all, delete-orphan',
                                                                    passive_deletes=True)
     messages_received: WriteOnlyMapped[list['Message']] = relationship(back_populates='user_to',
                                                                        foreign_keys='Message.user_to_id',
+                                                                       cascade='all, delete-orphan',
                                                                        passive_deletes=True)
 
     def __repr__(self):
@@ -48,8 +50,8 @@ class User(Model):
 class Message(Model):
     __tablename__ = 'messages'
     id: Mapped[int] = mapped_column(primary_key=True)
-    user_from_id: Mapped[int] = mapped_column(ForeignKey('users.id'))
-    user_to_id: Mapped[int] = mapped_column(ForeignKey('users.id'))
+    user_from_id: Mapped[int] = mapped_column(ForeignKey('users.id', ondelete='CASCADE'))
+    user_to_id: Mapped[int] = mapped_column(ForeignKey('users.id', ondelete='CASCADE'))
     content: Mapped[str] = mapped_column(Text)
     created_at: Mapped[datetime] = mapped_column(default=datetime.utcnow, index=True)
     user_from: Mapped['User'] = relationship(lazy='joined', back_populates='messages_sent', innerjoin=True,

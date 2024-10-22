@@ -8,13 +8,14 @@ from starlette import status
 from src.main import app
 
 from cryptography.x509 import load_pem_x509_certificate
-from .conftest import test_user
 
 
-def test_signup_user(signup_user_response):
+def test_signup_user(signup_user_response, user):
     print(signup_user_response.json())
-    assert signup_user_response.status_code == status.HTTP_201_CREATED
-    assert signup_user_response.json().get("email") == test_user.get('email')
+    assert signup_user_response.status_code == status.HTTP_201_CREATED, \
+        f"Expected status code {status.HTTP_201_CREATED}, got {signup_user_response.status_code}"
+    assert signup_user_response.json().get("email") == user.email, \
+        f"Expected email {user.email}, got {signup_user_response.json().get('email')}"
 
 
 def decode_access_token(access_token):
@@ -27,7 +28,7 @@ def decode_access_token(access_token):
     return validated_result_payload
 
 
-async def test_login_user_using_authorization_header(login_user_response):
+async def test_login_user_using_authorization_header(login_user_response, user):
     data = login_user_response.json()
     print(data)
     assert data.get('token_type') == 'bearer', "json body bearer not set"
@@ -35,10 +36,10 @@ async def test_login_user_using_authorization_header(login_user_response):
     validated_result_payload = decode_access_token(access_token)
     print("validated_result_payload")
     print(validated_result_payload)
-    assert validated_result_payload.get('sub') == test_user.get('email'), "token subject not set to email"
+    assert validated_result_payload.get('sub') == user.email, "token subject not set to email"
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="function")
 async def authenticate_user_with_header_response(login_user_response):
     async with AsyncClient(transport=ASGITransport(app=app), base_url='http://test') as client:
         auth_header = f'Bearer {login_user_response.json().get("access_token")}'
@@ -59,4 +60,5 @@ async def test_authenticated_request_rejects_if_not_authenticated():
 async def test_authenticated_request_accepts_valid_header(authenticate_user_with_header_response):
     print(authenticate_user_with_header_response.status_code)
     print(authenticate_user_with_header_response.json())
-    assert authenticate_user_with_header_response.status_code == status.HTTP_200_OK, "authenticated request is rejected on protected path"
+    assert authenticate_user_with_header_response.status_code == status.HTTP_200_OK, \
+        "authenticated request is rejected on protected path"
