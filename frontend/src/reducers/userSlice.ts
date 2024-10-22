@@ -1,16 +1,24 @@
 import {createAsyncThunk, createSlice, PayloadAction} from '@reduxjs/toolkit';
 import {SignupInputs} from '../pages/Signup/SignupForm.tsx';
 import {NotificationType, notify} from './notificationSlice.ts';
+import {LoginInputs} from '../pages/Login/LoginForm.tsx';
 
 
 type UserState = {
-    id: string | null;
+    email: string | undefined
     status: 'idle' | 'loading' | 'succeeded' | 'failed';
-
+    first_name: string | undefined
+    last_name: string | undefined
+    access_token: string | undefined
+    token_type: string | undefined
 }
 const initialState: UserState = {
-    id: null,
-    status: 'idle'
+    email: undefined,
+    status: 'idle',
+    first_name: undefined,
+    last_name: undefined,
+    access_token: undefined,
+    token_type: undefined,
 }
 
 interface UserCreateOut {
@@ -19,13 +27,16 @@ interface UserCreateOut {
     last_name: string
 }
 
-interface UserSignUpError {
+interface FastApiError {
     detail: string
 }
 
 interface UserLoginOut {
+    email: string
+    first_name: string
+    last_name: string | undefined
     access_token: string
-     token_type: string
+    token_type: string
 }
 
 
@@ -42,13 +53,10 @@ const userSlice = createSlice({
         }
     },
     extraReducers: builder => {
-        builder.addCase(signupUser.fulfilled, (state, action: PayloadAction<UserCreateOut>) => {
-            if (action.payload) {
-                const {email} = action.payload
-                state.id = email
-            }
-
+        builder.addCase(loginUser.fulfilled, (state, action: PayloadAction<UserLoginOut>) => {
+            return {...state, ...action.payload, status: 'succeeded'}
         })
+
     }
 })
 
@@ -66,21 +74,51 @@ export const signupUser = createAsyncThunk<UserCreateOut, SignupInputs>(
                 body: JSON.stringify(userSignupFields)
             })
             if (!res.ok) {
-                const errorData: UserSignUpError = await res.json()
+                const errorData: FastApiError = await res.json()
                 dispatch(notify({message: "Could not sign up", type: NotificationType.ERROR}))
                 console.error(errorData.detail)
                 return rejectWithValue(errorData)
             }
             const data: UserCreateOut = await res.json()
-            window.localStorage.setItem('UserCreateOut', JSON.stringify(data))
+            // window.localStorage.setItem('UserCreateOut', JSON.stringify(data))
             return data
         } catch (e) {
             const err = e as Error
-            console.error("An error occured: " + err)
+            console.error("An error occurred: " + err)
             dispatch(notify({message: "Could not sign up", type: NotificationType.ERROR}))
             return rejectWithValue({detail: err.message})
         }
     })
+
+export const loginUser = createAsyncThunk<UserLoginOut, LoginInputs>(
+    '/user/login',
+    async (userLoginFields: LoginInputs, {dispatch, rejectWithValue}) => {
+        try {
+            const form = new FormData()
+            form.append("username", userLoginFields.email)
+            form.append("password", userLoginFields.password)
+            const res = await fetch(baseUrl + '/api/login', {
+                method: "POST",
+                body: form, // send as FormData
+            })
+            if (!res.ok) {
+                const errorData: FastApiError = await res.json()
+                dispatch(notify({message: "Could not log in", type: NotificationType.ERROR}))
+                console.error(errorData.detail)
+                return rejectWithValue(errorData)
+            }
+            const data: UserLoginOut = await res.json()
+            window.localStorage.setItem('access_token', data.access_token)
+            // window.localStorage.setItem('UserLoginOut', JSON.stringify(data))
+            return data
+        } catch (e) {
+            const err = e as Error
+            console.error("An error occurred: " + err)
+            dispatch(notify({message: "Could not log in", type: NotificationType.ERROR}))
+            return rejectWithValue({detail: err.message})
+        }
+    }
+)
 
 export const {
     userLoggedIn,

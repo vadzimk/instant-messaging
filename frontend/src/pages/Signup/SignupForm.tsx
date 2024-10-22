@@ -5,7 +5,7 @@ import {Link} from 'react-router-dom';
 import EmailField from '../../components/EmailField.tsx';
 import PasswordField from '../../components/PasswordField.tsx';
 import {signupUser} from '../../reducers/userSlice.ts';
-import {useAppDispatch, useAppSelector} from '../../hooks.ts';
+import {useAppDispatch} from '../../hooks.ts';
 
 export type SignupInputs = {
     first_name: string
@@ -20,7 +20,7 @@ type SignupFormProps = {
 
 export default function SignupForm({setSignup}: SignupFormProps) {
     const dispatch = useAppDispatch()  // ts setup requires typed dispatch
-    const userId = useAppSelector(state => state.user.id)
+
 
     const {
         register,
@@ -31,10 +31,13 @@ export default function SignupForm({setSignup}: SignupFormProps) {
     } = useForm<SignupInputs>()
 
     const onSubmit: SubmitHandler<SignupInputs> = async (data) => {
-        dispatch(signupUser(data))
-        if (userId) {
+        try {
+            // https://redux.js.org/tutorials/essentials/part-5-async-logic#checking-thunk-results-in-components
+            await dispatch(signupUser(data)).unwrap()
             reset()
             setSignup(true)
+        } catch {
+            /* empty */
         }
     }
 

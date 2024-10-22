@@ -3,13 +3,17 @@ import EmailField from '../../components/EmailField.tsx';
 import PasswordField from '../../components/PasswordField.tsx';
 import {useForm, SubmitHandler} from "react-hook-form"
 import {Link} from 'react-router-dom';
-import auth from '../../services/auth.ts';
+import {useAppDispatch} from '../../hooks.ts';
+import {loginUser} from '../../reducers/userSlice.ts';
 
 export type LoginInputs = {
     email: string;
     password: string;
 }
 export default function LoginForm() {
+    const dispatch = useAppDispatch()
+
+
     const {
         register,
         handleSubmit,
@@ -18,19 +22,13 @@ export default function LoginForm() {
     } = useForm<LoginInputs>()
 
     const onSubmit: SubmitHandler<LoginInputs> = async (data: LoginInputs) => {
-        const res = await auth.login(data)
-        if (!res){
-            console.error("Login failed, no response returned")
-            return // TODO show error message
-        }
-        const body = await res.json()
-        if (res.status === 200) {
+        try{
+            await dispatch(loginUser(data)).unwrap()
             reset()
-            // save token
-            localStorage.setItem('access_token', body.access_token)
-        } else {
-            console.error("Failed to login user, error detail: " + body?.detail || "Unknown error")
+        } catch {
+            /* empty */
         }
+
     }
     return (
         <>
