@@ -12,4 +12,20 @@
     .description-error {
         @apply text-xs text-orange-500 min-h-4;
     }
+
+    .my-modal {
+        @apply
+        fixed
+        inset-0
+        flex
+        items-center
+        justify-center
+        z-[999]
+        bg-transparent
+        transition-all
+        duration-200
+        ease-custom-cubic
+        overflow-hidden;
+    }
+
 }

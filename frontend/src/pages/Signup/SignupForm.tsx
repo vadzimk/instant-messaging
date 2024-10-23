@@ -2,7 +2,7 @@ import {useForm, SubmitHandler} from "react-hook-form"
 import {Input, Label, Field, Description, Fieldset} from '@headlessui/react'
 // import auth from '../../services/auth.ts';
 import {Link} from 'react-router-dom';
-import EmailField from '../../components/EmailField.tsx';
+import EmailField from '../../components/EmailField';
 import PasswordField from '../../components/PasswordField.tsx';
 import {signupUser} from '../../reducers/userSlice.ts';
 import {useAppDispatch} from '../../hooks.ts';

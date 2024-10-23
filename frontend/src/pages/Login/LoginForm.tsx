@@ -1,10 +1,10 @@
 import {Fieldset} from '@headlessui/react';
-import EmailField from '../../components/EmailField.tsx';
 import PasswordField from '../../components/PasswordField.tsx';
 import {useForm, SubmitHandler} from "react-hook-form"
 import {Link} from 'react-router-dom';
 import {useAppDispatch} from '../../hooks.ts';
 import {loginUser} from '../../reducers/userSlice.ts';
+import EmailField from '../../components/EmailField';
 
 export type LoginInputs = {
     email: string;
@@ -28,7 +28,6 @@ export default function LoginForm() {
         } catch {
             /* empty */
         }
-
     }
     return (
         <>
