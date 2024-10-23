@@ -16,7 +16,7 @@ export default function ChatsList() {
                 <h1 className="text-lg">Chats</h1>
                 <button className="ml-auto"
                     onClick={() => setModalOpen(true)}>
-                    <NewIcon />
+                    <NewIcon className="btn btn-sm btn-circle btn-ghost" />
                 </button>
             </div>
             <div className="flex flex-col">

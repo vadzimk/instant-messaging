@@ -76,7 +76,7 @@ async def send_message(socketio_client_w_auth, user) -> Tuple[HTTPResponse, User
         pass  # expected
 
 
-@pytest.mark.only
+# @pytest.mark.only
 async def test_message(send_message, user):
     # checks if message is in database
     user2_email = send_message[1].email

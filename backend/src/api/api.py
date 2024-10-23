@@ -53,3 +53,9 @@ async def login_user(
 @router.post('/me')
 async def me(user: p.User = Depends(get_user)):
     print("user_email", user.email)
+
+
+@router.post('/add-new-contact', response_model=p.AddNewContactOut)
+async def add_new_contact(contact_fields: p.AddNewContactIn, user: p.User = Depends(get_user)):
+
+    return p.AddNewContactOut(email=contact_fields.email, first_name='Bob', last_name='')

@@ -5,9 +5,9 @@ import pytest
 from httpx import AsyncClient, ASGITransport
 
 from starlette import status
-from src.main import app
-
 from cryptography.x509 import load_pem_x509_certificate
+from src.main import app
+from src.api.schemas import AddNewContactIn
 
 
 def test_signup_user(signup_user_response, user):
@@ -56,9 +56,23 @@ async def test_authenticated_request_rejects_if_not_authenticated():
     assert res.status_code == status.HTTP_401_UNAUTHORIZED, "unauthenticated request is not rejected on protected path"
 
 
-# @pytest.mark.only
 async def test_authenticated_request_accepts_valid_header(authenticate_user_with_header_response):
     print(authenticate_user_with_header_response.status_code)
     print(authenticate_user_with_header_response.json())
     assert authenticate_user_with_header_response.status_code == status.HTTP_200_OK, \
         "authenticated request is rejected on protected path"
+
+
+@pytest.mark.only
+async def test_add_new_contact(login_user_response):
+    async with AsyncClient(transport=ASGITransport(app=app), base_url='http://test') as client:
+        auth_header = f'Bearer {login_user_response.json().get("access_token")}'
+        new_contact = AddNewContactIn(email="unknown@email.com")
+        res = await client.post(
+            '/api/add-new-contact',
+            headers={'Authorization': auth_header},
+            json=new_contact.model_dump()
+        )
+        print(res.status_code)
+        print(res.json())
+        assert res.json().get('email') == new_contact.email

@@ -21,3 +21,13 @@ class User(UserCreateOut):
 class UserLoginOut(UserCreateOut):
     access_token: str
     token_type: str
+
+
+class AddNewContactIn(BaseModel):
+    email: str
+
+
+class AddNewContactOut(AddNewContactIn):
+    email: str
+    first_name: str
+    last_name: str
