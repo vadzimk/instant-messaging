@@ -1,12 +1,12 @@
+from typing import Generator, AsyncGenerator
 import pytest
 import asyncio
-from httpx import AsyncClient, ASGITransport
+from httpx import AsyncClient, ASGITransport, Response
 from sqlalchemy import select
 from src.main import app
 from src.db import Session
 from src import models as m
-
-from src.api.schemas import UserCreateIn
+from src.api import schemas as p
 
 
 @pytest.fixture(scope='session')
@@ -18,17 +18,28 @@ def event_loop(request):
 
 
 @pytest.fixture(scope='function')
-def user() -> UserCreateIn:
-    test_user = UserCreateIn(
-        email="test@mail.com",
-        first_name="testname",
+def user1() -> Generator[p.UserCreateIn, None, None]:
+    test_user = p.UserCreateIn(
+        email="u1@mail.com",
+        first_name="u1",
         last_name="",
         password="secret"
     )
     yield test_user
 
 
-async def signup_user_helper(user_to_create: UserCreateIn):
+@pytest.fixture(scope='function')
+def user2() -> Generator[p.UserCreateIn, None, None]:
+    test_user = p.UserCreateIn(
+        email="u2@mail.com",
+        first_name="u2",
+        last_name="",
+        password="secret"
+    )
+    yield test_user
+
+
+async def signup_user_helper(user_to_create: p.UserCreateIn) -> AsyncGenerator[Response, None]:
     async with AsyncClient(transport=ASGITransport(app=app), base_url='http://test') as client:
         res = await client.post('/api/signup', json=user_to_create.model_dump())
     yield res
@@ -41,8 +52,8 @@ async def signup_user_helper(user_to_create: UserCreateIn):
 
 
 @pytest.fixture(scope='function')
-async def signup_user_response(user):
-    signup_res_iterator = signup_user_helper(user)
+async def signup_user1_response(user1) -> AsyncGenerator[Response, None]:
+    signup_res_iterator = signup_user_helper(user1)
     signup_res = await anext(signup_res_iterator)
     yield signup_res
     try:
@@ -52,10 +63,21 @@ async def signup_user_response(user):
 
 
 @pytest.fixture(scope='function')
-async def login_user_response(signup_user_response, user):
+async def signup_user2_response(user2) -> AsyncGenerator[Response, None]:
+    signup_res_iterator = signup_user_helper(user2)
+    signup_res = await anext(signup_res_iterator)
+    yield signup_res
+    try:
+        await anext(signup_res_iterator)  # cleanup
+    except StopAsyncIteration:
+        pass  # expected
+
+
+@pytest.fixture(scope='function')
+async def login_user1_response(signup_user1_response, user1) -> AsyncGenerator[Response, None]:
     user_to_login = {
-        'username': user.email,
-        'password': user.password
+        'username': user1.email,
+        'password': user1.password
     }
     async with AsyncClient(transport=ASGITransport(app=app), base_url='http://test') as client:
         res = await client.post('/api/login', data=user_to_login)  # send as form data

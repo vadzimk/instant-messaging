@@ -1,0 +1,7 @@
+.idea/
+*.ipynb
+jwt_keys/
+result.log
+.env
+.env.prod
+.env.production

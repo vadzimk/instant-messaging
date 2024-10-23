@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Optional
 
-from sqlalchemy import MetaData, event, inspect, String, Boolean, Text, ForeignKey
+from sqlalchemy import MetaData, event, inspect, String, Boolean, Text, ForeignKey, Table, Column
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship, WriteOnlyMapped
 
 
@@ -15,6 +15,15 @@ class Model(DeclarativeBase):
     })
 
 
+# join table at level sqlalchemy_core
+# https://docs.sqlalchemy.org/en/20/orm/join_conditions.html#self-referential-many-to-many
+Contact = Table('contacts',
+                Model.metadata,
+                Column('user_id', ForeignKey('users.id', ondelete='CASCADE'), primary_key=True, nullable=False),
+                Column('contact_id', ForeignKey('users.id', ondelete='CASCADE'), primary_key=True, nullable=False)
+                )
+
+
 class User(Model):
     __tablename__ = 'users'
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -23,14 +32,33 @@ class User(Model):
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, index=True)
     first_name: Mapped[str] = mapped_column(String(64), index=True)
     last_name: Mapped[Optional[str]] = mapped_column(String(64), index=True)
-    messages_sent: WriteOnlyMapped[list['Message']] = relationship(back_populates='user_from',
-                                                                   foreign_keys='Message.user_from_id',
-                                                                   cascade='all, delete-orphan',
-                                                                   passive_deletes=True)
-    messages_received: WriteOnlyMapped[list['Message']] = relationship(back_populates='user_to',
-                                                                       foreign_keys='Message.user_to_id',
-                                                                       cascade='all, delete-orphan',
-                                                                       passive_deletes=True)
+    messages_sent: WriteOnlyMapped[list['Message']] = relationship(
+        back_populates='user_from',
+        foreign_keys='Message.user_from_id',
+        cascade='all, delete-orphan',
+        passive_deletes=True)
+    messages_received: WriteOnlyMapped[list['Message']] = relationship(
+        back_populates='user_to',
+        foreign_keys='Message.user_to_id',
+        cascade='all, delete-orphan',
+        passive_deletes=True)
+    # many-to-many managed by sqlalchemy relationship
+    contacts: Mapped[list['User']] = relationship(
+        'User',
+        lazy='selectin',
+        secondary='contacts',
+        primaryjoin='User.id == contacts.c.user_id', # Contact.c provides access to the column definitions of the table.
+        secondaryjoin='User.id == contacts.c.contact_id',
+        back_populates='contacts_of'
+    )
+    contacts_of: Mapped[list['User']] = relationship(
+        'User',
+        lazy='selectin',
+        secondary='contacts',
+        primaryjoin='User.id == contacts.c.contact_id',
+        secondaryjoin='User.id == contacts.c.user_id',
+        back_populates='contacts'
+    )
 
     def __repr__(self):
         return f'User({self.id}, "{self.email}")'
@@ -39,9 +67,9 @@ class User(Model):
         return {
             'id': self.id,
             'email': self.email,
+            'is_active': self.is_active,
             'first_name': self.first_name,
             'last_name': self.last_name,
-            'is_active': self.is_active,
         }
 
 
@@ -58,6 +86,21 @@ class Message(Model):
                                              foreign_keys=[user_from_id])
     user_to: Mapped['User'] = relationship(lazy='joined', back_populates='messages_received', innerjoin=True,
                                            foreign_keys=[user_to_id])
+
+    def __repr__(self):
+        return (f'Message({self.id}, '
+                f'user_from_id={self.user_from_id}, '
+                f'user_to_id={self.user_to_id}, '
+                f'content={self.content})')
+
+    def dict(self):
+        return {
+            'id': self.id,
+            'user_from_id': self.user_from_id,
+            'user_to_id': self.user_to_id,
+            'content': self.content,
+            'created_at': self.created_at,
+        }
 
 
 # ==================================== BOTTOM OF FILE =====================================================

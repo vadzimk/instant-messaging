@@ -1,4 +1,2 @@
 .idea/
-*.ipynb
-jwt_keys/
 result.log
