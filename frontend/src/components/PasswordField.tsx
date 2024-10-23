@@ -14,7 +14,9 @@ export default function PasswordField<T extends FieldValues>({register, errors}:
         <Field className="flex flex-col">
             <Label className="text-sm">Password</Label>
             <div className="relative">
-                <Input type={showPassword ? "text" : "password"}
+                <Input data-focus
+                       data-hover
+                       type={showPassword ? "text" : "password"}
                        {...register("password" as Path<T>, {required: 'Password is required'})}
                        className="input-base w-full"
                 />

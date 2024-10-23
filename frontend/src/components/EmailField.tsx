@@ -9,7 +9,9 @@ export default function EmailField<T extends FieldValues>({register, errors}: Em
     return (
         <Field className="flex flex-col">
             <Label className="text-sm">Email</Label>
-            <Input type="text" {...register('email' as Path<T>, {
+            <Input data-focus
+                   data-hover
+                   type="text" {...register('email' as Path<T>, {
                 required: 'Email is required',
                 pattern: {
                     value: /^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$/,

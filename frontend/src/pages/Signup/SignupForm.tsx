@@ -49,7 +49,9 @@ export default function SignupForm({setSignup}: SignupFormProps) {
                     <div className="flex flex-row justify-between gap-4">
                         <Field className="flex flex-col">
                             <Label className="text-sm">First name</Label>
-                            <Input type="text" {...register("first_name", {required: 'First name is required'})}
+                            <Input data-focus
+                                   data-hover
+                                   type="text" {...register("first_name", {required: 'First name is required'})}
                                    className="input-base"/>
                             <Description className="description-error">
                                 {errors.first_name && <span>{errors.first_name.message}</span>}
@@ -57,7 +59,9 @@ export default function SignupForm({setSignup}: SignupFormProps) {
                         </Field>
                         <Field className="flex flex-col">
                             <Label className="text-sm">Last name</Label>
-                            <Input type="text" {...register("last_name")}
+                            <Input data-focus
+                                   data-hover
+                                   type="text" {...register("last_name")}
                                    className="input-base"/>
                         </Field>
                     </div>

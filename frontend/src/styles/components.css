@@ -6,7 +6,7 @@
     }
 
     .input-base {
-        @apply border data-[hover]:shadow data-[focus]:bg-blue-100 dark:data-[focus]:bg-gray-800 h-8 rounded;
+        @apply border rounded border-gray-400 dark:border-gray-600 data-[hover]:shadow data-[focus]:bg-gray-100 dark:data-[focus]:bg-gray-800 dark:text-white h-8;
     }
 
     .description-error {

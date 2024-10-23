@@ -5,20 +5,20 @@ import {LoginInputs} from '../pages/Login/LoginForm.tsx';
 
 
 type UserState = {
-    email: string | undefined
+    email?: string
     status: 'idle' | 'loading' | 'succeeded' | 'failed';
-    first_name: string | undefined
-    last_name: string | undefined
-    access_token: string | undefined
-    token_type: string | undefined
+    first_name?: string
+    last_name?: string
+    access_token?: string
+    token_type?: string
 }
 const initialState: UserState = {
-    email: undefined,
+    // email: undefined,
     status: 'idle',
-    first_name: undefined,
-    last_name: undefined,
-    access_token: undefined,
-    token_type: undefined,
+    // first_name: undefined,
+    // last_name: undefined,
+    // access_token: undefined,
+    // token_type: undefined,
 }
 
 interface UserCreateOut {
