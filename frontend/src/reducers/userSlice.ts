@@ -17,13 +17,13 @@ const initialState: UserState = {
     status: 'idle',
 }
 
-interface UserSignupOut {
+interface GetUserSchema {
     email: string
     first_name: string
     last_name: string
 }
 
-interface UserLoginOut {
+interface LoginUserSchema {
     email: string
     first_name: string
     last_name: string | undefined
@@ -36,7 +36,7 @@ const userSlice = createSlice({
     name: 'user',
     initialState,
     reducers: {
-        userLoggedIn: function (state, action: PayloadAction<UserLoginOut>) {
+        userLoggedIn: function (state, action: PayloadAction<LoginUserSchema>) {
             return {...state, ...action.payload}
         },
         userLoggedOut: function () {
@@ -45,7 +45,7 @@ const userSlice = createSlice({
         }
     },
     extraReducers: builder => {
-        builder.addCase(loginUser.fulfilled, (state, action: PayloadAction<UserLoginOut>) => {
+        builder.addCase(loginUser.fulfilled, (state, action: PayloadAction<LoginUserSchema>) => {
             return {...state, ...action.payload, status: 'succeeded'}
         })
 
@@ -53,11 +53,11 @@ const userSlice = createSlice({
 })
 
 
-export const signupUser = createAsyncThunk<UserSignupOut, SignupInputs>(
+export const signupUser = createAsyncThunk<GetUserSchema, SignupInputs>(
     '/user/signup',
     async (userSignupFields: SignupInputs, {dispatch, rejectWithValue}) => {
         try {
-            const res = await fetch(baseUrl + '/api/signup', {
+            const res = await fetch(baseUrl + '/api/users', {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -70,7 +70,7 @@ export const signupUser = createAsyncThunk<UserSignupOut, SignupInputs>(
                 console.error(errorData.detail)
                 return rejectWithValue(errorData)
             }
-            const data: UserSignupOut = await res.json()
+            const data: GetUserSchema = await res.json()
             // window.localStorage.setItem('UserCreateOut', JSON.stringify(data))
             return data
         } catch (e) {
@@ -81,14 +81,14 @@ export const signupUser = createAsyncThunk<UserSignupOut, SignupInputs>(
         }
     })
 
-export const loginUser = createAsyncThunk<UserLoginOut, LoginFields>(
+export const loginUser = createAsyncThunk<LoginUserSchema, LoginFields>(
     '/user/login',
     async (userLoginFields: LoginFields, {dispatch, rejectWithValue}) => {
         try {
             const form = new FormData()
             form.append("username", userLoginFields.email)
             form.append("password", userLoginFields.password)
-            const res = await fetch(baseUrl + '/api/login', {
+            const res = await fetch(baseUrl + '/api/users/login', {
                 method: "POST",
                 body: form, // send as FormData
             })
@@ -98,7 +98,7 @@ export const loginUser = createAsyncThunk<UserLoginOut, LoginFields>(
                 console.error(errorData.detail)
                 return rejectWithValue(errorData)
             }
-            const data: UserLoginOut = await res.json()
+            const data: LoginUserSchema = await res.json()
             window.localStorage.setItem('access_token', data.access_token)
             // window.localStorage.setItem('UserLoginOut', JSON.stringify(data))
             return data

@@ -5,29 +5,33 @@ import {UserState} from './userSlice.ts';
 
 type Message = [string, string, string] // Tuple: [message content, sender ID, recipient ID]
 
-export interface NewContactFields {
+export interface CreateContactSchema {
     email: string
 }
 
-interface Contact extends NewContactFields {
+interface GetContactSchema extends CreateContactSchema {
     first_name: string;
     last_name: string;
 }
 
-interface Chat {
-    id: number;
-    contact: Contact;
+interface GetContactsSchema {
+    contacts: GetContactSchema[];
+}
+
+export interface Chat {
+    id: number; // positive non-zero
+    contact: GetContactSchema;
     messages: Message[]
 }
 
 type ChatState = {
     chatList: Chat[]
-    currentChat: number | null
+    currentChatId: number | null
 }
 
 const initialState: ChatState = {
     chatList: [],
-    currentChat: null,
+    currentChatId: null,
 }
 
 const chatSlice = createSlice({
@@ -35,7 +39,7 @@ const chatSlice = createSlice({
     initialState,
     reducers: {
         setCurrentChat(state, action: PayloadAction<number | null>) {
-            state.currentChat = action.payload
+            state.currentChatId = action.payload
         }
     },
     extraReducers: builder => {
@@ -46,20 +50,33 @@ const chatSlice = createSlice({
                 messages: []
             }
             state.chatList = [...state.chatList, newChat]
-            state.currentChat = newChat.id
+            state.currentChatId = newChat.id
+        }).addCase(getContacts.fulfilled, (state, action) => {
+            if (!action.payload.contacts.length) {
+                return state
+            }
+            state.chatList = action.payload.contacts.map((c, index) => {
+                return {
+                    id: index + 1,
+                    contact: c,
+                    messages: []
+                }
+            })
+            if (state.chatList.length > 0) {
+                state.currentChatId = state.chatList.length
+            }
         })
     }
 })
 
-export const addContact = createAsyncThunk<Contact, NewContactFields>(
-    '/chat/addNewChat',
-    async (contactFields: NewContactFields,
+export const addContact = createAsyncThunk<GetContactSchema, CreateContactSchema>(
+    '/chat/addContact',
+    async (contactFields: CreateContactSchema,
            {dispatch, rejectWithValue, getState}) => {
-        const state = getState() as {user: UserState}
+        const state = getState() as { user: UserState }
         const token = state.user.access_token
         try {
-            // post request to /api/add-new-chat
-            const res = await fetch(baseUrl + '/api/add-contact', {
+            const res = await fetch(baseUrl + '/api/contacts', {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -73,7 +90,7 @@ export const addContact = createAsyncThunk<Contact, NewContactFields>(
                 console.error(errorData.detail)
                 return rejectWithValue(errorData)
             }
-            const data: Contact = await res.json()
+            const data: GetContactSchema = await res.json()
             return data
         } catch (e) {
             const err = e as Error
@@ -84,6 +101,35 @@ export const addContact = createAsyncThunk<Contact, NewContactFields>(
     }
 )
 
+export const getContacts = createAsyncThunk<GetContactsSchema>(
+    '/chat/getContacts',
+    async (_, {dispatch, rejectWithValue, getState}) => {
+        const state = getState() as { user: UserState }
+        const token = state.user.access_token
+        try {
+            const res = await fetch(baseUrl + '/api/contacts', {
+                method: "GET",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`
+                }
+            })
+            if (!res.ok) {
+                const errorData: FastApiError = await res.json()
+                dispatch(notify({message: "Could not get contacts", type: NotificationType.ERROR}))
+                console.error(errorData.detail)
+                return rejectWithValue(errorData)
+            }
+            const data: GetContactsSchema = await res.json()
+            return data
+        } catch (e) {
+            const err = e as Error
+            console.error('An error occurred: ', +err)
+            dispatch(notify({message: "Could not get contacts", type: NotificationType.ERROR}))
+            return rejectWithValue({detail: err.message})
+        }
+    }
+)
 
 export const {setCurrentChat} = chatSlice.actions
 export default chatSlice

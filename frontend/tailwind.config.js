@@ -11,6 +11,9 @@ export default {
       transitionTimingFunction: {
         'custom-cubic': 'cubic-bezier(0, 0, 0.2, 1)',
       },
+      backgroundColor: {
+        'custom-fallback-bc': 'var(--fallback-bc,oklch(var(--bc)/0.2))',
+      },
     },
   },
   plugins: [daisyui],

@@ -2,7 +2,7 @@ import {SubmitHandler, useForm} from 'react-hook-form';
 import {useAppDispatch} from '../../hooks.ts';
 import EmailInput from '../../components/EmailField/EmailInput.tsx';
 import {Description, Field} from '@headlessui/react';
-import {addContact, NewContactFields} from '../../reducers/chatSlice.ts';
+import {addContact, CreateContactSchema} from '../../reducers/chatSlice.ts';
 
 export default function AddContactForm() {
     const dispatch = useAppDispatch()
@@ -12,9 +12,9 @@ export default function AddContactForm() {
         handleSubmit,
         reset,
         formState: {errors}
-    } = useForm<NewContactFields>()
+    } = useForm<CreateContactSchema>()
 
-    const onSubmit: SubmitHandler<NewContactFields> = async (data: NewContactFields) => {
+    const onSubmit: SubmitHandler<CreateContactSchema> = async (data: CreateContactSchema) => {
         try {
             await dispatch(addContact(data)).unwrap()
             reset() // on success
