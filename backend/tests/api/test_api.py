@@ -9,7 +9,7 @@ from sqlalchemy.orm import aliased
 from starlette import status
 from cryptography.x509 import load_pem_x509_certificate
 from src.main import app
-from src.api.schemas import AddNewContactIn
+from src.api.schemas import AddContactIn
 from src.db import Session
 from src import models as m
 
@@ -71,7 +71,7 @@ async def test_authenticated_request_accepts_valid_header(authenticate_user1_wit
 async def test_add_contact(login_user1_response, signup_user2_response):
     async with AsyncClient(transport=ASGITransport(app=app), base_url='http://test') as client:
         auth_header = f'Bearer {login_user1_response.json().get("access_token")}'
-        new_contact = AddNewContactIn(**signup_user2_response.json())
+        new_contact = AddContactIn(**signup_user2_response.json())
         res = await client.post(
             '/api/add-contact',
             headers={'Authorization': auth_header},

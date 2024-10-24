@@ -18,8 +18,8 @@ def event_loop(request):
 
 
 @pytest.fixture(scope='function')
-def user1() -> Generator[p.UserCreateIn, None, None]:
-    test_user = p.UserCreateIn(
+def user1() -> Generator[p.UserSignupIn, None, None]:
+    test_user = p.UserSignupIn(
         email="u1@mail.com",
         first_name="u1",
         last_name="",
@@ -29,8 +29,8 @@ def user1() -> Generator[p.UserCreateIn, None, None]:
 
 
 @pytest.fixture(scope='function')
-def user2() -> Generator[p.UserCreateIn, None, None]:
-    test_user = p.UserCreateIn(
+def user2() -> Generator[p.UserSignupIn, None, None]:
+    test_user = p.UserSignupIn(
         email="u2@mail.com",
         first_name="u2",
         last_name="",
@@ -39,7 +39,7 @@ def user2() -> Generator[p.UserCreateIn, None, None]:
     yield test_user
 
 
-async def signup_user_helper(user_to_create: p.UserCreateIn) -> AsyncGenerator[Response, None]:
+async def signup_user_helper(user_to_create: p.UserSignupIn) -> AsyncGenerator[Response, None]:
     async with AsyncClient(transport=ASGITransport(app=app), base_url='http://test') as client:
         res = await client.post('/api/signup', json=user_to_create.model_dump())
     yield res

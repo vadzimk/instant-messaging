@@ -3,31 +3,31 @@ from typing import Optional
 from pydantic import BaseModel, EmailStr
 
 
-class UserCreateOut(BaseModel):
+class UserSignupOut(BaseModel):
     email: EmailStr
     first_name: str
     last_name: Optional[str]
 
 
-class UserCreateIn(UserCreateOut):
+class UserSignupIn(UserSignupOut):
     password: str
 
 
-class User(UserCreateOut):
+class User(UserSignupOut):
     id: int
     is_active: bool
 
 
-class UserLoginOut(UserCreateOut):
+class UserLoginOut(UserSignupOut):
     access_token: str
     token_type: str
 
 
-class AddNewContactIn(BaseModel):
+class AddContactIn(BaseModel):
     email: str
 
 
-class AddNewContactOut(AddNewContactIn):
+class AddContactOut(AddContactIn):
     email: str
     first_name: str
     last_name: str

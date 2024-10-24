@@ -36,7 +36,7 @@ def generate_jwt(data):
         "sub": data.get('sub'),
         "aud": "http://127.0.0.1:8000/",
         "iat": now.timestamp(),
-        "exp": (now + timedelta(hours=24)).timestamp(),
+        "exp": (now + timedelta(days=30)).timestamp(),
         "scope": "openid"
     }
     private_key_path = Path(__file__).parent.parent.parent / 'jwt_keys/private_key.pem'

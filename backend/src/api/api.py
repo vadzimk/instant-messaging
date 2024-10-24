@@ -16,8 +16,8 @@ router = APIRouter()
 logger = logging.getLogger(__name__)
 
 
-@router.post('/signup', response_model=p.UserCreateOut, status_code=status.HTTP_201_CREATED)
-async def signup_user(user: p.UserCreateIn, session: AsyncSession = Depends(get_db)):
+@router.post('/signup', response_model=p.UserSignupOut, status_code=status.HTTP_201_CREATED)
+async def signup_user(user: p.UserSignupIn, session: AsyncSession = Depends(get_db)):
     existing_user = await session.scalar(select(m.User).where(m.User.email == user.email))
     if existing_user:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email already registered")
@@ -57,10 +57,10 @@ async def me(user: p.User = Depends(get_user)):
     print("user_email", user.email)
 
 
-@router.post('/add-contact', response_model=p.AddNewContactOut, status_code=status.HTTP_201_CREATED)
-async def add_contact(contact_fields: p.AddNewContactIn,
-                          user: p.User = Depends(get_user),
-                          session: AsyncSession = Depends(get_db)):
+@router.post('/add-contact', response_model=p.AddContactOut, status_code=status.HTTP_201_CREATED)
+async def add_contact(contact_fields: p.AddContactIn,
+                      user: p.User = Depends(get_user),
+                      session: AsyncSession = Depends(get_db)):
     user1 = await session.scalar(select(m.User).where(m.User.email == user.email))
     user2 = await session.scalar(select(m.User).where(m.User.email == contact_fields.email))
     if not user2:
@@ -71,4 +71,4 @@ async def add_contact(contact_fields: p.AddNewContactIn,
     except IntegrityError as e:
         await session.rollback()
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail='Contact already exists')
-    return p.AddNewContactOut(**user2.dict())
+    return p.AddContactOut(**user2.dict())
