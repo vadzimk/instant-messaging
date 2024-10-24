@@ -9,7 +9,7 @@ from sqlalchemy.orm import aliased
 from starlette import status
 from cryptography.x509 import load_pem_x509_certificate
 from src.main import app
-from src.api.schemas import AddContactIn
+from src.api.schemas import CreateContactSchema
 from src.db import Session
 from src import models as m
 
@@ -67,36 +67,51 @@ async def test_authenticated_request_accepts_valid_header(authenticate_user1_wit
         "authenticated request is rejected on protected path"
 
 
-@pytest.mark.only
-async def test_add_contact(login_user1_response, signup_user2_response):
+@pytest.fixture
+async def create_contact_response(login_user1_response, signup_user2_response):
     async with AsyncClient(transport=ASGITransport(app=app), base_url='http://test') as client:
         auth_header = f'Bearer {login_user1_response.json().get("access_token")}'
-        new_contact = AddContactIn(**signup_user2_response.json())
-        res = await client.post(
-            '/api/add-contact',
+        new_contact = CreateContactSchema(**signup_user2_response.json())
+        return await client.post(
+            '/api/contacts',
             headers={'Authorization': auth_header},
             json=new_contact.model_dump()
         )
-        print(res.status_code)
-        print(res.json())
-        assert res.json().get('email') == new_contact.email, "Created contact email does not match"
 
-        # check contact in database
-        async with Session() as session:
-            async with session.begin():
-                u1 = await session.scalar(
-                    select(m.User).where(m.User.email == login_user1_response.json().get('email')))
-                u2 = await session.scalar(
-                    select(m.User).where(m.User.first_name == signup_user2_response.json().get('email')))
-                UserContact = aliased(m.User)
-                q = (select(m.User, UserContact)
-                     .join(m.Contact, m.User.id == m.Contact.c.user_id)
-                     .join(UserContact, m.Contact.c.contact_id == UserContact.id)
-                     .where(m.User.id == u1.id))
-                res = (await session.execute(q)).all()
-                found = False
-                for row in res:
-                    user, contact = row
-                    if contact.email == new_contact.email:
-                        found=True
-                assert found, f"Could not find {new_contact.email} in database"
+
+async def test_create_contact(create_contact_response, user2):
+    print(create_contact_response.status_code)
+    print(create_contact_response.json())
+    assert create_contact_response.json().get('email') == user2.email, "Created contact email does not match"
+
+    # check contact in database
+    async with Session() as session:
+        async with session.begin():
+            u1 = await session.scalar(
+                select(m.User).where(m.User.email == login_user1_response.json().get('email')))
+            u2 = await session.scalar(
+                select(m.User).where(m.User.first_name == signup_user2_response.json().get('email')))
+            UserContact = aliased(m.User)
+            q = (select(m.User, UserContact)
+                 .join(m.Contact, m.User.id == m.Contact.c.user_id)
+                 .join(UserContact, m.Contact.c.contact_id == UserContact.id)
+                 .where(m.User.id == u1.id))
+            res = (await session.execute(q)).all()
+            found = False
+            for row in res:
+                user, contact = row
+                if contact.email == user2.email:
+                    found = True
+            assert found, f"Could not find {user2.email} in database"
+
+
+@pytest.mark.only
+async def test_get_contacts(login_user1_response, create_contact_response):
+    async with AsyncClient(transport=ASGITransport(app=app), base_url='http://test') as client:
+        auth_header = f'Bearer {login_user1_response.json().get("access_token")}'
+        res = await client.get(
+            '/api/contacts',
+            headers={'Authorization': auth_header}
+        )
+        print(res.json())
+        assert create_contact_response.json() in res.json().get('contacts'), "Created contact not found in get_contacts response"

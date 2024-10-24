@@ -66,7 +66,7 @@ def decode_and_validate_token(access_token: str) -> dict:
     )
 
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl='/api/login')
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl='/api/users/login')
 
 
 class CouldNotValidateCredentials(HTTPException):
@@ -101,8 +101,8 @@ def get_current_user_id(token: Annotated[str, Depends(oauth2_scheme)]) -> str:
 
 
 async def get_user(user_email: Annotated[str, Depends(get_current_user_id)],
-                   session: Annotated[Session, Depends(get_db)]) -> p.User:
+                   session: Annotated[Session, Depends(get_db)]) -> p.GetUserSchema:
     user = await session.scalar(select(m.User).where(m.User.email == user_email))
     if user is None:
         raise CouldNotValidateCredentials()
-    return p.User(**user.dict())
+    return p.GetUserSchema(**user.dict())

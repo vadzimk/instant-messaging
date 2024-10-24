@@ -51,7 +51,7 @@ async def test_ping(socketio_client_w_auth_u1):
 
 
 @pytest.fixture
-async def send_message(socketio_client_w_auth_u1, user1, signup_user2_response) -> AsyncGenerator[Tuple[Response, str]]:
+async def send_message(socketio_client_w_auth_u1, user1, signup_user2_response) -> AsyncGenerator[Tuple[Response, str], None]:
     message_content = f'hello from user {user1.email}'
     user_to_email = signup_user2_response.json().get('email')
     res = await socketio_client_w_auth_u1.call('message', data={

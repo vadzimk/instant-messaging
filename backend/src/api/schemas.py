@@ -1,33 +1,32 @@
-from typing import Optional
+from typing import Optional, List
 
 from pydantic import BaseModel, EmailStr
 
 
-class UserSignupOut(BaseModel):
+class GetUserSchema(BaseModel):
     email: EmailStr
     first_name: str
     last_name: Optional[str]
 
 
-class UserSignupIn(UserSignupOut):
+class CreateUserSchema(GetUserSchema):
     password: str
 
 
-class User(UserSignupOut):
-    id: int
-    is_active: bool
-
-
-class UserLoginOut(UserSignupOut):
+class LoginUserSchema(GetUserSchema):
     access_token: str
     token_type: str
 
 
-class AddContactIn(BaseModel):
+class CreateContactSchema(BaseModel):
     email: str
 
 
-class AddContactOut(AddContactIn):
+class GetContactSchema(CreateContactSchema):
     email: str
     first_name: str
     last_name: str
+
+
+class GetContactsSchema(BaseModel):
+    contacts: List[GetContactSchema]

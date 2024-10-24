@@ -18,8 +18,8 @@ def event_loop(request):
 
 
 @pytest.fixture(scope='function')
-def user1() -> Generator[p.UserSignupIn, None, None]:
-    test_user = p.UserSignupIn(
+def user1() -> Generator[p.CreateUserSchema, None, None]:
+    test_user = p.CreateUserSchema(
         email="u1@mail.com",
         first_name="u1",
         last_name="",
@@ -29,8 +29,8 @@ def user1() -> Generator[p.UserSignupIn, None, None]:
 
 
 @pytest.fixture(scope='function')
-def user2() -> Generator[p.UserSignupIn, None, None]:
-    test_user = p.UserSignupIn(
+def user2() -> Generator[p.CreateUserSchema, None, None]:
+    test_user = p.CreateUserSchema(
         email="u2@mail.com",
         first_name="u2",
         last_name="",
@@ -39,9 +39,9 @@ def user2() -> Generator[p.UserSignupIn, None, None]:
     yield test_user
 
 
-async def signup_user_helper(user_to_create: p.UserSignupIn) -> AsyncGenerator[Response, None]:
+async def signup_user_helper(user_to_create: p.CreateUserSchema) -> AsyncGenerator[Response, None]:
     async with AsyncClient(transport=ASGITransport(app=app), base_url='http://test') as client:
-        res = await client.post('/api/signup', json=user_to_create.model_dump())
+        res = await client.post('/api/users', json=user_to_create.model_dump())
     yield res
     # delete created user
     async with Session() as session:
@@ -80,5 +80,5 @@ async def login_user1_response(signup_user1_response, user1) -> AsyncGenerator[R
         'password': user1.password
     }
     async with AsyncClient(transport=ASGITransport(app=app), base_url='http://test') as client:
-        res = await client.post('/api/login', data=user_to_login)  # send as form data
+        res = await client.post('/api/users/login', data=user_to_login)  # send as form data
         yield res
