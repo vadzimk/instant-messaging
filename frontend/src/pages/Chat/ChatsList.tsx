@@ -2,7 +2,7 @@ import NewIcon from '../../components/icons/NewIcon.tsx';
 import ChatItem from './ChatItem.tsx';
 import {useState} from 'react';
 import Modal from './Modal.tsx';
-import NewChatForm from './NewChatForm.tsx';
+import AddContactForm from './AddContactForm.tsx';
 
 export default function ChatsList() {
     const [isModalOpen, setModalOpen] = useState<boolean>(false)
@@ -26,7 +26,7 @@ export default function ChatsList() {
                 <ChatItem/>
             </div>
             <Modal onClose={handleModalClose} isOpen={isModalOpen}>
-                <NewChatForm/>
+                <AddContactForm/>
             </Modal>
         </div>
     )

@@ -1,5 +1,5 @@
 import {SignupInputs} from '../pages/Signup/SignupForm.tsx';
-import {LoginInputs} from '../pages/Login/LoginForm.tsx';
+import {LoginFields} from '../pages/Login/LoginForm.tsx';
 
 const baseUrl = 'http://localhost:8000'
 
@@ -17,7 +17,7 @@ const signup = async (formData: SignupInputs) => {
     }
 }
 
-const login = async (formData: LoginInputs) => {
+const login = async (formData: LoginFields) => {
     try {
         const form  = new FormData()
         form.append("username", formData.email)

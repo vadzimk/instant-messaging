@@ -1,11 +1,10 @@
 import {SubmitHandler, useForm} from 'react-hook-form';
-import {LoginInputs} from '../Login/LoginForm.tsx';
-import {loginUser} from '../../reducers/userSlice.ts';
 import {useAppDispatch} from '../../hooks.ts';
 import EmailInput from '../../components/EmailField/EmailInput.tsx';
 import {Description, Field} from '@headlessui/react';
+import {addContact, NewContactFields} from '../../reducers/chatSlice.ts';
 
-export default function NewChatForm() {
+export default function AddContactForm() {
     const dispatch = useAppDispatch()
 
     const {
@@ -13,12 +12,12 @@ export default function NewChatForm() {
         handleSubmit,
         reset,
         formState: {errors}
-    } = useForm<LoginInputs>()
+    } = useForm<NewContactFields>()
 
-    const onSubmit: SubmitHandler<LoginInputs> = async (data: LoginInputs) => {
+    const onSubmit: SubmitHandler<NewContactFields> = async (data: NewContactFields) => {
         try {
-            await dispatch(loginUser(data)).unwrap()
-            reset()
+            await dispatch(addContact(data)).unwrap()
+            reset() // on success
         } catch {
             /* empty */
         }

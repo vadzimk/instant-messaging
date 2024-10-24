@@ -6,7 +6,7 @@ import {useAppDispatch} from '../../hooks.ts';
 import {loginUser} from '../../reducers/userSlice.ts';
 import EmailField from '../../components/EmailField';
 
-export type LoginInputs = {
+export type LoginFields = {
     email: string;
     password: string;
 }
@@ -19,9 +19,9 @@ export default function LoginForm() {
         handleSubmit,
         reset,
         formState: {errors}
-    } = useForm<LoginInputs>()
+    } = useForm<LoginFields>()
 
-    const onSubmit: SubmitHandler<LoginInputs> = async (data: LoginInputs) => {
+    const onSubmit: SubmitHandler<LoginFields> = async (data: LoginFields) => {
         try{
             await dispatch(loginUser(data)).unwrap()
             reset()

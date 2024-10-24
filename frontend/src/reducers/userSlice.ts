@@ -1,10 +1,11 @@
 import {createAsyncThunk, createSlice, PayloadAction} from '@reduxjs/toolkit';
 import {SignupInputs} from '../pages/Signup/SignupForm.tsx';
 import {NotificationType, notify} from './notificationSlice.ts';
-import {LoginInputs} from '../pages/Login/LoginForm.tsx';
+import {LoginFields} from '../pages/Login/LoginForm.tsx';
+import {baseUrl, FastApiError} from './api.ts';
 
 
-type UserState = {
+export type UserState = {
     email?: string
     status: 'idle' | 'loading' | 'succeeded' | 'failed';
     first_name?: string
@@ -13,22 +14,13 @@ type UserState = {
     token_type?: string
 }
 const initialState: UserState = {
-    // email: undefined,
     status: 'idle',
-    // first_name: undefined,
-    // last_name: undefined,
-    // access_token: undefined,
-    // token_type: undefined,
 }
 
-interface UserCreateOut {
+interface UserSignupOut {
     email: string
     first_name: string
     last_name: string
-}
-
-interface FastApiError {
-    detail: string
 }
 
 interface UserLoginOut {
@@ -60,9 +52,8 @@ const userSlice = createSlice({
     }
 })
 
-const baseUrl = 'http://localhost:8000'
 
-export const signupUser = createAsyncThunk<UserCreateOut, SignupInputs>(
+export const signupUser = createAsyncThunk<UserSignupOut, SignupInputs>(
     '/user/signup',
     async (userSignupFields: SignupInputs, {dispatch, rejectWithValue}) => {
         try {
@@ -79,7 +70,7 @@ export const signupUser = createAsyncThunk<UserCreateOut, SignupInputs>(
                 console.error(errorData.detail)
                 return rejectWithValue(errorData)
             }
-            const data: UserCreateOut = await res.json()
+            const data: UserSignupOut = await res.json()
             // window.localStorage.setItem('UserCreateOut', JSON.stringify(data))
             return data
         } catch (e) {
@@ -90,9 +81,9 @@ export const signupUser = createAsyncThunk<UserCreateOut, SignupInputs>(
         }
     })
 
-export const loginUser = createAsyncThunk<UserLoginOut, LoginInputs>(
+export const loginUser = createAsyncThunk<UserLoginOut, LoginFields>(
     '/user/login',
-    async (userLoginFields: LoginInputs, {dispatch, rejectWithValue}) => {
+    async (userLoginFields: LoginFields, {dispatch, rejectWithValue}) => {
         try {
             const form = new FormData()
             form.append("username", userLoginFields.email)
