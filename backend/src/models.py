@@ -1,6 +1,7 @@
 from datetime import datetime
 from typing import Optional
-
+from uuid import UUID, uuid4
+from sqlalchemy.dialects.postgresql import UUID as PSQL_UUID
 from sqlalchemy import MetaData, event, inspect, String, Boolean, Text, ForeignKey, Table, Column
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship, WriteOnlyMapped
 
@@ -19,14 +20,16 @@ class Model(DeclarativeBase):
 # https://docs.sqlalchemy.org/en/20/orm/join_conditions.html#self-referential-many-to-many
 Contact = Table('contacts',
                 Model.metadata,
-                Column('user_id', ForeignKey('users.id', ondelete='CASCADE'), primary_key=True, nullable=False),
-                Column('contact_id', ForeignKey('users.id', ondelete='CASCADE'), primary_key=True, nullable=False)
+                Column('user_id', PSQL_UUID, ForeignKey('users.id', ondelete='CASCADE'), primary_key=True,
+                       nullable=False),
+                Column('contact_id', PSQL_UUID, ForeignKey('users.id', ondelete='CASCADE'), primary_key=True,
+                       nullable=False),
                 )
 
 
 class User(Model):
     __tablename__ = 'users'
-    id: Mapped[int] = mapped_column(primary_key=True)
+    id: Mapped[UUID] = mapped_column(default=uuid4, primary_key=True)
     email: Mapped[str] = mapped_column(unique=True, index=True)
     hashed_password: Mapped[str] = mapped_column(String(64))
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, index=True)
@@ -45,19 +48,20 @@ class User(Model):
     # many-to-many managed by sqlalchemy relationship
     contacts: Mapped[list['User']] = relationship(
         'User',
+        back_populates='contacts_of',
         lazy='selectin',
         secondary='contacts',
-        primaryjoin='User.id == contacts.c.user_id', # Contact.c provides access to the column definitions of the table.
+        primaryjoin='User.id == contacts.c.user_id',
+        # Contact.c provides access to the column definitions of the table.
         secondaryjoin='User.id == contacts.c.contact_id',
-        back_populates='contacts_of'
     )
     contacts_of: Mapped[list['User']] = relationship(
         'User',
+        back_populates='contacts',
         lazy='selectin',
         secondary='contacts',
         primaryjoin='User.id == contacts.c.contact_id',
         secondaryjoin='User.id == contacts.c.user_id',
-        back_populates='contacts'
     )
 
     def __repr__(self):
@@ -77,9 +81,11 @@ class User(Model):
 # storing in rdbms only for demo purposes, such data should be stored in key-value store such as Cassandra
 class Message(Model):
     __tablename__ = 'messages'
-    id: Mapped[int] = mapped_column(primary_key=True)
-    user_from_id: Mapped[int] = mapped_column(ForeignKey('users.id', ondelete='CASCADE'))
-    user_to_id: Mapped[int] = mapped_column(ForeignKey('users.id', ondelete='CASCADE'))
+    id: Mapped[UUID] = mapped_column(default=uuid4, primary_key=True)
+
+    user_from_id: Mapped[UUID] = mapped_column(ForeignKey('users.id', ondelete='CASCADE'))
+    user_to_id: Mapped[UUID] = mapped_column(ForeignKey('users.id', ondelete='CASCADE'))
+
     content: Mapped[str] = mapped_column(Text)
     created_at: Mapped[datetime] = mapped_column(default=datetime.utcnow, index=True)
     user_from: Mapped['User'] = relationship(lazy='joined', back_populates='messages_sent', innerjoin=True,

@@ -79,7 +79,7 @@ async def create_contact_response(login_user1_response, signup_user2_response):
         )
 
 
-async def test_create_contact(create_contact_response, user2):
+async def test_create_contact(login_user1_response, signup_user2_response, create_contact_response, user2):
     print(create_contact_response.status_code)
     print(create_contact_response.json())
     assert create_contact_response.json().get('email') == user2.email, "Created contact email does not match"
@@ -114,4 +114,13 @@ async def test_get_contacts(login_user1_response, create_contact_response):
             headers={'Authorization': auth_header}
         )
         print(res.json())
-        assert create_contact_response.json() in res.json().get('contacts'), "Created contact not found in get_contacts response"
+        assert create_contact_response.json() in res.json().get(
+            'contacts'), "Created contact not found in get_contacts response"
+
+
+# async def test_get_messages(login_user1_response):
+#     async with AsyncClient(transport=ASGITransport(app=app), base_url='http://test') as client:
+#         auth_header = f'Bearer {login_user1_response.json().get("access_token")}'
+#         res = await client.get(
+#             '/api/messages'
+#         )

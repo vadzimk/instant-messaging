@@ -45,9 +45,7 @@ async def login_user(
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Incorrect username or password")
     access_token = generate_jwt(data={'sub': user.email})
     return p.LoginUserSchema(
-        email=user.email,
-        first_name=user.first_name,
-        last_name=user.last_name,
+        **user.dict(),
         access_token=access_token,
         token_type='bearer'
     )
@@ -84,5 +82,10 @@ async def get_contacts(user: p.GetUserSchema = Depends(get_user), session: Async
          .join(UserContact, m.Contact.c.contact_id == UserContact.id)
          .where(m.User.email == user.email))
     result = (await session.execute(q)).all()
-    contacts = [p.GetContactSchema(**c.dict()) for _, c in result]
+    contacts = [p.GetContactSchema.model_validate(c) for _, c in result]
     return p.GetContactsSchema(contacts=contacts)
+
+
+# @router.get('/chats/{chat_id}', response_model=p.GetMessagesSchema)
+# async def get_messages(user: p.GetUserSchema = Depends(get_user), session: AsyncSession = Depends(get_db)):
+#     q = select(m.User)

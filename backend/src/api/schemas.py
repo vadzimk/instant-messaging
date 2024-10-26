@@ -1,15 +1,26 @@
 from typing import Optional, List
+from uuid import UUID
 
 from pydantic import BaseModel, EmailStr
 
 
-class GetUserSchema(BaseModel):
+class BaseSchema(BaseModel):
+    model_config = {
+        "from_attributes": True
+    }
+
+
+class GetUserSchema(BaseSchema):
+    id: UUID
     email: EmailStr
     first_name: str
     last_name: Optional[str]
 
 
-class CreateUserSchema(GetUserSchema):
+class CreateUserSchema(BaseSchema):
+    email: EmailStr
+    first_name: str
+    last_name: Optional[str]
     password: str
 
 
@@ -18,15 +29,14 @@ class LoginUserSchema(GetUserSchema):
     token_type: str
 
 
-class CreateContactSchema(BaseModel):
+class CreateContactSchema(BaseSchema):
     email: str
 
 
 class GetContactSchema(CreateContactSchema):
-    email: str
     first_name: str
     last_name: str
 
 
-class GetContactsSchema(BaseModel):
+class GetContactsSchema(BaseSchema):
     contacts: List[GetContactSchema]
