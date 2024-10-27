@@ -1,4 +1,4 @@
-import {createSlice} from '@reduxjs/toolkit';
+import {createAsyncThunk, createSlice} from '@reduxjs/toolkit';
 
 interface GetMessageSchema {
     id: string
@@ -27,6 +27,18 @@ const chatSlice = createSlice(({
     reducers: {},
     // extraReducers: {}
 }))
+
+export const sendMessage = createAsyncThunk(
+    '/chat/sendMessage',
+    async (messageFields,
+           {dispatch, rejectWithValue, getState}) => {
+        try {
+
+        } catch (e){
+
+        }
+    }
+)
 
 // eslint-disable-next-line no-empty-pattern
 export const {} = chatSlice.actions

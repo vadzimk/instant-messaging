@@ -1,7 +1,6 @@
 import {createAsyncThunk, createSlice, PayloadAction} from '@reduxjs/toolkit';
-import {NotificationType, notify} from './notificationSlice.ts';
-import {baseUrl, FastApiError} from './api.ts';
-import {UserState} from './userSlice.ts';
+import {baseUrl, FastApiError, fetchWithAuthHandler} from './api.ts';
+import {AppDispatch, RootState} from '../store.ts';
 
 
 export interface CreateContactSchema {
@@ -52,65 +51,37 @@ const contactsSlice = createSlice({
     }
 })
 
-export const addContact = createAsyncThunk<GetContactSchema, CreateContactSchema>(
+export const addContact = createAsyncThunk<GetContactSchema, CreateContactSchema, { rejectValue: FastApiError }>(
     '/contacts/add',
     async (contactFields: CreateContactSchema,
-           {dispatch, rejectWithValue, getState}) => {
-        const state = getState() as { user: UserState }
-        const token = state.user.access_token
-        try {
-            const res = await fetch(baseUrl + '/api/contacts', {
+           thunkAPI) => {
+        return await fetchWithAuthHandler<GetContactSchema>(
+            `${baseUrl}/api/contacts`,
+            {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "Authorization": `Bearer ${token}`
-                },
                 body: JSON.stringify(contactFields)
-            })
-            if (!res.ok) {
-                const errorData: FastApiError = await res.json()
-                dispatch(notify({message: "Could not add new chat", type: NotificationType.ERROR}))
-                console.error(errorData.detail)
-                return rejectWithValue(errorData)
-            }
-            const data: GetContactSchema = await res.json()
-            return data
-        } catch (e) {
-            const err = e as Error
-            console.error('An error occurred: ', +err)
-            dispatch(notify({message: "Could not add new chat", type: NotificationType.ERROR}))
-            return rejectWithValue({detail: err.message})
-        }
+            },
+            thunkAPI.getState as () => RootState,
+            thunkAPI.dispatch as AppDispatch,
+            thunkAPI.rejectWithValue,
+            "Could not add new chat"
+        )
     }
 )
 
 export const getContacts = createAsyncThunk<GetContactsSchema>(
     '/contacts/get',
-    async (_, {dispatch, rejectWithValue, getState}) => {
-        const state = getState() as { user: UserState }
-        const token = state.user.access_token
-        try {
-            const res = await fetch(baseUrl + '/api/contacts', {
+    async (_, thunkAPI) => {
+        return await fetchWithAuthHandler<GetContactsSchema>(
+            `${baseUrl}/api/contacts`,
+            {
                 method: "GET",
-                headers: {
-                    "Content-Type": "application/json",
-                    "Authorization": `Bearer ${token}`
-                }
-            })
-            if (!res.ok) {
-                const errorData: FastApiError = await res.json()
-                dispatch(notify({message: "Could not get contacts", type: NotificationType.ERROR}))
-                console.error(errorData.detail)
-                return rejectWithValue(errorData)
-            }
-            const data: GetContactsSchema = await res.json()
-            return data
-        } catch (e) {
-            const err = e as Error
-            console.error('An error occurred: ', +err)
-            dispatch(notify({message: "Could not get contacts", type: NotificationType.ERROR}))
-            return rejectWithValue({detail: err.message})
-        }
+            },
+            thunkAPI.getState as () => RootState,
+            thunkAPI.dispatch as AppDispatch,
+            thunkAPI.rejectWithValue,
+            "Could not get contacts"
+        )
     }
 )
 
