@@ -5,7 +5,7 @@ import {Link} from 'react-router-dom';
 import {useAppDispatch} from '../../hooks.ts';
 import {loginUser} from '../../reducers/userSlice.ts';
 import EmailField from '../../components/EmailField';
-import {getContacts} from '../../reducers/chatSlice.ts';
+import {getContacts} from '../../reducers/contactsSlice.ts';
 
 export type LoginFields = {
     email: string;

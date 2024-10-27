@@ -1,21 +1,21 @@
 import NewIcon from '../../components/icons/NewIcon.tsx';
-import ChatItem from './ChatItem.tsx';
+import ContactItem from './ContactItem.tsx';
 import {useState} from 'react';
 import Modal from './Modal.tsx';
 import AddContactForm from './AddContactForm.tsx';
 import {useAppDispatch, useAppSelector} from '../../hooks.ts';
-import {setCurrentChat} from '../../reducers/chatSlice.ts';
+import {setCurrentContact} from '../../reducers/contactsSlice.ts';
 
-export default function ChatsList() {
+export default function ContactList() {
     const dispatch = useAppDispatch()
-    const {chatList, currentChatId} = useAppSelector(state => state.chat)
+    const {contactList, currentContactId} = useAppSelector(state => state.contacts)
     const [isModalOpen, setModalOpen] = useState<boolean>(false)
     const handleModalClose = () => {
         setModalOpen(false)
         console.log('close modal clicked')
     }
-    const handleChatClick = (chatId: number) => {
-        dispatch(setCurrentChat(chatId))
+    const handleContactClick = (contactId: string) => {
+        dispatch(setCurrentContact(contactId))
     }
     return (
         <div
@@ -29,12 +29,12 @@ export default function ChatsList() {
             </div>
             <div className="flex flex-col">
                 {
-                    chatList.map(ch => (
-                        <ChatItem
-                            key={ch.id}
-                            chat={ch}
-                            className={currentChatId === ch.id ? "bg-custom-fallback-bc bg-opacity-30 dark:bg-opacity-15" : ""}
-                            onClick={() => handleChatClick(ch.id)}
+                    contactList.map(c => (
+                        <ContactItem
+                            key={c.id}
+                            contact={c}
+                            className={currentContactId === c.id ? "bg-custom-fallback-bc bg-opacity-30 dark:bg-opacity-15" : ""}
+                            onClick={() => handleContactClick(c.id)}
                         />
                     )).reverse()
                 }

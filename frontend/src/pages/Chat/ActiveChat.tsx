@@ -6,8 +6,8 @@ import {useRef, useState} from 'react';
 import {useAppSelector} from '../../hooks.ts';
 
 export default function ActiveChat() {
-    const {chatList, currentChatId} = useAppSelector(state => state.chat)
-    const currentChat = currentChatId !== null ? chatList[currentChatId - 1] : null
+    const {contactList, currentContactId} = useAppSelector(state => state.contacts)
+    const currentContact = currentContactId !== null ? contactList.find(c=>c.id===currentContactId) : null
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     const [message, setMessage] = useState('');
 
@@ -20,7 +20,6 @@ export default function ActiveChat() {
             textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`; // Set height based on content
         }
     };
-    console.log(currentChat)
     return (
         <div className="flex flex-col w-full p-4">
             {/*Active chat header*/}
@@ -28,10 +27,10 @@ export default function ActiveChat() {
                 <div className="flex flex-row">
                     <Avatar className="w-8"/>
                     {
-                        currentChat &&
+                        currentContact &&
                         (
                             <div className="ml-3">
-                                <p className="text-md text-black dark:text-white">{currentChat.contact.first_name} {currentChat.contact.last_name}</p>
+                                <p className="text-md text-black dark:text-white">{currentContact.first_name} {currentContact.last_name}</p>
                                 <p className="text-xs">Last seen 45 minutes ago</p>
                             </div>
                         )

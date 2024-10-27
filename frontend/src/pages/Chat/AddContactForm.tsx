@@ -2,7 +2,7 @@ import {SubmitHandler, useForm} from 'react-hook-form';
 import {useAppDispatch} from '../../hooks.ts';
 import EmailInput from '../../components/EmailField/EmailInput.tsx';
 import {Description, Field} from '@headlessui/react';
-import {addContact, CreateContactSchema} from '../../reducers/chatSlice.ts';
+import {addContact, CreateContactSchema} from '../../reducers/contactsSlice.ts';
 
 export default function AddContactForm() {
     const dispatch = useAppDispatch()
