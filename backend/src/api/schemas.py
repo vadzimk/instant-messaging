@@ -1,24 +1,24 @@
 from datetime import datetime
-from typing import Optional, List
+from typing import Optional, List, Any
 from uuid import UUID
 
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel as PydanticBaseModel, EmailStr, ValidationError
 
 
-class BaseSchema(BaseModel):
+class BaseModel(PydanticBaseModel):
     model_config = {
-        "from_attributes": True
+        "from_attributes": True,  # model_validate will be able to take a dict or orm.model
     }
 
 
-class GetUserSchema(BaseSchema):
+class GetUserSchema(BaseModel):
     id: UUID
     email: EmailStr
     first_name: str
     last_name: Optional[str]
 
 
-class CreateUserSchema(BaseSchema):
+class CreateUserSchema(BaseModel):
     email: EmailStr
     first_name: str
     last_name: Optional[str]
@@ -30,21 +30,26 @@ class LoginUserSchema(GetUserSchema):
     token_type: str
 
 
-class CreateContactSchema(BaseSchema):
+class CreateContactSchema(BaseModel):
     email: str
 
 
-class GetContactSchema(BaseSchema):
+class GetContactSchema(BaseModel):
     id: UUID
     first_name: str
     last_name: str
 
 
-class GetContactsSchema(BaseSchema):
+class GetContactsSchema(BaseModel):
     contacts: List[GetContactSchema]
 
 
-class GetMessageSchema(BaseSchema):
+class CreateMessageSchema(BaseModel):
+    contact_id: UUID
+    content: str
+
+
+class GetMessageSchema(BaseModel):
     id: UUID
     content: str
     created_at: datetime
@@ -52,5 +57,15 @@ class GetMessageSchema(BaseSchema):
     user_to_id: UUID
 
 
-class GetMessagesSchema(BaseSchema):
+class GetMessagesSchema(BaseModel):
     messages: List[GetMessageSchema]
+
+
+class SioErrorSchema(BaseModel):
+    success: bool
+    data: Any
+    errors: List[ValidationError]
+
+    model_config = {
+        'arbitrary_types_allowed': True
+    }

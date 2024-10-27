@@ -80,7 +80,7 @@ async def test_get_contacts(client_with_auth_user1, create_u2_contact_for_u1_res
         'contacts'), "Created contact not found in get_contacts response"
 
 
-@pytest.mark.only
+# @pytest.mark.only
 async def test_get_messages(client_with_auth_user1, send_message_u1_u2, user2):
     async with Session() as session:
         q = select(m.User).where(m.User.email == user2.email)

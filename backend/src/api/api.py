@@ -78,7 +78,7 @@ async def create_contact(
     except IntegrityError as e:
         await session.rollback()
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail='Contact already exists')
-    return p.GetContactSchema(**user2.dict())
+    return user2
 
 
 @router.get('/contacts', response_model=p.GetContactsSchema)
@@ -114,5 +114,4 @@ async def get_messages(
     ))
     messages = [p.GetMessageSchema.model_validate(msg)
                 for msg in (await session.scalars(q)).all()]
-    print(messages)
     return p.GetMessagesSchema(messages=messages)

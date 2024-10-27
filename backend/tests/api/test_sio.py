@@ -1,8 +1,10 @@
+import pytest
 from sqlalchemy import select, or_
 from sqlalchemy.orm import aliased
 
 from src.db import Session
 from src import models as m
+from src.api import schemas as p
 
 
 # @pytest.mark.only
@@ -24,9 +26,11 @@ async def test_ping(socketio_client_w_auth_u1):
     assert res == data_to_send, "Socketio ping event handler did not send expected reply"
 
 
-# @pytest.mark.only
+@pytest.mark.only
 async def test_message(send_message_u1_u2, user1, user2):
     res, expected_content = send_message_u1_u2
+    # get_message_res = p.GetMessageSchema.model_validate(res.json())
+    print("res", res)
     # checks if message is in database
     async with Session() as session:
         async with session.begin():

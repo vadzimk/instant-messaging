@@ -143,9 +143,10 @@ async def socketio_client_no_auth() -> AsyncGenerator[socketio.AsyncSimpleClient
 async def send_message_u1_u2(socketio_client_w_auth_u1, user1, signup_user2_response) -> AsyncGenerator[
     Tuple[Response, str], None]:
     message_content = f'hello from user {user1.email}'
-    user_to_email = signup_user2_response.json().get('email')
+    user_to_id = signup_user2_response.json().get('id')
+    assert user_to_id is not None
     res = await socketio_client_w_auth_u1.call('message', data={
-        "to": user_to_email,
+        "contact_id": user_to_id,
         "content": message_content
     })
     yield res, message_content
