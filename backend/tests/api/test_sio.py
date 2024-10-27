@@ -1,34 +1,8 @@
-from typing import Tuple, AsyncGenerator
-
-import pytest
-import socketio
-from httpx import Response
 from sqlalchemy import select, or_
 from sqlalchemy.orm import aliased
 
 from src.db import Session
 from src import models as m
-
-
-@pytest.fixture
-async def socketio_client_w_auth_u1(login_user1_response) -> AsyncGenerator[socketio.AsyncSimpleClient, None]:
-    access_token = login_user1_response.json().get("access_token")
-    client = socketio.AsyncSimpleClient()
-    await client.connect('http://localhost:8000', auth={"token": access_token})
-    yield client
-    await client.disconnect()
-
-
-@pytest.fixture
-async def socketio_client_no_auth() -> AsyncGenerator[socketio.AsyncSimpleClient, None]:
-    client = socketio.AsyncSimpleClient()
-    try:
-        await client.connect('http://localhost:8000')
-    except socketio.exceptions.ConnectionError:
-        client = None
-    yield client
-    if client:
-        await client.disconnect()
 
 
 # @pytest.mark.only
@@ -50,20 +24,9 @@ async def test_ping(socketio_client_w_auth_u1):
     assert res == data_to_send, "Socketio ping event handler did not send expected reply"
 
 
-@pytest.fixture
-async def send_message(socketio_client_w_auth_u1, user1, signup_user2_response) -> AsyncGenerator[Tuple[Response, str], None]:
-    message_content = f'hello from user {user1.email}'
-    user_to_email = signup_user2_response.json().get('email')
-    res = await socketio_client_w_auth_u1.call('message', data={
-        "to": user_to_email,
-        "content": message_content
-    })
-    yield res, message_content
-
-
 # @pytest.mark.only
-async def test_message(send_message, user1, user2):
-    res, expected_content = send_message
+async def test_message(send_message_u1_u2, user1, user2):
+    res, expected_content = send_message_u1_u2
     # checks if message is in database
     async with Session() as session:
         async with session.begin():

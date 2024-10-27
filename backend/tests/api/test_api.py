@@ -1,18 +1,13 @@
-from pathlib import Path
-
-import jwt
 import pytest
 from httpx import AsyncClient, ASGITransport
 from sqlalchemy import select
 from sqlalchemy.orm import aliased
-
 from starlette import status
-from cryptography.x509 import load_pem_x509_certificate
 from src.main import app
-from src.api.schemas import CreateContactSchema
 from src.db import Session
 from src import models as m
-
+from .conftest import decode_access_token
+from src.api import schemas as p
 
 def test_signup_user(signup_user1_response, user1):
     print(signup_user1_response)
@@ -20,16 +15,6 @@ def test_signup_user(signup_user1_response, user1):
         f"Expected status code {status.HTTP_201_CREATED}, got {signup_user1_response.status_code}"
     assert signup_user1_response.json().get("email") == user1.email, \
         f"Expected email {user1.email}, got {signup_user1_response.json().get('email')}"
-
-
-def decode_access_token(access_token):
-    # validate token on the client for each request
-    private_key_path = Path(__file__).parent.parent.parent / 'jwt_keys/public_key.pem'
-    public_key_text = private_key_path.read_text()
-    public_key = load_pem_x509_certificate(public_key_text.encode('utf-8')).public_key()
-    validated_result_payload = jwt.decode(access_token, key=public_key, algorithms=['RS256'],
-                                          audience=["http://127.0.0.1:8000/"])
-    return validated_result_payload
 
 
 async def test_login_user_using_authorization_header(login_user1_response, user1):
@@ -43,14 +28,6 @@ async def test_login_user_using_authorization_header(login_user1_response, user1
     assert validated_result_payload.get('sub') == user1.email, "token subject not set to email"
 
 
-@pytest.fixture(scope="function")
-async def authenticate_user1_with_header_response(login_user1_response):
-    async with AsyncClient(transport=ASGITransport(app=app), base_url='http://test') as client:
-        auth_header = f'Bearer {login_user1_response.json().get("access_token")}'
-        res = await client.post('/api/me', headers={'Authorization': auth_header})
-        yield res
-
-
 async def test_authenticated_request_rejects_if_not_authenticated():
     async with AsyncClient(transport=ASGITransport(app=app), base_url='http://test') as client:
         auth_header = f'Bearer xxx.xxx.xxx'
@@ -60,29 +37,17 @@ async def test_authenticated_request_rejects_if_not_authenticated():
     assert res.status_code == status.HTTP_401_UNAUTHORIZED, "unauthenticated request is not rejected on protected path"
 
 
-async def test_authenticated_request_accepts_valid_header(authenticate_user1_with_header_response):
-    print(authenticate_user1_with_header_response.status_code)
-    print(authenticate_user1_with_header_response.json())
-    assert authenticate_user1_with_header_response.status_code == status.HTTP_200_OK, \
+async def test_authenticated_request_accepts_valid_header(client_with_auth_user1):
+    res = await client_with_auth_user1.post('/api/me')
+    print(res.status_code)
+    print(res.json())
+    assert res.status_code == status.HTTP_200_OK, \
         "authenticated request is rejected on protected path"
 
 
-@pytest.fixture
-async def create_contact_response(login_user1_response, signup_user2_response):
-    async with AsyncClient(transport=ASGITransport(app=app), base_url='http://test') as client:
-        auth_header = f'Bearer {login_user1_response.json().get("access_token")}'
-        new_contact = CreateContactSchema(**signup_user2_response.json())
-        return await client.post(
-            '/api/contacts',
-            headers={'Authorization': auth_header},
-            json=new_contact.model_dump()
-        )
-
-
-async def test_create_contact(login_user1_response, signup_user2_response, create_contact_response, user2):
-    print(create_contact_response.status_code)
-    print(create_contact_response.json())
-    assert create_contact_response.json().get('email') == user2.email, "Created contact email does not match"
+async def test_create_contact(login_user1_response, signup_user2_response, create_u2_contact_for_u1_response, user2):
+    print("create_contact_response.status_code", create_u2_contact_for_u1_response.status_code)
+    print(create_u2_contact_for_u1_response.json())
 
     # check contact in database
     async with Session() as session:
@@ -90,7 +55,9 @@ async def test_create_contact(login_user1_response, signup_user2_response, creat
             u1 = await session.scalar(
                 select(m.User).where(m.User.email == login_user1_response.json().get('email')))
             u2 = await session.scalar(
-                select(m.User).where(m.User.first_name == signup_user2_response.json().get('email')))
+                select(m.User).where(m.User.id == signup_user2_response.json().get('id')))
+            assert create_u2_contact_for_u1_response.json().get(
+                'id') == str(u2.id), "Created contact id does not match with created user id"
             UserContact = aliased(m.User)
             q = (select(m.User, UserContact)
                  .join(m.Contact, m.User.id == m.Contact.c.user_id)
@@ -102,25 +69,32 @@ async def test_create_contact(login_user1_response, signup_user2_response, creat
                 user, contact = row
                 if contact.email == user2.email:
                     found = True
-            assert found, f"Could not find {user2.email} in database"
+            assert found, f"Could not find {user2.email} in among contacts of user {login_user1_response.json().get('email')}"
+
+
+# @pytest.mark.only
+async def test_get_contacts(client_with_auth_user1, create_u2_contact_for_u1_response):
+    res = await client_with_auth_user1.get('/api/contacts')
+    print(res.json())
+    assert create_u2_contact_for_u1_response.json() in res.json().get(
+        'contacts'), "Created contact not found in get_contacts response"
 
 
 @pytest.mark.only
-async def test_get_contacts(login_user1_response, create_contact_response):
-    async with AsyncClient(transport=ASGITransport(app=app), base_url='http://test') as client:
-        auth_header = f'Bearer {login_user1_response.json().get("access_token")}'
-        res = await client.get(
-            '/api/contacts',
-            headers={'Authorization': auth_header}
-        )
-        print(res.json())
-        assert create_contact_response.json() in res.json().get(
-            'contacts'), "Created contact not found in get_contacts response"
+async def test_get_messages(client_with_auth_user1, send_message_u1_u2, user2):
+    async with Session() as session:
+        q = select(m.User).where(m.User.email == user2.email)
+        u2 = await session.scalar(q)
+        print(u2.id)
+
+    res = await client_with_auth_user1.get(
+        f'/api/chats/{u2.id}'
+    )
+    valid_response = p.GetMessagesSchema.model_validate(res.json())
+    valid_msg = p.GetMessageSchema.model_validate(valid_response.messages[0])
+    _, expected_content =send_message_u1_u2
+    assert valid_msg.content == expected_content, "Message content does not equal to expected"
+    assert str(valid_msg.user_to_id) == str(u2.id), "user_to_id does not equal to expected"
 
 
-# async def test_get_messages(login_user1_response):
-#     async with AsyncClient(transport=ASGITransport(app=app), base_url='http://test') as client:
-#         auth_header = f'Bearer {login_user1_response.json().get("access_token")}'
-#         res = await client.get(
-#             '/api/messages'
-#         )
+

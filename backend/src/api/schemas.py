@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Optional, List
 from uuid import UUID
 
@@ -33,10 +34,23 @@ class CreateContactSchema(BaseSchema):
     email: str
 
 
-class GetContactSchema(CreateContactSchema):
+class GetContactSchema(BaseSchema):
+    id: UUID
     first_name: str
     last_name: str
 
 
 class GetContactsSchema(BaseSchema):
     contacts: List[GetContactSchema]
+
+
+class GetMessageSchema(BaseSchema):
+    id: UUID
+    content: str
+    created_at: datetime
+    user_from_id: UUID
+    user_to_id: UUID
+
+
+class GetMessagesSchema(BaseSchema):
+    messages: List[GetMessageSchema]
