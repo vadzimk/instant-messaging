@@ -23,7 +23,7 @@ export default function LoginForm() {
     } = useForm<LoginFields>()
 
     const onSubmit: SubmitHandler<LoginFields> = async (data: LoginFields) => {
-        try{
+        try {
             await dispatch(loginUser(data)).unwrap()
             reset()
             dispatch(getContacts())

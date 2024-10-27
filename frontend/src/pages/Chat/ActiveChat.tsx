@@ -3,13 +3,15 @@ import KebabHorizontalIcon from '../../components/icons/KebabHorizontalIcon.tsx'
 import PaperAirplaneIcon from '../../components/icons/PaperAirplaneIcon.tsx';
 import {Textarea} from '@headlessui/react';
 import {useRef, useState} from 'react';
-import {useAppSelector} from '../../hooks.ts';
+import {useAppDispatch, useAppSelector} from '../../hooks.ts';
+import {sendMessage} from '../../reducers/chatSlice.ts';
 
 export default function ActiveChat() {
     const {contactList, currentContactId} = useAppSelector(state => state.contacts)
-    const currentContact = currentContactId !== null ? contactList.find(c=>c.id===currentContactId) : null
+    const currentContact = currentContactId !== null ? contactList.find(c => c.id === currentContactId) : null
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     const [message, setMessage] = useState('');
+    const dispatch = useAppDispatch()
 
     const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
         setMessage(e.target.value);
@@ -20,6 +22,19 @@ export default function ActiveChat() {
             textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`; // Set height based on content
         }
     };
+
+    const handleSendMessage = async (e: React.FormEvent) => {
+        e.preventDefault()
+        if (message.trim() && currentContactId) {
+            try {
+                await dispatch(sendMessage({contact_id: currentContactId, content: message})).unwrap()
+                setMessage('')
+            } catch {
+                /* empty */
+            }
+
+        }
+    }
     return (
         <div className="flex flex-col w-full p-4">
             {/*Active chat header*/}
@@ -42,7 +57,8 @@ export default function ActiveChat() {
             </div>
 
             <div className="h-full text-center">Chat history</div>
-            <div className="relative">
+            <form onSubmit={handleSendMessage}
+                  className="relative">
                 <Textarea
                     ref={textareaRef}
                     name="message"
@@ -54,10 +70,11 @@ export default function ActiveChat() {
                     placeholder="start typing"
                     className="input-base w-full resize-none overflow-hidden focus:outline-none min-h-12 p-2"
                 />
-                <div className="flex flex-col justify-center px-4 absolute top-0 right-0 h-full">
+                <button type="submit"
+                        className="flex flex-col justify-center px-4 absolute top-0 right-0 h-full">
                     <PaperAirplaneIcon/>
-                </div>
-            </div>
+                </button>
+            </form>
         </div>
     );
 }

@@ -1,5 +1,5 @@
 import {createAsyncThunk, createSlice, PayloadAction} from '@reduxjs/toolkit';
-import {baseUrl, FastApiError, fetchWithAuthHandler} from './api.ts';
+import {baseUrl, FastApiError, fetchWithAuthHandler} from '../services/api.ts';
 import {AppDispatch, RootState} from '../store.ts';
 
 

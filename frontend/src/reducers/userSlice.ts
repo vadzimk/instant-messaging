@@ -1,7 +1,7 @@
 import {createAsyncThunk, createSlice, PayloadAction} from '@reduxjs/toolkit';
 import {SignupInputs} from '../pages/Signup/SignupForm.tsx';
 import {LoginFields} from '../pages/Login/LoginForm.tsx';
-import {baseUrl, fetchWithHandler} from './api.ts';
+import {baseUrl, fetchWithHandler} from '../services/api.ts';
 import {AppDispatch} from '../store.ts';
 
 

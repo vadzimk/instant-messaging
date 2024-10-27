@@ -1,5 +1,5 @@
-import {NotificationType, notify} from './notificationSlice.ts';
-import {UserState} from './userSlice.ts';
+import {NotificationType, notify} from '../reducers/notificationSlice.ts';
+import {UserState} from '../reducers/userSlice.ts';
 import {AppDispatch, RootState} from '../store.ts';
 
 export const baseUrl = 'http://localhost:8000'
@@ -22,7 +22,7 @@ export async function fetchWithHandler<T>(
             {
                 ...options,
                 headers: {
-                    ...(isFormData? {} : {"Content-Type": "application/json"}),
+                    ...(isFormData ? {} : {"Content-Type": "application/json"}),
                     ...options.headers,
                 },
             })
