@@ -31,6 +31,7 @@ async def test_message(send_message_u1_u2, user1, user2):
     res, expected_content = send_message_u1_u2
     # get_message_res = p.GetMessageSchema.model_validate(res.json())
     print("res", res)
+    assert res.success, "socket.io event handler failed"
     # checks if message is in database
     async with Session() as session:
         async with session.begin():

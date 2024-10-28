@@ -33,17 +33,18 @@ def validate(request_model: Type[BaseModel], response_model: Type[BaseModel]):
             try:
                 validated_data = request_model.model_validate(data)
             except ValidationError as e:
-                return p.SioErrorSchema(success=False, data=data, errors=e.errors())
+                return p.SioResponseSchema(success=False, data=data, errors=e.errors())
 
             # Execute the handler and get the response
-            response = await func(sid, validated_data, *args, **kwargs)
+            func_response = await func(sid, validated_data, *args, **kwargs)
 
             # Validate the response data before sending it to the client
-            if not isinstance(response, response_model):
-                validated_response = response_model.model_validate(response)
+            if not isinstance(func_response, response_model):
+                validated_response = response_model.model_validate(func_response)
             else:
-                validated_response = response
-            serialized_response = jsonable_encoder(validated_response)
+                validated_response = func_response
+            response = p.SioResponseSchema(data=validated_response)
+            serialized_response = jsonable_encoder(response)
             return serialized_response
 
         return wrapper

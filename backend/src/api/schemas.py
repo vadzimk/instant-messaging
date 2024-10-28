@@ -1,3 +1,4 @@
+from dataclasses import field
 from datetime import datetime
 from typing import Optional, List, Any
 from uuid import UUID
@@ -61,10 +62,10 @@ class GetMessagesSchema(BaseModel):
     messages: List[GetMessageSchema]
 
 
-class SioErrorSchema(BaseModel):
-    success: bool
+class SioResponseSchema(BaseModel):
+    success: bool = True
     data: Any
-    errors: List[ValidationError]
+    errors: List[ValidationError] = field(default_factory=list)
 
     model_config = {
         'arbitrary_types_allowed': True
