@@ -3,48 +3,9 @@ import {SocketClient} from '../services/socketClient.ts';
 import {NotificationType, notify} from './notificationSlice.ts';
 import {v4 as uuidv4} from 'uuid'
 import {RootState} from '../store.ts';
+import {Chat, ChatState, CreateMessageSchema, ErrorSchema, GetMessageSchema, SioResponseSchema} from './types';
 
-interface GetMessageSchema {
-    id: string;
-    content: string;
-    created_at: string; // // ISO 8601 datetime format
-    user_from_id: string; // uuid
-    user_to_id: string; // uuid
-}
 
-// interface GetMessagesSchema {
-//     messages: GetMessageSchema[]
-// }
-
-type ServerValidationError = {
-    field: string,
-    message: string []
-}
-
-export interface SioResponseSchema {
-    success: boolean
-    data: any
-    errors: ServerValidationError[]
-}
-
-type ErrorSchema = {
-    errors: ServerValidationError[] | string[]
-}
-
-interface CreateMessageSchema {
-    contact_id: string; // uuid
-    content: string;
-}
-
-export interface Chat {
-    id: string; // uuid ! generated on client !
-    contactId: string; // uuid
-    messages: GetMessageSchema[]
-}
-
-type ChatState = {
-    chatList: Chat[]
-}
 const initialState: ChatState = {
     chatList: [],
 }

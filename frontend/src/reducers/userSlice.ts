@@ -3,37 +3,10 @@ import {SignupInputs} from '../pages/Signup/SignupForm.tsx';
 import {LoginFields} from '../pages/Login/LoginForm.tsx';
 import {baseUrl, fetchWithHandler} from '../services/api.ts';
 import {AppDispatch} from '../store.ts';
+import {GetUserSchema, LoginUserSchema, UserState} from './types';
 
 
-export type UserState = {
-    id?: string // uuid
-    email?: string
-    // status: 'idle' | 'loading' | 'succeeded' | 'failed';
-    first_name?: string
-    last_name?: string
-    access_token?: string
-    token_type?: string
-}
-const initialState: UserState = {
-
-}
-
-interface GetUserSchema {
-    id: string // uuid
-    email: string
-    first_name: string
-    last_name: string
-}
-
-interface LoginUserSchema {
-    id: string // uuid
-    email: string
-    first_name: string
-    last_name: string | undefined
-    access_token: string
-    token_type: string
-}
-
+const initialState: UserState = {}
 
 const userSlice = createSlice({
     name: 'user',

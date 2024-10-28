@@ -1,26 +1,8 @@
 import {createAsyncThunk, createSlice, PayloadAction} from '@reduxjs/toolkit';
 import {baseUrl, FastApiError, fetchWithAuthHandler} from '../services/api.ts';
 import {AppDispatch, RootState} from '../store.ts';
+import {ContactsState, CreateContactSchema, GetContactSchema, GetContactsSchema} from './types';
 
-
-export interface CreateContactSchema {
-    email: string
-}
-
-export interface GetContactSchema {
-    id: string // uuid
-    first_name: string;
-    last_name: string;
-}
-
-interface GetContactsSchema {
-    contacts: GetContactSchema[];
-}
-
-export type ContactsState = {
-    contactList: GetContactSchema[]
-    currentContactId: string | null
-}
 
 const initialState: ContactsState = {
     contactList: [],
