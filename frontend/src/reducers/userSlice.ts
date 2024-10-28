@@ -6,6 +6,7 @@ import {AppDispatch} from '../store.ts';
 
 
 export type UserState = {
+    id: string // uuid
     email?: string
     status: 'idle' | 'loading' | 'succeeded' | 'failed';
     first_name?: string
@@ -18,12 +19,14 @@ const initialState: UserState = {
 }
 
 interface GetUserSchema {
+    id: string // uuid
     email: string
     first_name: string
     last_name: string
 }
 
 interface LoginUserSchema {
+    id: string // uuid
     email: string
     first_name: string
     last_name: string | undefined

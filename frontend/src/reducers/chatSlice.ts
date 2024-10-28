@@ -1,6 +1,8 @@
 import {createAsyncThunk, createSlice} from '@reduxjs/toolkit';
 import {SocketClient} from '../services/socketClient.ts';
 import {NotificationType, notify} from './notificationSlice.ts';
+import {v4 as uuidv4} from 'uuid'
+import {RootState} from '../store.ts';
 
 interface GetMessageSchema {
     id: string;
@@ -14,10 +16,19 @@ interface GetMessagesSchema {
     messages: GetMessageSchema[]
 }
 
-export interface SioErrorSchema {
+type ServerValidationError = {
+    field: string,
+    message: string []
+}
+
+export interface SioResponseSchema {
     success: boolean
     data: any
-    errors: { field: string, message: string }[] | string[]
+    errors: ServerValidationError[]
+}
+
+type ErrorSchema = {
+    errors: ServerValidationError[] | string[]
 }
 
 interface CreateMessageSchema {
@@ -26,7 +37,7 @@ interface CreateMessageSchema {
 }
 
 export interface Chat {
-    id: string; // uuid
+    id: string; // uuid ! generated on client !
     contactId: string; // uuid
     messages: GetMessageSchema[]
 }
@@ -44,34 +55,46 @@ const chatSlice = createSlice(({
     reducers: {},
     extraReducers: builder => {
         builder.addCase(sendMessage.fulfilled, (state, action) => {
-            // TODO chat list is empty
-            state.chatList.find(ch => (
-                ch.contactId === action.payload.user_from_id || ch.contactId === action.payload.user_to_id))?.messages.push(action.payload) // mutation is allowed in redux toolkit, bc it uses immer library
+            const currentChat = state.chatList.find(ch => (
+                ch.contactId === action.payload.data.user_from_id || ch.contactId === action.payload.data.user_to_id))
+            if (currentChat) {
+                currentChat.messages.push(action.payload.data) // mutation is allowed in redux toolkit, bc toolkit uses immer library
+            } else {
+                const newChat: Chat = {
+                    id: uuidv4(),
+                    contactId: action.payload.data.user_from_id == action.payload.userId ? action.payload.data.user_to_id : action.payload.data.user_from_id,
+                    messages: [action.payload.data]
+                }
+                state.chatList.push(newChat)
+            }
         })
     }
 }))
 
-export const sendMessage = createAsyncThunk<GetMessageSchema, CreateMessageSchema, { rejectValue: SioErrorSchema }>(
+export const sendMessage = createAsyncThunk<{ data: GetMessageSchema, userId: string }, CreateMessageSchema, { rejectValue: ErrorSchema }>(
     '/chat/sendMessage',
     async (messageFields: CreateMessageSchema,
            thunkAPI) => {
         try {
             const socketClient = SocketClient.getInstance()
-            const data = await socketClient.emitWithAck('message', {
+            const res: SioResponseSchema = await socketClient.emitWithAck('message', {
                 contact_id: messageFields.contact_id,
                 content: messageFields.content
             })
-            if (!data.success) {
+            if (!res.success) {
+                console.dir(res)
                 thunkAPI.dispatch(notify({message: "Could not send message", type: NotificationType.ERROR}))
                 console.error('Could not send message')
-                return thunkAPI.rejectWithValue(data.errors)
+                return thunkAPI.rejectWithValue({errors: res.errors})
             }
-            return data
+            const state = thunkAPI.getState() as RootState
+            const userId = state.user.id
+            return {data: res.data, userId}
 
         } catch (e) {
             thunkAPI.dispatch(notify({message: "Could not send message", type: NotificationType.ERROR}))
             console.error(e)
-            return thunkAPI.rejectWithValue({success: false, data: messageFields, errors: ["Could not send message"]})
+            return thunkAPI.rejectWithValue({errors: ["Could not send message"]})
 
         }
     }
