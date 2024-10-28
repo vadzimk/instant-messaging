@@ -1,6 +1,6 @@
 import Avatar from '../../components/Avatar.tsx';
-import {GetContactSchema} from '../../reducers/contactsSlice.ts';
 import {useAppSelector} from '../../hooks.ts';
+import {GetContactSchema} from '../../reducers/types';
 
 type ContactItemProps = {
     contact: GetContactSchema;

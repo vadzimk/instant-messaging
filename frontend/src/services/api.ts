@@ -1,5 +1,5 @@
 import {NotificationType, notify} from '../reducers/notificationSlice.ts';
-import {UserState} from '../reducers/userSlice.ts';
+import {UserState} from '../reducers/types';
 import {AppDispatch, RootState} from '../store.ts';
 
 export const baseUrl = 'http://localhost:8000'

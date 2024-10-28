@@ -1,19 +1,29 @@
-import {useAppSelector} from '../../hooks.ts';
+import {useAppDispatch, useAppSelector} from '../../hooks.ts';
+import {useEffect} from 'react';
+import {getMessages, selectChatByContactId} from '../../reducers/chatSlice.ts';
 
 
 export function ChatHistory() {
-    const {chatList} = useAppSelector(state => state.chat)
-    const {currentContactId} = useAppSelector(state => state.contacts)
+    const {currentContactId} = useAppSelector(
+        state => state.contacts)
+    const currentChat = useAppSelector(
+        state => selectChatByContactId(state, currentContactId))
+    const dispatch = useAppDispatch()
+
+    useEffect(() => {
+        if(currentContactId && ! currentChat?.messages){
+            dispatch(getMessages(currentContactId))
+        }
+    }, [currentContactId, dispatch, currentChat])
 
     return (
         <div className="h-full flex flex-col justify-end">
             {
-                chatList
-                    .filter(ch => ch.contactId === currentContactId)
-                    ?.map(chi =>
-                        chi.messages.map(m => (
-                            <div key={m.id}>{m.content}</div>
-                        )))
+                currentChat?.messages.map(
+                    m => (
+                        <div key={m.id}>{m.content}</div>
+                    )
+                )
             }
         </div>
     )

@@ -1,9 +1,17 @@
 import {createAsyncThunk, createSlice} from '@reduxjs/toolkit';
 import {SocketClient} from '../services/socketClient.ts';
 import {NotificationType, notify} from './notificationSlice.ts';
-import {v4 as uuidv4} from 'uuid'
-import {RootState} from '../store.ts';
-import {Chat, ChatState, CreateMessageSchema, ErrorSchema, GetMessageSchema, SioResponseSchema} from './types';
+import {AppDispatch, RootState} from '../store.ts';
+import {
+    Chat,
+    ChatState,
+    CreateMessageSchema,
+    ErrorSchema,
+    GetMessageSchema,
+    GetMessagesSchema,
+    SioResponseSchema
+} from './types';
+import {baseUrl, fetchWithAuthHandler} from '../services/api.ts';
 
 
 const initialState: ChatState = {
@@ -22,9 +30,20 @@ const chatSlice = createSlice(({
                 currentChat.messages.push(action.payload.data) // mutation is allowed in redux toolkit, bc toolkit uses immer library
             } else {
                 const newChat: Chat = {
-                    id: uuidv4(),
                     contactId: action.payload.data.user_from_id == action.payload.userId ? action.payload.data.user_to_id : action.payload.data.user_from_id,
                     messages: [action.payload.data]
+                }
+                state.chatList.push(newChat)
+            }
+        }).addCase(getMessages.fulfilled, (state, action) => {
+            const chat = state.chatList.find(
+                ch => ch.contactId === action.payload.contactId)
+            if (chat) {
+                chat.messages = action.payload.data.messages
+            } else {
+                const newChat: Chat = {
+                    contactId: action.payload.contactId,
+                    messages: action.payload.data.messages
                 }
                 state.chatList.push(newChat)
             }
@@ -63,6 +82,27 @@ export const sendMessage = createAsyncThunk<{
         }
     }
 )
+
+export const getMessages = createAsyncThunk<{ data: GetMessagesSchema, contactId: string }, string>(
+    '/chat/getMessages',
+    async (contactId: string, thunkAPI) => {
+        const data = await fetchWithAuthHandler<GetMessagesSchema>(
+            `${baseUrl}/api/chats/${contactId}`,
+            {
+                method: "GET"
+            },
+            thunkAPI.getState as () => RootState,
+            thunkAPI.dispatch as AppDispatch,
+            thunkAPI.rejectWithValue,
+            "Could not get messages"
+        )
+        return {data, contactId}
+    }
+)
+
+export const selectChatByContactId = (state: RootState, contactId: string | null ) =>
+    state.chat.chatList.find(
+        ch => ch.contactId === contactId)
 
 // eslint-disable-next-line no-empty-pattern
 export const {} = chatSlice.actions

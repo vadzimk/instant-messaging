@@ -6,9 +6,9 @@ export interface GetMessageSchema {
     user_to_id: string; // uuid
 }
 
-// export interface GetMessagesSchema {
-//     messages: GetMessageSchema[]
-// }
+export interface GetMessagesSchema {
+    messages: GetMessageSchema[]
+}
 
 export type ServerValidationError = {
     field: string,
@@ -31,7 +31,6 @@ export interface CreateMessageSchema {
 }
 
 export interface Chat {
-    id: string; // uuid ! generated on client !
     contactId: string; // uuid
     messages: GetMessageSchema[]
 }
