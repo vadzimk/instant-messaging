@@ -3,7 +3,7 @@ import ErrorPage from './pages/ErrorPage.tsx';
 import Layout from './Layout.tsx';
 import Home from './pages/Home.tsx';
 import Index from './pages/Signup';
-import {useEffect} from 'react';
+import {useEffect, useState} from 'react';
 import {SocketClient} from './services/socketClient.ts';
 
 const router = createBrowserRouter([
@@ -18,11 +18,20 @@ const router = createBrowserRouter([
 
 
 function App() {
+    const [accessToken, setAccessToken] = useState<string | null>(
+        window.localStorage.getItem('access_token'))
+
     useEffect(() => {
-        const access_token = window.localStorage.getItem('access_token')
-        const socketClient = new SocketClient(access_token) // init singleton and socket.io connection
-        return () => socketClient.disconnect()
-    }, [])
+        const handleStorageChange = ()=> {
+            const token = window.localStorage.getItem('access_token')
+            setAccessToken(token)
+        }
+        window.addEventListener('storage', handleStorageChange)
+        if(accessToken){
+            new SocketClient(accessToken)
+        }
+        return () => SocketClient.disconnect()
+    }, [accessToken])
 
     return (
         <>

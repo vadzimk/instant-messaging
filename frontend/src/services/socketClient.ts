@@ -77,7 +77,7 @@ export class SocketClient {
     }
 
 
-    public disconnect() {
-        this.socket?.disconnect()
+    public static disconnect() {
+        SocketClient.instance?.socket?.disconnect()
     }
 }

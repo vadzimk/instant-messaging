@@ -5,6 +5,7 @@ import {Textarea} from '@headlessui/react';
 import {useRef, useState} from 'react';
 import {useAppDispatch, useAppSelector} from '../../hooks.ts';
 import {sendMessage} from '../../reducers/chatSlice.ts';
+import {ChatHistory} from './ChatHistory.tsx';
 
 export default function ActiveChat() {
     const {contactList, currentContactId} = useAppSelector(state => state.contacts)
@@ -55,8 +56,7 @@ export default function ActiveChat() {
                     <KebabHorizontalIcon className="mr-3"/>
                 </div>
             </div>
-
-            <div className="h-full text-center">Chat history</div>
+            <ChatHistory/>
             <form onSubmit={handleSendMessage}
                   className="relative">
                 <Textarea

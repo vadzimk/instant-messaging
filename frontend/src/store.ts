@@ -1,10 +1,19 @@
 import {combineReducers, configureStore} from '@reduxjs/toolkit';
-import {persistReducer} from 'redux-persist'
 import storage from 'redux-persist/lib/storage'
 import userSlice from './reducers/userSlice.ts';
 import notificationSlice from './reducers/notificationSlice.ts';
 import contactsSlice from './reducers/contactsSlice.ts';
 import chatSlice from './reducers/chatSlice.ts';
+
+import {
+    persistReducer,
+    FLUSH,
+    REHYDRATE,
+    PAUSE,
+    PERSIST,
+    PURGE,
+    REGISTER,
+} from 'redux-persist'
 
 
 const reducers = combineReducers({
@@ -16,6 +25,7 @@ const reducers = combineReducers({
 
 const persistConfig = {
     key: 'root',
+    version: 1,
     storage,
 }
 
@@ -24,6 +34,12 @@ const persistedReducer = persistReducer(persistConfig, reducers)
 // https://redux.js.org/usage/configuring-your-store#simplifying-setup-with-redux-toolkit
 export const store = configureStore({
     reducer: persistedReducer,
+    middleware: (getDefaultMiddleware) =>
+        getDefaultMiddleware({
+            serializableCheck: {
+                ignoredActions: [FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER],
+            },
+        }),
 })
 
 // Get the type of our store variable

@@ -12,9 +12,9 @@ interface GetMessageSchema {
     user_to_id: string; // uuid
 }
 
-interface GetMessagesSchema {
-    messages: GetMessageSchema[]
-}
+// interface GetMessagesSchema {
+//     messages: GetMessageSchema[]
+// }
 
 type ServerValidationError = {
     field: string,
@@ -71,7 +71,10 @@ const chatSlice = createSlice(({
     }
 }))
 
-export const sendMessage = createAsyncThunk<{ data: GetMessageSchema, userId: string }, CreateMessageSchema, { rejectValue: ErrorSchema }>(
+export const sendMessage = createAsyncThunk<{
+    data: GetMessageSchema,
+    userId: string | undefined
+}, CreateMessageSchema, { rejectValue: ErrorSchema }>(
     '/chat/sendMessage',
     async (messageFields: CreateMessageSchema,
            thunkAPI) => {
