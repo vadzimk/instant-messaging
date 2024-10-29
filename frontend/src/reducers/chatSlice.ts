@@ -60,7 +60,7 @@ export const sendMessage = createAsyncThunk<{
            thunkAPI) => {
         try {
             const socketClient = SocketClient.getInstance()
-            const res: SioResponseSchema = await socketClient.emitWithAck('message', {
+            const res: SioResponseSchema = await socketClient.emitWithAck('message_send', {
                 contact_id: messageFields.contact_id,
                 content: messageFields.content
             })
