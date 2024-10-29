@@ -1,9 +1,9 @@
 from dataclasses import field
 from datetime import datetime
-from typing import Optional, List, Any
+from typing import Optional, List, Any, Tuple
 from uuid import UUID
 
-from pydantic import BaseModel as PydanticBaseModel, EmailStr, ValidationError
+from pydantic import BaseModel as PydanticBaseModel, EmailStr
 
 
 class BaseModel(PydanticBaseModel):
@@ -60,6 +60,14 @@ class GetMessageSchema(BaseModel):
 
 class GetMessagesSchema(BaseModel):
     messages: List[GetMessageSchema]
+
+
+class ValidationError(BaseModel):
+    type: str  # related type
+    loc: Tuple[str]  # location of error
+    msg: str
+    input: Any  # actual input
+    url: str  # more info about this error
 
 
 class SioResponseSchema(BaseModel):

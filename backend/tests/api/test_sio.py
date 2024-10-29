@@ -1,3 +1,5 @@
+import asyncio
+
 import pytest
 from sqlalchemy import select, or_
 from sqlalchemy.orm import aliased
@@ -26,8 +28,7 @@ async def test_ping(socketio_client_w_auth_u1):
     assert res == data_to_send, "Socketio ping event handler did not send expected reply"
 
 
-@pytest.mark.only
-async def test_message(send_message_u1_u2, user1, user2):
+async def test_message_send(send_message_u1_u2, user1, user2):
     res, expected_content = send_message_u1_u2
     # get_message_res = p.GetMessageSchema.model_validate(res.json())
     print("res", res)
@@ -52,3 +53,12 @@ async def test_message(send_message_u1_u2, user1, user2):
             assert result == [(expected_content,
                                user1.email,
                                user2.email)], "Message from user1 to user2 was not sent successfully"
+
+
+@pytest.mark.only
+async def test_message_receive(socketio_client_w_auth_u2, send_message_u1_u2):
+    res, expected_content = send_message_u1_u2
+    client, future = socketio_client_w_auth_u2
+    await asyncio.wait_for(future, timeout=2)
+    data_received = future.result()
+    print(f'>>> data_received {data_received}')

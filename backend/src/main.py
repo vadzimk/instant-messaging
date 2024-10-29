@@ -20,4 +20,4 @@ app.add_middleware(CORSMiddleware,
 
 
 app.include_router(router, prefix='/api')
-app.mount('/socket.io/', socketio.ASGIApp(sio))
+app.mount('/socket.io/', socketio.ASGIApp(sio))  # socketio adds automatically /socket.io/ to the URL.

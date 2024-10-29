@@ -1,4 +1,5 @@
-from typing import Generator, AsyncGenerator, Tuple
+from asyncio import Event, Future
+from typing import Generator, AsyncGenerator, Tuple, Any
 import pytest
 import asyncio
 from httpx import AsyncClient, ASGITransport, Response
@@ -90,6 +91,17 @@ async def login_user1_response(signup_user1_response, user1) -> AsyncGenerator[R
         yield res
 
 
+@pytest.fixture(scope='function')
+async def login_user2_response(signup_user2_response, user2) -> AsyncGenerator[Response, None]:
+    user_to_login = {
+        'username': user2.email,
+        'password': user2.password
+    }
+    async with AsyncClient(transport=ASGITransport(app=app), base_url='http://test') as client:
+        res = await client.post('/api/users/login', data=user_to_login)  # send as form data
+        yield res
+
+
 def decode_access_token(access_token):
     # validate token on the client for each request
     private_key_path = Path(__file__).parent.parent.parent / 'jwt_keys/public_key.pem'
@@ -128,6 +140,27 @@ async def socketio_client_w_auth_u1(login_user1_response) -> AsyncGenerator[sock
 
 
 @pytest.fixture
+async def socketio_client_w_auth_u2(login_user2_response) -> Tuple[AsyncGenerator[socketio.AsyncClient, None], Future]:
+    access_token = login_user2_response.json().get("access_token")
+    client = socketio.AsyncClient(logger=True, engineio_logger=True)
+    await client.connect('http://localhost:8000', auth={"token": access_token})
+    print(f'>>> client of user2 connected, sid {client.get_sid()}')
+    future = asyncio.get_running_loop().create_future()  # https://github.com/miguelgrinberg/python-socketio/issues/332#issuecomment-712928157
+
+    @client.on('message_receive')
+    async def message_receive(data):
+        print(f'>>> received message {data}')
+        # # Send acknowledgment data back to the server
+        # acknowledgment_data = {'status': 'received', 'data_id': data.get('id')}
+        # await client.emit('message_receive_ack', acknowledgment_data)
+        future.set_result(data)
+
+    print('>>> client waiting')
+    yield client, future
+    await client.disconnect()
+
+
+@pytest.fixture
 async def socketio_client_no_auth() -> AsyncGenerator[socketio.AsyncSimpleClient, None]:
     client = socketio.AsyncSimpleClient()
     try:
@@ -145,8 +178,9 @@ async def send_message_u1_u2(socketio_client_w_auth_u1, user1, signup_user2_resp
     message_content = f'hello from user {user1.email}'
     user_to_id = signup_user2_response.json().get('id')
     assert user_to_id is not None
-    res = await socketio_client_w_auth_u1.call('message', data={
+    res = await socketio_client_w_auth_u1.call('message_send', data={
         "contact_id": user_to_id,
         "content": message_content
     })
+    print('>>> message sent from user1 to user2')
     yield p.SioResponseSchema(**res), message_content
