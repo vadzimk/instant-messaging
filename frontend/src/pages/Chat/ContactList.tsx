@@ -27,7 +27,7 @@ export default function ContactList() {
                     <NewIcon className="btn btn-sm btn-circle btn-ghost"/>
                 </button>
             </div>
-            <div className="flex flex-col">
+            <div className="flex flex-col overflow-y-auto">
                 {
                     contactList.map(c => (
                         <ContactItem

@@ -36,8 +36,14 @@ export default function ActiveChat() {
 
         }
     }
+    const handleKeyDown = async (e: React.KeyboardEvent<HTMLTextAreaElement>)=>{
+        if(e.key === 'Enter' && e.shiftKey){
+            e.preventDefault() // prevent new line
+            await handleSendMessage(e)
+        }
+    }
     return (
-        <div className="flex flex-col w-full p-4">
+        <div className="flex flex-col w-full h-full p-4 relative">
             {/*Active chat header*/}
             <div className="flex flex-row justify-between ">
                 <div className="flex flex-row">
@@ -67,6 +73,7 @@ export default function ActiveChat() {
                     rows={1}
                     value={message}
                     onChange={handleInputChange}
+                    onKeyDown={handleKeyDown}
                     placeholder="start typing"
                     className="input-base w-full resize-none overflow-hidden focus:outline-none min-h-12 p-2"
                 />
