@@ -1,4 +1,4 @@
-import {createAsyncThunk, createSlice} from '@reduxjs/toolkit';
+import {createAsyncThunk, createSlice, PayloadAction} from '@reduxjs/toolkit';
 import {SocketClient} from '../services/socketClient.ts';
 import {NotificationType, notify} from './notificationSlice.ts';
 import {AppDispatch, RootState} from '../store.ts';
@@ -8,7 +8,7 @@ import {
     CreateMessageSchema,
     ErrorSchema,
     GetMessageSchema,
-    GetMessagesSchema,
+    GetMessagesSchema, MessageReceivedPayloadType,
     SioResponseSchema
 } from './types';
 import {baseUrl, fetchWithAuthHandler} from '../services/api.ts';
@@ -18,10 +18,22 @@ const initialState: ChatState = {
     chatList: [],
 }
 
+export const selectChatByContactId = (state: RootState, contactId: string | null) =>
+    state.chat.chatList.find(
+        ch => ch.contactId === contactId)
+
 const chatSlice = createSlice(({
     name: 'chat',
     initialState,
-    reducers: {},
+    reducers: {
+        messageReceived: function (state, action: PayloadAction<MessageReceivedPayloadType>) {
+            const contactId = action.payload.message.user_from_id === action.payload.appUser.id
+                ? action.payload.message.user_to_id
+                : action.payload.message.user_from_id
+            state.chatList.find(
+                ch=>ch.contactId === contactId)?.messages.push(action.payload.message)
+        }
+    },
     extraReducers: builder => {
         builder.addCase(sendMessage.fulfilled, (state, action) => {
             const currentChat = state.chatList.find(ch => (
@@ -100,11 +112,8 @@ export const getMessages = createAsyncThunk<{ data: GetMessagesSchema, contactId
     }
 )
 
-export const selectChatByContactId = (state: RootState, contactId: string | null ) =>
-    state.chat.chatList.find(
-        ch => ch.contactId === contactId)
 
 // eslint-disable-next-line no-empty-pattern
-export const {} = chatSlice.actions
+export const {messageReceived} = chatSlice.actions
 
 export default chatSlice

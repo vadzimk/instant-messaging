@@ -1,9 +1,15 @@
+import {GetUserSchema} from './userTypes.ts';
+
 export interface GetMessageSchema {
     id: string;
     content: string;
     created_at: string; // // ISO 8601 datetime format
     user_from_id: string; // uuid
     user_to_id: string; // uuid
+}
+export interface MessageReceivedPayloadType {
+    appUser: GetUserSchema
+    message: GetMessageSchema
 }
 
 export interface GetMessagesSchema {
