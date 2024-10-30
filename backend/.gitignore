@@ -5,3 +5,6 @@ result.log
 .env
 .env.prod
 .env.production
+__pycache__/
+*.pyc
+*.pyo

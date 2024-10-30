@@ -7,6 +7,7 @@ from sqlalchemy.orm import aliased
 from src.db import Session
 from src import models as m
 from src.api import schemas as p
+from tests.data.data import user1, user2
 
 
 # @pytest.mark.only
@@ -28,7 +29,7 @@ async def test_ping(socketio_client_w_auth_u1):
     assert res == data_to_send, "Socketio ping event handler did not send expected reply"
 
 
-async def test_message_send(send_message_u1_u2, user1, user2):
+async def test_message_send(send_message_u1_u2):
     res, expected_content = send_message_u1_u2
     # get_message_res = p.GetMessageSchema.model_validate(res.json())
     print("res", res)
@@ -55,10 +56,9 @@ async def test_message_send(send_message_u1_u2, user1, user2):
                                user2.email)], "Message from user1 to user2 was not sent successfully"
 
 
-@pytest.mark.only
-async def test_message_receive(socketio_client_w_auth_u2, send_message_u1_u2):
-    res, expected_content = send_message_u1_u2
-    client, future = socketio_client_w_auth_u2
-    await asyncio.wait_for(future, timeout=2)
-    data_received = future.result()
-    print(f'>>> data_received {data_received}')
+async def test_message_receive(socketio_client_u2_receive_message_future, send_message_u1_u2):
+    _, expected_content = send_message_u1_u2
+    await asyncio.wait_for(socketio_client_u2_receive_message_future, timeout=2)
+    data = socketio_client_u2_receive_message_future.result()
+    print(f'>>> data_received {data}')
+    assert data.get("content") == expected_content

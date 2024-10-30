@@ -8,8 +8,10 @@ from src.db import Session
 from src import models as m
 from .conftest import decode_access_token
 from src.api import schemas as p
+from ..data.data import user1, user2
 
-def test_signup_user(signup_user1_response, user1):
+
+def test_signup_user(signup_user1_response):
     print(signup_user1_response)
     assert signup_user1_response.status_code == status.HTTP_201_CREATED, \
         f"Expected status code {status.HTTP_201_CREATED}, got {signup_user1_response.status_code}"
@@ -17,7 +19,7 @@ def test_signup_user(signup_user1_response, user1):
         f"Expected email {user1.email}, got {signup_user1_response.json().get('email')}"
 
 
-async def test_login_user_using_authorization_header(login_user1_response, user1):
+async def test_login_user_using_authorization_header(login_user1_response):
     data = login_user1_response.json()
     print(data)
     assert data.get('token_type') == 'bearer', "json body bearer not set"
@@ -45,7 +47,7 @@ async def test_authenticated_request_accepts_valid_header(client_with_auth_user1
         "authenticated request is rejected on protected path"
 
 
-async def test_create_contact(login_user1_response, signup_user2_response, create_u2_contact_for_u1_response, user2):
+async def test_create_contact(login_user1_response, signup_user2_response, create_u2_contact_for_u1_response):
     print("create_contact_response.status_code", create_u2_contact_for_u1_response.status_code)
     print(create_u2_contact_for_u1_response.json())
 
@@ -81,7 +83,7 @@ async def test_get_contacts(client_with_auth_user1, create_u2_contact_for_u1_res
 
 
 # @pytest.mark.only
-async def test_get_messages(client_with_auth_user1, send_message_u1_u2, user2):
+async def test_get_messages(client_with_auth_user1, send_message_u1_u2):
     async with Session() as session:
         q = select(m.User).where(m.User.email == user2.email)
         u2 = await session.scalar(q)
