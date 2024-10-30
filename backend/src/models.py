@@ -35,6 +35,7 @@ class User(Model):
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, index=True)
     first_name: Mapped[str] = mapped_column(String(64), index=True)
     last_name: Mapped[Optional[str]] = mapped_column(String(64), index=True)
+    created_at: Mapped[datetime] = mapped_column(default=datetime.utcnow, index=True)
     messages_sent: WriteOnlyMapped[list['Message']] = relationship(
         back_populates='user_from',
         foreign_keys='Message.user_from_id',
