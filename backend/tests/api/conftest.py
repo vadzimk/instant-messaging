@@ -1,5 +1,5 @@
-from asyncio import Event, Future
-from typing import Generator, AsyncGenerator, Tuple, Any
+from asyncio import Future
+from typing import AsyncGenerator, Tuple
 import pytest
 import asyncio
 from httpx import AsyncClient, ASGITransport, Response
@@ -10,8 +10,8 @@ import socketio
 import jwt
 
 from src.main import app
-from src.db import Session
-from src import models as m
+from src.db.base import Session
+from src.db import models as m
 from src.api import schemas as p
 from tests.data.data import user1, user2, baseUrl
 

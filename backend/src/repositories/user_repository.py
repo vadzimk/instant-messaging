@@ -1,6 +1,6 @@
 from sqlalchemy.ext.asyncio import AsyncSession
-from src.repository.abstract_repository import AbstractRepository, T
-from .. import models as m
+from src.repositories.abstract_repository import AbstractRepository
+from ..db import models as m
 
 
 class UserRepository(AbstractRepository[m.User]):

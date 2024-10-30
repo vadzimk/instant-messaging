@@ -9,10 +9,11 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import aliased
 from starlette import status
-from ..services.auth import hash_password, verify_password, generate_jwt, get_user
+
+from ..db.base import get_db
+from ..db import models as m
+from src.api.dependencies.auth import hash_password, verify_password, generate_jwt, get_user
 from . import schemas as p
-from ..db import get_db
-from .. import models as m
 
 router = APIRouter()
 logger = logging.getLogger(__name__)

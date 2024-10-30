@@ -2,11 +2,12 @@ import asyncio
 from typing import AsyncGenerator, List
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
-from src.repository.user_repository import UserRepository
-from src.db import Session
+
+from src.db.base import Session
+from src.repositories.user_repository import UserRepository
+from src.db import models as m
 
 from tests.data.data import user1
-from src import models as m
 
 
 @pytest.fixture(scope='session')

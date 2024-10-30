@@ -1,11 +1,10 @@
-from pprint import pprint
-from typing import AsyncGenerator, List
+from typing import List
 
 import pytest
 from sqlalchemy import select
 
-from src.repository.user_repository import UserRepository
-from src import models as m
+from src.repositories.user_repository import UserRepository
+from src.db import models as m
 from tests.data.data import user1
 
 

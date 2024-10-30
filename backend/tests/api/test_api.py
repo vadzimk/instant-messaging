@@ -1,11 +1,11 @@
-import pytest
 from httpx import AsyncClient, ASGITransport
 from sqlalchemy import select
 from sqlalchemy.orm import aliased
 from starlette import status
+
+from src.db.base import Session
 from src.main import app
-from src.db import Session
-from src import models as m
+from src.db import models as m
 from .conftest import decode_access_token
 from src.api import schemas as p
 from ..data.data import user1, user2

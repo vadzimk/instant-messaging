@@ -12,9 +12,9 @@ from jwt import (ExpiredSignatureError, ImmatureSignatureError, InvalidAlgorithm
 from sqlalchemy import select
 from starlette import status
 from cryptography.x509 import load_pem_x509_certificate
-from .. import models as m
-from ..db import Session, get_db
-from ..api import schemas as p
+from src.api import schemas as p
+from src.db import models as m
+from src.db.base import Session, get_db
 
 logger = logging.getLogger(__name__)
 
@@ -39,7 +39,7 @@ def generate_jwt(data):
         "exp": (now + timedelta(days=30)).timestamp(),
         "scope": "openid"
     }
-    private_key_path = Path(__file__).parent.parent.parent / 'jwt_keys/private_key.pem'
+    private_key_path = Path(__file__).parent.parent.parent.parent / 'jwt_keys/private_key.pem'
     private_key_text = private_key_path.read_text()
     private_key = serialization.load_pem_private_key(
         private_key_text.encode(encoding='utf-8'),  # utf-8 is default
@@ -48,7 +48,7 @@ def generate_jwt(data):
     return jwt.encode(payload=payload, key=private_key, algorithm="RS256")
 
 
-public_key_text = (Path(__file__).parent.parent.parent / "jwt_keys/public_key.pem").read_text()
+public_key_text = (Path(__file__).parent.parent.parent.parent / "jwt_keys/public_key.pem").read_text()
 public_key = load_pem_x509_certificate(public_key_text.encode()).public_key()
 
 

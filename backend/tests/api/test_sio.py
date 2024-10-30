@@ -1,12 +1,10 @@
 import asyncio
 
-import pytest
 from sqlalchemy import select, or_
 from sqlalchemy.orm import aliased
 
-from src.db import Session
-from src import models as m
-from src.api import schemas as p
+from src.db import models as m
+from src.db.base import Session
 from tests.data.data import user1, user2
 
 
