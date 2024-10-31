@@ -1,3 +1,4 @@
+import pytest
 from httpx import AsyncClient, ASGITransport
 from sqlalchemy import select
 from sqlalchemy.orm import aliased
@@ -7,10 +8,10 @@ from src.db.base import Session
 from src.main import app
 from src.db import models as m
 from .conftest import decode_access_token
-from src.api import schemas as p
+from src import schemas as p
 from ..data.data import user1, user2
 
-
+@pytest.mark.only
 def test_signup_user(signup_user1_response):
     print(signup_user1_response)
     assert signup_user1_response.status_code == status.HTTP_201_CREATED, \

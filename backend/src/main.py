@@ -2,9 +2,9 @@ import logging
 import socketio
 from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
-from .api.sio import sio
-from .utils import setup_logging
-from .api.api import router
+from src.api.sio import sio
+from src.utils import setup_logging
+from src.api.api import router
 
 setup_logging(logging.INFO)
 

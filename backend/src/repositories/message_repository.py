@@ -3,6 +3,6 @@ from src.repositories.abstract_repository import AbstractRepository
 from src.db import models as m
 
 
-class UserRepository(AbstractRepository[m.User]):
+class MessageRepository(AbstractRepository[m.User]):
     def __init__(self, session: AsyncSession):
-        super().__init__(session, m.User)
+        super().__init__(session, m.Message)

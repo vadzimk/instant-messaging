@@ -1,4 +1,4 @@
-from src.api import schemas as p
+from src import schemas as p
 
 user1 = p.CreateUserSchema(
     email="u1@mail.com",

@@ -6,11 +6,13 @@ import socketio
 from fastapi.encoders import jsonable_encoder
 from pydantic import BaseModel, ValidationError
 from sqlalchemy import select
-from ..db import models as m
-from ..db.base import get_db
+
+from src.api.dependencies.uow import get_db
+from src.db import models as m
+
 from src.api.dependencies.auth import get_current_user_id, get_user
-from .. import redis_client
-from . import schemas as p
+from src import redis_client
+from src import schemas as p
 
 logger = logging.getLogger(__name__)
 

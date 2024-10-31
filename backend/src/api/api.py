@@ -10,10 +10,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import aliased
 from starlette import status
 
-from ..db.base import get_db
-from ..db import models as m
-from src.api.dependencies.auth import hash_password, verify_password, generate_jwt, get_user
-from . import schemas as p
+from src.api.dependencies.uow import get_db, get_uow
+from src.api.dependencies.auth import verify_password, generate_jwt, get_user
+from src.db import models as m
+from src import schemas as p
+from src.services.user_service import UserService
+from src.unit_of_work.sqlalchemy_uow import SqlAlchemyUnitOfWork
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -22,20 +24,10 @@ logger = logging.getLogger(__name__)
 @router.post('/users', response_model=p.GetUserSchema, status_code=status.HTTP_201_CREATED)
 async def signup_user(
         user: p.CreateUserSchema,
-        session: AsyncSession = Depends(get_db)
+        uow: SqlAlchemyUnitOfWork = Depends(get_uow)
 ):
-    existing_user = await session.scalar(select(m.User).where(m.User.email == user.email))
-    if existing_user:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email already registered")
-    hashed_password = hash_password(user.password)
-    new_user = m.User(email=user.email,
-                      hashed_password=hashed_password,
-                      first_name=user.first_name,
-                      last_name=user.last_name)
-    session.add(new_user)
-    await session.commit()
-    await session.refresh(new_user)
-    return new_user
+    user_service = UserService(uow)
+    return await user_service.register_user(user)
 
 
 @router.post('/users/login', response_model=p.LoginUserSchema)

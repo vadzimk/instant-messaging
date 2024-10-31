@@ -12,9 +12,10 @@ from jwt import (ExpiredSignatureError, ImmatureSignatureError, InvalidAlgorithm
 from sqlalchemy import select
 from starlette import status
 from cryptography.x509 import load_pem_x509_certificate
-from src.api import schemas as p
+from src import schemas as p
+from src.api.dependencies.uow import get_db
 from src.db import models as m
-from src.db.base import Session, get_db
+from src.db.base import Session
 
 logger = logging.getLogger(__name__)
 
