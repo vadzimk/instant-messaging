@@ -11,6 +11,7 @@ from .conftest import decode_access_token
 from src import schemas as p
 from ..data.data import user1, user2
 
+
 @pytest.mark.only
 def test_signup_user(signup_user1_response):
     print(signup_user1_response)
@@ -63,8 +64,8 @@ async def test_create_contact(login_user1_response, signup_user2_response, creat
                 'id') == str(u2.id), "Created contact id does not match with created user id"
             UserContact = aliased(m.User)
             q = (select(m.User, UserContact)
-                 .join(m.Contact, m.User.id == m.Contact.c.user_id)
-                 .join(UserContact, m.Contact.c.contact_id == UserContact.id)
+                 .join(m.Contact.user)
+                 .join(UserContact, m.Contact.contact_user)
                  .where(m.User.id == u1.id))
             res = (await session.execute(q)).all()
             found = False
@@ -95,9 +96,6 @@ async def test_get_messages(client_with_auth_user1, send_message_u1_u2):
     )
     valid_response = p.GetMessagesSchema.model_validate(res.json())
     valid_msg = p.GetMessageSchema.model_validate(valid_response.messages[0])
-    _, expected_content =send_message_u1_u2
+    _, expected_content = send_message_u1_u2
     assert valid_msg.content == expected_content, "Message content does not equal to expected"
     assert str(valid_msg.user_to_id) == str(u2.id), "user_to_id does not equal to expected"
-
-
-

@@ -7,12 +7,14 @@ from fastapi.encoders import jsonable_encoder
 from pydantic import BaseModel, ValidationError
 from sqlalchemy import select
 
+from src.api.dependencies import get_user, get_current_user_id
 from src.db import models as m
 
-from src.api.dependencies.auth import get_current_user_id, get_user
 from src import redis_client
 from src import schemas as p
-from src.db.base import get_db
+from src.db.base import get_db, Session
+from src.services.user_service import UserService
+from src.unit_of_work.sqlalchemy_uow import SqlAlchemyUnitOfWork
 
 logger = logging.getLogger(__name__)
 
@@ -60,16 +62,20 @@ async def connect(sid, environ, auth):
         raise socketio.exceptions.ConnectionRefusedError('Socketio Authentication failed')
     token = auth.get('token')
     user_email = get_current_user_id(token)
-    async for session in get_db():  # consume async generator
-        user = await get_user(user_email, session)
-        await sio.save_session(sid, {'user_id': user.id})
 
-        # store sid in redis by user_id
-        # TODO if the client connects from second device the first device sid will be overridden
-        #  and messages on the first device will not go through
-        await redis_client.set_user_sid(user_id=user.id, sid=sid)
-        user_sid_in_redis = await redis_client.get_user_sid(user.id)
-        logger.info(f'on connection >>> {user.id} user_sid_in_redis {user_sid_in_redis}')
+    async with Session() as session:
+        async with SqlAlchemyUnitOfWork(session) as uow:
+            user_service = UserService(uow)
+            user: m.User = await get_user(user_email, user_service)
+
+            await sio.save_session(sid, {'user_id': user.id})
+
+            # store sid in redis by user_id
+            # TODO if the client connects from second device the first device sid will be overridden
+            #  and messages on the first device will not go through
+            await redis_client.set_user_sid(user_id=user.id, sid=sid)
+            user_sid_in_redis = await redis_client.get_user_sid(user.id)
+            logger.info(f'on connection >>> {user.id} user_sid_in_redis {user_sid_in_redis}')
 
 
 @sio.event

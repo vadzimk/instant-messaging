@@ -3,8 +3,8 @@ from typing import List
 import pytest
 from sqlalchemy import select
 
-from src.repositories.user_repository import UserRepository
 from src.db import models as m
+from src.repositories.repos import UserRepository
 from tests.data.data import user1
 
 

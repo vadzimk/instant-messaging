@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import Optional
 from uuid import UUID, uuid4
 from sqlalchemy.dialects.postgresql import UUID as PSQL_UUID
-from sqlalchemy import MetaData, event, inspect, String, Boolean, Text, ForeignKey, Table, Column
+from sqlalchemy import MetaData, event, inspect, String, Boolean, Text, ForeignKey, Table, Column, UniqueConstraint
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship, WriteOnlyMapped
 
 
@@ -16,15 +16,40 @@ class Model(DeclarativeBase):
     })
 
 
-# join table at level sqlalchemy_core
-# https://docs.sqlalchemy.org/en/20/orm/join_conditions.html#self-referential-many-to-many
-Contact = Table('contacts',
-                Model.metadata,
-                Column('user_id', PSQL_UUID, ForeignKey('users.id', ondelete='CASCADE'), primary_key=True,
-                       nullable=False),
-                Column('contact_id', PSQL_UUID, ForeignKey('users.id', ondelete='CASCADE'), primary_key=True,
-                       nullable=False),
-                )
+# association object
+class Contact(Model):
+    __tablename__ = 'contacts'
+    id: Mapped[UUID] = mapped_column(default=uuid4, primary_key=True)
+    user_id: Mapped[UUID] = mapped_column(ForeignKey('users.id', ondelete='CASCADE'))
+    contact_id: Mapped[UUID] = mapped_column(ForeignKey('users.id', ondelete='CASCADE'))
+    created_at: Mapped[datetime] = mapped_column(default=datetime.utcnow, index=True)
+    user: Mapped['User'] = relationship(
+        'User',
+        back_populates='contacts',
+        foreign_keys=[user_id],
+        lazy='joined',
+        innerjoin=True
+    )
+    contact_user: Mapped['User'] = relationship(
+        'User',
+        back_populates='associated_with',
+        foreign_keys=[contact_id],
+        lazy='joined',
+        innerjoin=True
+    )
+
+    __table_args__ = (UniqueConstraint('user_id', 'contact_id', name='_user_contact_uc'),)
+
+    def __repr__(self):
+        return f'Contact({self.id}, user_id={self.user_id}, contact_id={self.contact_id})'
+
+    def dict(self):
+        return {
+            'id': self.id,
+            'user_id': self.user_id,
+            'contact_id': self.contact_id,
+            'created_at': self.created_at,
+        }
 
 
 class User(Model):
@@ -46,23 +71,20 @@ class User(Model):
         foreign_keys='Message.user_to_id',
         cascade='all, delete-orphan',
         passive_deletes=True)
-    # many-to-many managed by sqlalchemy relationship
-    contacts: Mapped[list['User']] = relationship(
-        'User',
-        back_populates='contacts_of',
+    # many-to-many not managed by sqlalchemy relationship
+    contacts: Mapped[list['Contact']] = relationship(
+        'Contact',
+        back_populates='user',
         lazy='selectin',
-        secondary='contacts',
-        primaryjoin='User.id == contacts.c.user_id',
-        # Contact.c provides access to the column definitions of the table.
-        secondaryjoin='User.id == contacts.c.contact_id',
+        cascade='all, delete-orphan',
+        foreign_keys='Contact.user_id'
     )
-    contacts_of: Mapped[list['User']] = relationship(
-        'User',
-        back_populates='contacts',
+    associated_with: Mapped[list['Contact1']] = relationship(
+        'Contact',
+        back_populates='contact_user',
         lazy='selectin',
-        secondary='contacts',
-        primaryjoin='User.id == contacts.c.contact_id',
-        secondaryjoin='User.id == contacts.c.user_id',
+        cascade='all, delete-orphan',
+        foreign_keys='Contact.contact_id'
     )
 
     def __repr__(self):
@@ -89,10 +111,18 @@ class Message(Model):
 
     content: Mapped[str] = mapped_column(Text)
     created_at: Mapped[datetime] = mapped_column(default=datetime.utcnow, index=True)
-    user_from: Mapped['User'] = relationship(lazy='joined', back_populates='messages_sent', innerjoin=True,
-                                             foreign_keys=[user_from_id])
-    user_to: Mapped['User'] = relationship(lazy='joined', back_populates='messages_received', innerjoin=True,
-                                           foreign_keys=[user_to_id])
+    user_from: Mapped['User'] = relationship(
+        lazy='joined',
+        back_populates='messages_sent',
+        innerjoin=True,
+        foreign_keys=[user_from_id]
+    )
+    user_to: Mapped['User'] = relationship(
+        lazy='joined',
+        back_populates='messages_received',
+        innerjoin=True,
+        foreign_keys=[user_to_id]
+    )
 
     def __repr__(self):
         return (f'Message({self.id}, '

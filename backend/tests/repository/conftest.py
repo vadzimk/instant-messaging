@@ -4,8 +4,9 @@ import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.db.base import Session
-from src.repositories.user_repository import UserRepository
+
 from src.db import models as m
+from src.repositories.repos import UserRepository
 
 from tests.data.data import user1
 

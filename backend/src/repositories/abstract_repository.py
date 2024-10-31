@@ -3,9 +3,10 @@ from typing import TypeVar, Generic, Dict, Any, List, Optional, Tuple
 from uuid import UUID
 
 from sqlalchemy import select, and_
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.exceptions import EntityNotFoundError
+from src.exceptions import EntityNotFoundError, IntegrityErrorException
 
 T = TypeVar('T')
 
@@ -15,16 +16,25 @@ class AbstractRepository(Generic[T]):
         self.session = session
         self.model = model
 
+    async def _save(self, entity: T) -> T:
+        """ Helper method to flush and refresh and handle IntegrityError """
+        try:
+            await self.session.flush()
+            await self.session.refresh(entity)
+            # commit must be done in client code (service class) when using UOW pattern
+            # example: class Service: ... def method(): ... self.uow.commit()
+        except IntegrityError as err:
+            raise IntegrityErrorException(f"Integrity constraint violated {str(err)}")
+        return entity
+
     async def add(self, entity: T) -> T:
         """
-        Inserts new row with entity
+        Inserts new row with entity into the session
         @param entity:
-        @return: instance of inserted entity
+        @return: instance of inserted entity added to the session
         """
         self.session.add(entity)
-        await self.session.commit()
-        await self.session.refresh(entity)
-        return entity
+        return await self._save(entity)
 
     async def get(self, filters: Dict[str, Any]) -> Optional[T]:
         """
@@ -37,19 +47,17 @@ class AbstractRepository(Generic[T]):
 
     async def update(self, filters: Dict[str, Any], update: Dict[str, Any]) -> Optional[T]:
         """
-        Updates orm entity and returns updated instance
+        Updates orm entity and returns updated instance in the session
         @param filters: dict of column value for where equality condition
         @param update: dict of new column value
-        @return: updated entity
+        @return: updated entity in the session
         """
         entity = await self.get(filters)
         if not entity:
             raise EntityNotFoundError(f'Not found {self.model} matching filters {filters}')
         for col, value in update.items():
             setattr(entity, col, value)
-        await self.session.commit()
-        await self.session.refresh(entity)
-        return entity
+        return await self._save(entity)
 
     async def delete(self, filters: Dict[str, Any]) -> None:
         entity = await self.get(filters)
@@ -65,7 +73,7 @@ class AbstractRepository(Generic[T]):
             filters: Optional[Dict[str, Any]] = None,
             *,
             dynamic_filters: Optional[List[Tuple[str, str, Any]]] = None
-    ) -> List[T]:
+    ) -> List[Any]:
         """
         Retrieves a paginated, filtered, and sorted list of items starting from a cursor position.
         @param cursor: last returned result; default=(last_item_created_at, id)
