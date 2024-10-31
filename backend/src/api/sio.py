@@ -7,12 +7,12 @@ from fastapi.encoders import jsonable_encoder
 from pydantic import BaseModel, ValidationError
 from sqlalchemy import select
 
-from src.api.dependencies.uow import get_db
 from src.db import models as m
 
 from src.api.dependencies.auth import get_current_user_id, get_user
 from src import redis_client
 from src import schemas as p
+from src.db.base import get_db
 
 logger = logging.getLogger(__name__)
 

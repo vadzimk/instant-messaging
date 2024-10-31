@@ -10,10 +10,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import aliased
 from starlette import status
 
-from src.api.dependencies.uow import get_db, get_uow
-from src.api.dependencies.auth import verify_password, generate_jwt, get_user
+from src.api.dependencies.uow import get_uow, get_user_service
+from src.api.dependencies.auth import get_user
 from src.db import models as m
 from src import schemas as p
+from src.db.base import get_db
 from src.services.user_service import UserService
 from src.unit_of_work.sqlalchemy_uow import SqlAlchemyUnitOfWork
 
@@ -34,19 +35,9 @@ async def signup_user(
 async def login_user(
         #  The OAuth2 specification for a password flow the data should be collected using form data (instead of JSON)
         form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
-        session: AsyncSession = Depends(get_db)
+        user_service: UserService = Depends(get_user_service)
 ):
-    user_email = form_data.username
-    user_password = form_data.password
-    user = await session.scalar(select(m.User).where(m.User.email == user_email))
-    if not (user and verify_password(user_password, user.hashed_password)):
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Incorrect username or password")
-    access_token = generate_jwt(data={'sub': user.email})
-    return p.LoginUserSchema(
-        **user.dict(),
-        access_token=access_token,
-        token_type='bearer'
-    )
+    return await user_service.login_user(form_data)
 
 
 @router.post('/me')

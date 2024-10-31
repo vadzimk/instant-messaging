@@ -13,9 +13,10 @@ from sqlalchemy import select
 from starlette import status
 from cryptography.x509 import load_pem_x509_certificate
 from src import schemas as p
-from src.api.dependencies.uow import get_db
+
 from src.db import models as m
-from src.db.base import Session
+from src.db.base import Session, get_db
+from src.exceptions import CouldNotValidateCredentials
 
 logger = logging.getLogger(__name__)
 
@@ -68,15 +69,6 @@ def decode_and_validate_token(access_token: str) -> dict:
 
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl='/api/users/login')
-
-
-class CouldNotValidateCredentials(HTTPException):
-    def __init__(self, message="Could not validate credentials"):
-        super().__init__(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=message,
-            headers={"WWW-Authenticate": "Bearer"},
-        )
 
 
 def get_current_user_id(token: Annotated[str, Depends(oauth2_scheme)]) -> str:
