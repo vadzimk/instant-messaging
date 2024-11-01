@@ -54,6 +54,10 @@ pnpm i && \
 pnpm run dev
 ```
 
+## Database ERD relationship model
+shows actual ORM relationships only, all columns are not shown  
+![ERD](backend/migrations/diagrams/ERD_contacts_association_object_step2.jpg)
+
 <details>
 <summary>Requirements specification</summary>
 
