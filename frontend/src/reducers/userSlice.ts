@@ -6,7 +6,9 @@ import {AppDispatch} from '../store.ts';
 import {GetUserSchema, LoginUserSchema, UserState} from './types';
 
 
-const initialState: UserState = {}
+const initialState: UserState = {
+    status: 'idle'
+}
 
 const userSlice = createSlice({
     name: 'user',

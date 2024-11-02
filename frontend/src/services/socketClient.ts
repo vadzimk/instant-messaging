@@ -4,6 +4,13 @@ import {type AppDispatch} from '../store.ts';
 import {GetMessageSchema, GetUserSchema} from '../reducers/types';
 import {messageReceived} from '../reducers/chatSlice.ts';
 
+
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-expect-error
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+type AllButLast<T extends any[]> = T extends [...infer H, infer L] ? H : any[];
+
+
 // // example of using buffer for binary data
 // const buffer = new ArrayBuffer(8); // Create an ArrayBuffer of size 8 bytes
 // const view = new Uint8Array(buffer); // Create a view for the ArrayBuffer
@@ -17,7 +24,7 @@ interface ServerToClientEvents {
 }
 
 interface ClientToServerEvents {
-    hello: () => void;
+    message_send: () => void;
 }
 
 
@@ -66,25 +73,25 @@ export class SocketClient {
     }
 
 
-    public emit(
-        event,
-        ...args
+    public emit<K extends keyof ClientToServerEvents>(
+        event: K,
+        ...args: Parameters<ClientToServerEvents[K]>
     ) {
         this.socket?.emit(event, ...args)
     }
 
-    public emitWithAck(
-        event,
-        ...args
+    public emitWithAck<K extends keyof ClientToServerEvents>(
+        event: K,
+        ...args: AllButLast<Parameters<ClientToServerEvents[K]>>
     ) {
         return this.socket?.emitWithAck(event, ...args)
     }
 
-    public on(
-        event,
-        callback,
+    public on<K extends keyof ServerToClientEvents>(
+        event: K,
+        callback: ServerToClientEvents[K],
     ) {
-        this.socket?.on(event, callback)
+        this.socket?.on(event, callback as any)
     }
 
 
