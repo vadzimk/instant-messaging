@@ -6,6 +6,7 @@ import Index from './pages/Signup';
 import {useEffect, useState} from 'react';
 import {SocketClient} from './services/socketClient.ts';
 import {useAppDispatch, useAppSelector} from './hooks.ts';
+import {GetUserSchema, UserState} from './reducers/types';
 
 const router = createBrowserRouter([
     {
@@ -17,6 +18,14 @@ const router = createBrowserRouter([
     }
 ])
 
+function isGetUserSchema(user: UserState): user is GetUserSchema{
+    return (
+        typeof user.id === 'string' &&
+            typeof user.email === 'string' &&
+            typeof user.first_name === 'string' &&
+            typeof user.last_name === 'string'
+    )
+}
 
 function App() {
     const [accessToken, setAccessToken] = useState<string | null>(
@@ -31,10 +40,19 @@ function App() {
             setAccessToken(token)
         }
         window.addEventListener('storage', handleStorageChange)
-        if(accessToken){
+        if(accessToken && isGetUserSchema(user)){
             new SocketClient(accessToken, user, dispatch)
         }
-        return () => SocketClient.disconnect()
+        return () => {
+            try {
+                SocketClient.getInstance() // if initialized
+                SocketClient.disconnect()
+            } catch {
+                /* empty */
+            } finally {
+                window.removeEventListener('storage', handleStorageChange)
+            }
+        }
     }, [accessToken, dispatch, user])
 
     return (

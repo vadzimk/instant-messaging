@@ -30,14 +30,18 @@ export default function ActiveChat() {
             try {
                 await dispatch(sendMessage({contact_id: currentContactId, content: message})).unwrap()
                 setMessage('')
+                // reset text area height after the message is sent
+                if (textareaRef.current){
+                    textareaRef.current.style.height = 'auto'
+                }
             } catch {
                 /* empty */
             }
 
         }
     }
-    const handleKeyDown = async (e: React.KeyboardEvent<HTMLTextAreaElement>)=>{
-        if(e.key === 'Enter' && e.shiftKey){
+    const handleKeyDown = async (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+        if (e.key === 'Enter' && e.shiftKey) {
             e.preventDefault() // prevent new line
             await handleSendMessage(e)
         }
@@ -47,11 +51,11 @@ export default function ActiveChat() {
             {/*Active chat header*/}
             <div className="flex flex-row justify-between ">
                 <div className="flex flex-row">
-                    <Avatar className="w-8"/>
                     {
                         currentContact &&
                         (
                             <div className="ml-3">
+                                <Avatar className="w-8"/>
                                 <p className="text-md text-black dark:text-white">{currentContact.first_name} {currentContact.last_name}</p>
                                 <p className="text-xs">Last seen 45 minutes ago</p>
                             </div>
@@ -62,26 +66,29 @@ export default function ActiveChat() {
                     <KebabHorizontalIcon className="mr-3"/>
                 </div>
             </div>
-            <ChatHistory/>
-            <form onSubmit={handleSendMessage}
-                  className="relative">
-                <Textarea
-                    ref={textareaRef}
-                    name="message"
-                    data-focus
-                    data-hover
-                    rows={1}
-                    value={message}
-                    onChange={handleInputChange}
-                    onKeyDown={handleKeyDown}
-                    placeholder="start typing"
-                    className="input-base w-full resize-none overflow-hidden focus:outline-none min-h-12 p-2"
-                />
-                <button type="submit"
-                        className="flex flex-col justify-center px-4 absolute top-0 right-0 h-full">
-                    <PaperAirplaneIcon/>
-                </button>
-            </form>
+
+            {currentContact && <>
+                <ChatHistory/>
+                <form onSubmit={handleSendMessage}
+                      className="relative">
+                    <Textarea
+                        ref={textareaRef}
+                        name="message"
+                        data-focus
+                        data-hover
+                        rows={1}
+                        value={message}
+                        onChange={handleInputChange}
+                        onKeyDown={handleKeyDown}
+                        placeholder="start typing"
+                        className="input-base w-full resize-none overflow-hidden focus:outline-none min-h-12 p-2"
+                    />
+                    <button type="submit"
+                            className="flex flex-col justify-center px-4 absolute top-0 right-0 h-full">
+                        <PaperAirplaneIcon/>
+                    </button>
+                </form>
+            </>}
         </div>
     );
 }

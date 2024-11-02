@@ -24,7 +24,7 @@ export function ChatHistory() {
             messagesEndRef.current.scrollIntoView({behavior: 'smooth'})
         }
     })
-
+    console.log(currentChat?.messages.map(c=>c.content))
     return (
         <div className="h-full flex-1 flex-col justify-end overflow-y-auto"> {/* overflow appears with flex-1 */}
             {
@@ -34,7 +34,12 @@ export function ChatHistory() {
                              className={clsx('chat', m.user_from_id===currentContactId ? "chat-start": "chat-end")}
                         >
                             <div className={clsx("chat-bubble", m.user_from_id===currentContactId ? "chat-bubble-primary" : "chat-bubble-accent")}>
-                                {m.content}
+                                {m.content.split('\n').map((line, index, arr)=>(
+                                    <>
+                                        {line}
+                                        {index < arr.length -1 && <br/>}
+                                    </>
+                                ))}
                             </div>
                         </div>
                     )

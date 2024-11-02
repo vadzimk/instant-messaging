@@ -24,7 +24,7 @@ export default function ContactItem({contact, className, onClick}: ContactItemPr
                     <p className="text-sm">Oct/10/2024</p>
                 </div>
                 {latestMessage ?
-                    <p>{latestMessage.content}</p>
+                    <p>{latestMessage.content.substring(0, 30)}{latestMessage.content.length > 20 ? '...' : ''}</p>
                     : <p>Just added</p>}
             </div>
         </div>

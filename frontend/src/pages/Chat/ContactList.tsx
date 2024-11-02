@@ -27,16 +27,20 @@ export default function ContactList() {
                     <NewIcon className="btn btn-sm btn-circle btn-ghost"/>
                 </button>
             </div>
-            <div className="flex flex-col overflow-y-auto">
+            <div className="flex flex-col overflow-y-auto flex-1">
                 {
-                    contactList.map(c => (
-                        <ContactItem
-                            key={c.id}
-                            contact={c}
-                            className={currentContactId === c.id ? "bg-custom-fallback-bc bg-opacity-30 dark:bg-opacity-15" : ""}
-                            onClick={() => handleContactClick(c.id)}
-                        />
-                    )).reverse()
+                    contactList.length === 0
+                        ? <div className="flex flex-col flex-1 justify-center">
+                            <p>Click the <span><NewIcon className="inline w-5"/> </span> icon to start a new chat</p>
+                    </div>
+                        : contactList.map(c => (
+                            <ContactItem
+                                key={c.id}
+                                contact={c}
+                                className={currentContactId === c.id ? "bg-custom-fallback-bc bg-opacity-30 dark:bg-opacity-15" : ""}
+                                onClick={() => handleContactClick(c.id)}
+                            />
+                        )).reverse()
                 }
             </div>
             <Modal onClose={handleModalClose} isOpen={isModalOpen}>
