@@ -58,6 +58,9 @@ pnpm run dev
 shows actual ORM relationships only, all columns are not shown  
 ![ERD](backend/migrations/diagrams/ERD_contacts_association_object_step2.jpg)
 
+## Completed UI screenshots
+![UI](screenshots.png)
+
 <details>
 <summary>Requirements specification</summary>
 
