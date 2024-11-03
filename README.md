@@ -38,6 +38,7 @@
 - Service classes handle business logic
 
 ## Start Demo 
+Serves frontend on ***localhost:80***
 ```shell
 git clone https://gitlab.com/telei/instant-messaging.git && \
 cd instant-messaging && \
