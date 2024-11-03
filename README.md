@@ -36,14 +36,28 @@
 - Repository pattern
 - Unit of work pattern
 - Service classes handle business logic
-  
-## Prerequisites
+
+## Start Demo 
+```shell
+git clone https://gitlab.com/telei/instant-messaging.git && \
+cd instant-messaging && \
+make demo.up
+```
+
+## Finish Demo
+```shell
+make demo.clean
+```
+
+## Completed UI screenshots
+![UI](screenshots.png)
+
+## Development and Test
+### Prerequisites
 - pnpm
   - https://pnpm.io/installation
 - nodejs v22
 - python v3.10
-  
-## Development and Test
 ```shell
 cd backend && \
 make docker.up.dev && \
@@ -58,21 +72,6 @@ pnpm run dev
 ## Database ERD relationship model
 shows actual ORM relationships only, all columns are not shown  
 ![ERD](backend/migrations/diagrams/ERD_contacts_association_object_step2.jpg)
-
-## Completed UI screenshots
-![UI](screenshots.png)
-
-## Start Demo 
-```shell
-git clone https://gitlab.com/telei/instant-messaging.git && \
-cd instant-messaging && \
-make demo.up
-```
-
-## Finish Demo
-```shell
-make demo.clean
-```
 <details>
 <summary>Requirements specification</summary>
 
