@@ -1,8 +1,9 @@
+import os
 from uuid import UUID
 
 import redis.asyncio as aioredis
 
-rclient = aioredis.from_url('redis://localhost:6379/0')
+rclient = aioredis.from_url(f'redis://{os.getenv("REDIS_HOST")}:{os.getenv("REDIS_PORT")}/0')
 
 
 async def set_user_sid(user_id: str | UUID, sid: str):

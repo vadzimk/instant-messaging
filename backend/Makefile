@@ -5,7 +5,7 @@ backend.test:
 	pipenv run python -m pytest -vv -s
 
 backend.dev:
-	pipenv run uvicorn src.main:app --reload
+	ENV=development pipenv run uvicorn src.main:app --reload
 
 # generate public private key pair
 jwt.keys:

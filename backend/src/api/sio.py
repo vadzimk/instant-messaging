@@ -1,4 +1,5 @@
 import logging
+import os
 from functools import wraps
 from typing import Callable, Type
 
@@ -18,7 +19,7 @@ from src.unit_of_work.sqlalchemy_uow import SqlAlchemyUnitOfWork
 
 logger = logging.getLogger(__name__)
 
-redis_manager = socketio.AsyncRedisManager(url='redis://localhost:6379/0')
+redis_manager = socketio.AsyncRedisManager(url=f'redis://{os.getenv("REDIS_HOST")}:{os.getenv("REDIS_PORT")}/0')
 # test client https://github.com/serajhqi/socketio-test-client
 sio = socketio.AsyncServer(
     async_mode='asgi',

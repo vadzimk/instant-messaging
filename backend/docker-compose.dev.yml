@@ -9,5 +9,14 @@ services:
     env_file:
       - .env.dev
 
+  redis:
+    image: redis
+    expose:
+      - 6379
+    command: [ 'redis-server', '--appendonly', 'yes' ]
+    restart: unless-stopped
+
+
 volumes:
   postgres_data:
+  redis_data:
