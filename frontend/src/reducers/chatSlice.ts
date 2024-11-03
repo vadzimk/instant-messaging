@@ -11,7 +11,7 @@ import {
     GetMessagesSchema, MessageReceivedPayloadType,
     SioResponseSchema
 } from './types';
-import {baseUrl, fetchWithAuthHandler} from '../services/api.ts';
+import {fetchWithAuthHandler} from '../services/api.ts';
 
 
 const initialState: ChatState = {
@@ -99,7 +99,7 @@ export const getMessages = createAsyncThunk<{ data: GetMessagesSchema, contactId
     '/chat/getMessages',
     async (contactId: string, thunkAPI) => {
         const data = await fetchWithAuthHandler<GetMessagesSchema>(
-            `${baseUrl}/api/chats/${contactId}`,
+            `/api/chats/${contactId}`,
             {
                 method: "GET"
             },

@@ -1,5 +1,4 @@
 import {io, Socket} from 'socket.io-client';
-import {baseUrl} from './api.ts';
 import {type AppDispatch} from '../store.ts';
 import {GetMessageSchema, GetUserSchema} from '../reducers/types';
 import {messageReceived} from '../reducers/chatSlice.ts';
@@ -43,7 +42,7 @@ export class SocketClient {
         this.access_token = access_token
         this.appUser = user
         this.dispatch = dispatch
-        this.socket = io(baseUrl, {
+        this.socket = io(undefined, {
             auth: {token: this.access_token}
         })
         this.setupListeners()

@@ -1,7 +1,7 @@
 import {createAsyncThunk, createSlice, PayloadAction} from '@reduxjs/toolkit';
 import {SignupInputs} from '../pages/Signup/SignupForm.tsx';
 import {LoginFields} from '../pages/Login/LoginForm.tsx';
-import {baseUrl, fetchWithHandler} from '../services/api.ts';
+import {fetchWithHandler} from '../services/api.ts';
 import {AppDispatch} from '../store.ts';
 import {GetUserSchema, LoginUserSchema, UserState} from './types';
 
@@ -35,7 +35,7 @@ export const signupUser = createAsyncThunk<GetUserSchema, SignupInputs>(
     '/user/signup',
     async (userSignupFields: SignupInputs, thunkAPI) => {
         return await fetchWithHandler(
-            `${baseUrl}/api/users`,
+            `/api/users`,
             {
                 method: "POST",
                 body: JSON.stringify(userSignupFields)
@@ -53,7 +53,7 @@ export const loginUser = createAsyncThunk<LoginUserSchema, LoginFields>(
         form.append("username", userLoginFields.email)
         form.append("password", userLoginFields.password)
         const data = await fetchWithHandler(
-            `${baseUrl}/api/users/login`,
+            `/api/users/login`,
             {
                 method: "POST",
                 body: form, // send as FormData

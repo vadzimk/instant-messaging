@@ -1,5 +1,5 @@
 import {createAsyncThunk, createSlice, PayloadAction} from '@reduxjs/toolkit';
-import {baseUrl, FastApiError, fetchWithAuthHandler} from '../services/api.ts';
+import {FastApiError, fetchWithAuthHandler} from '../services/api.ts';
 import {AppDispatch, RootState} from '../store.ts';
 import {ContactsState, CreateContactSchema, GetContactSchema, GetContactsSchema} from './types';
 
@@ -38,7 +38,7 @@ export const addContact = createAsyncThunk<GetContactSchema, CreateContactSchema
     async (contactFields: CreateContactSchema,
            thunkAPI) => {
         return await fetchWithAuthHandler<GetContactSchema>(
-            `${baseUrl}/api/contacts`,
+            `/api/contacts`,
             {
                 method: "POST",
                 body: JSON.stringify(contactFields)
@@ -55,7 +55,7 @@ export const getContacts = createAsyncThunk<GetContactsSchema>(
     '/contacts/get',
     async (_, thunkAPI) => {
         return await fetchWithAuthHandler<GetContactsSchema>(
-            `${baseUrl}/api/contacts`,
+            `/api/contacts`,
             {
                 method: "GET",
             },
