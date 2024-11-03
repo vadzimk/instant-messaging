@@ -31,9 +31,14 @@ function App() {
             const token = window.localStorage.getItem('access_token')
             setAccessToken(token)
         }
-        window.addEventListener('storage', handleStorageChange)
+
+        window.addEventListener('storage', handleStorageChange)  // 'storage' event only triggers when changes are made to localStorage from another tab or window
+        handleStorageChange() // to handle updates made within the same tab
+
         if(accessToken && user.id !== undefined){
+
             new SocketClient(accessToken, user as GetUserSchema, dispatch)
+            console.log('SocketClient created')
         }
         return () => {
             try {
