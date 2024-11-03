@@ -1,4 +1,5 @@
 # instant-messaging app
+### [Link to Start demo](#start-demo)
 
 ## User stories
 - [x] user wants to authenticate
@@ -27,9 +28,9 @@
     - you can query redis for sio to see who is online
     - chatbot and celery notification queue when offline
       - add telegram username to user model
-- [ ] deployment
-  - [ ] make app docker image
-  - [ ] make nginx reverse-proxy service
+- [x] deployment
+  - [x] make app docker image
+  - [x] make nginx reverse-proxy service
 
 ## System design considerations
 - Repository pattern
@@ -38,7 +39,7 @@
   
 ## Prerequisites
 - pnpm
-  - `npm install -g pnpm`
+  - https://pnpm.io/installation
 - nodejs v22
 - python v3.10
   
@@ -61,6 +62,17 @@ shows actual ORM relationships only, all columns are not shown
 ## Completed UI screenshots
 ![UI](screenshots.png)
 
+## Start Demo 
+```shell
+git clone https://gitlab.com/telei/instant-messaging.git && \
+cd instant-messaging && \
+make demo.up
+```
+
+## Finish Demo
+```shell
+make demo.clean
+```
 <details>
 <summary>Requirements specification</summary>
 
