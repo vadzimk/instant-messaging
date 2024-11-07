@@ -4,7 +4,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import aliased
 from starlette import status
 
-from src.db.base import Session
+from src.db.session import Session
 from src.main import app
 from src.db import models as m
 from .conftest import decode_access_token

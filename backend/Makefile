@@ -2,7 +2,7 @@ docker.up.dev:
 	docker-compose -f docker-compose.dev.yml up -d
 
 backend.test:
-	pipenv run python -m pytest -vv -s
+	ENV=development pipenv run python -m pytest -vv -s
 
 backend.dev:
 	ENV=development pipenv run uvicorn src.main:app --reload

@@ -9,7 +9,7 @@ from sqlalchemy.ext.asyncio import async_engine_from_config
 
 from alembic import context
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))  # ensures that the parent directory is in the Python path.
-from src.db.base import engine # <-- new
+from src.db.session import engine # <-- new
 import src.db.models as models
 
 # this is the Alembic Config object, which provides

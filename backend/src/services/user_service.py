@@ -4,19 +4,20 @@ from src.exceptions import AlreadyRegisteredException, IncorrectCredentialsExcep
 from src.services.auth import hash_password, verify_password, generate_jwt
 from src.db import models as m
 from src.repositories.repos import UserRepository
-from src.unit_of_work.sqlalchemy_uow import AbstractUnitOfWork
+from src.unit_of_work.sqlalchemy_uow import SqlAlchemyUnitOfWork
 from src import schemas as p
 
 
+# service classes can reference any repository that is why I do a commit inside service class itself
 class UserService:
-    def __init__(self, uow: AbstractUnitOfWork):
-        self.uow = uow
+    def __init__(self, uow: SqlAlchemyUnitOfWork):
+        self._uow = uow
         self._user_repo: Optional[UserRepository] = None
 
     @property
     def user_repo(self) -> UserRepository:
         if self._user_repo is None:
-            self._user_repo = self.uow.get_user_repository()
+            self._user_repo = self._uow.get_user_repository()
         return self._user_repo
 
     async def get_existing_user(self, filters: Dict[str, Any]):
@@ -34,7 +35,7 @@ class UserService:
             first_name=user_data.first_name,
             last_name=user_data.last_name)
         new_user = await self.user_repo.add(new_user)
-        await self.uow.commit()
+        await self._uow.commit()
         return new_user
 
     async def login_user(self, form_data: OAuth2PasswordRequestForm) -> p.LoginUserSchema:

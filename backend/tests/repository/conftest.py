@@ -1,10 +1,8 @@
 import asyncio
+import os
 from typing import AsyncGenerator, List
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
-
-from src.db.base import Session
-
 from src.db import models as m
 from src.repositories.repos import UserRepository
 
@@ -20,6 +18,8 @@ def event_loop(request):
 
 @pytest.fixture
 async def async_session() -> AsyncGenerator[AsyncSession, None]:
+    from src.db.session import Session  # moved from outer scope so that load_env has a change to run first
+
     session: AsyncSession = Session()
     try:
         yield session
