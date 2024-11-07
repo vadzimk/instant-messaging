@@ -10,7 +10,7 @@ import socketio
 import jwt
 
 from src.main import app
-from src.db.base import Session
+from src.db.session import Session
 from src.db import models as m
 from src import schemas as p
 from tests.data.data import user1, user2, baseUrl

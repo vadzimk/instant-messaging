@@ -4,7 +4,7 @@ from sqlalchemy import select, or_
 from sqlalchemy.orm import aliased
 
 from src.db import models as m
-from src.db.base import Session
+from src.db.session import Session
 from tests.data.data import user1, user2
 
 

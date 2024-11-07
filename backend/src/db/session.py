@@ -1,5 +1,7 @@
 import os
+from typing import AsyncGenerator
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
+
 # TODO replace hard coded values with configuration class
 
 print("PORT-------->", os.getenv('POSTGRES_PORT'))
@@ -11,7 +13,7 @@ engine = create_async_engine(db_path)
 Session = async_sessionmaker(engine, expire_on_commit=False)
 
 
-async def get_db():
+async def get_db() -> AsyncGenerator[AsyncSession, None]:
     session: AsyncSession = Session()
     try:
         yield session

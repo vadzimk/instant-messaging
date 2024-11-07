@@ -5,7 +5,7 @@ from src.services.contact_service import ContactService
 from src.services.message_service import MessageService
 from src.unit_of_work.sqlalchemy_uow import SqlAlchemyUnitOfWork
 from src.db import models as m
-from src.db.base import Session
+from src.db.session import Session
 from src.services.user_service import UserService
 from fastapi import HTTPException, Depends
 from fastapi.security import OAuth2PasswordBearer

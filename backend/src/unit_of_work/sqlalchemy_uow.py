@@ -23,36 +23,25 @@ class AbstractUnitOfWork(ABC):
         """ called by the client code """
         raise NotImplementedError()
 
-    @abstractmethod
-    def get_user_repository(self) -> UserRepository:
-        raise NotImplementedError()
-
-    @abstractmethod
-    def get_message_repository(self) -> MessageRepository:
-        raise NotImplementedError()
-
-    def get_contact_repository(self) -> ContactRepository:
-        raise NotImplementedError()
-
 
 class SqlAlchemyUnitOfWork(AbstractUnitOfWork):
     def __init__(self, session: AsyncSession):
-        self.session = session
-        self.user_repository = UserRepository(self.session)
-        self.message_repository = MessageRepository(self.session)
-        self.contact_repository = ContactRepository(self.session)
+        self._session = session
+        self._user_repository = UserRepository(self._session)
+        self._message_repository = MessageRepository(self._session)
+        self._contact_repository = ContactRepository(self._session)
 
     async def commit(self):
-        await self.session.commit()
+        await self._session.commit()
 
     async def rollback(self):
-        await self.session.rollback()
+        await self._session.rollback()
 
     def get_user_repository(self) -> UserRepository:
-        return self.user_repository
+        return self._user_repository
 
     def get_message_repository(self) -> MessageRepository:
-        return self.message_repository
+        return self._message_repository
 
     def get_contact_repository(self) -> ContactRepository:
-        return self.contact_repository
+        return self._contact_repository
