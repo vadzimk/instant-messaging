@@ -14,12 +14,15 @@ from src.db import models as m
 from src import redis_client
 from src import schemas as p
 from src.db.session import get_db, Session
+from src.main import server_settings
 from src.services.user_service import UserService
 from src.unit_of_work.sqlalchemy_uow import SqlAlchemyUnitOfWork
 
 logger = logging.getLogger(__name__)
 
-redis_manager = socketio.AsyncRedisManager(url=f'redis://{os.getenv("REDIS_HOST")}:{os.getenv("REDIS_PORT")}/0')
+redis_manager = socketio.AsyncRedisManager(
+    url=f'redis://{server_settings.REDIS_HOST}:{server_settings.REDIS_PORT}/0')
+
 # test client https://github.com/serajhqi/socketio-test-client
 sio = socketio.AsyncServer(
     async_mode='asgi',

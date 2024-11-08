@@ -1,19 +1,14 @@
 import logging
-import os
 import socketio
 from fastapi import FastAPI
 from starlette import status
 from starlette.middleware.cors import CORSMiddleware
 from starlette.requests import Request
 from starlette.responses import JSONResponse
-from dotenv import load_dotenv, find_dotenv
 
-# must run before all local imports
-if os.getenv('ENV') != 'development':
-    # variables were exported in container
-    pass
-else:
-    load_dotenv(find_dotenv('.env.dev'))
+from src.settings import configure_server_settings
+
+server_settings = configure_server_settings()  # must be called before local imports
 
 from src.api.sio import sio
 from src import exceptions as e

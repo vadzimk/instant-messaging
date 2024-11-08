@@ -59,6 +59,15 @@ make demo.clean
   - https://pnpm.io/installation
 - nodejs v22
 - python v3.10
+
+### Create telegram bot token
+Search for BotFather  
+/start  
+/newbot
+
+### Create `.env.dev`
+Copy from `.env.dev.example` and paste your bot token
+
 ```shell
 cd backend && \
 make docker.up.dev && \
