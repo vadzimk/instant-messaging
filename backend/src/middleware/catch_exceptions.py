@@ -19,8 +19,6 @@ async def custom_exception_handler(request: Request, exc: Exception):
     detail = str(exc)  # Default detail message
     headers = {}
 
-    logger.info(f"This is UserNotFoundException {isinstance(exc, e.UserNotFoundException)}")
-
     if isinstance(exc, e.IntegrityErrorException):
         status_code = status.HTTP_400_BAD_REQUEST
 
@@ -34,7 +32,7 @@ async def custom_exception_handler(request: Request, exc: Exception):
         status_code = status.HTTP_400_BAD_REQUEST
 
     elif isinstance(exc, e.CouldNotValidateCredentials):
-        status_code = status.HTTP_401_UNAUTHORIZED,
+        status_code = status.HTTP_401_UNAUTHORIZED
         headers = {"WWW-Authenticate": "Bearer"}
         detail = "Could not validate credentials"
 

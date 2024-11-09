@@ -3,7 +3,7 @@ from uuid import UUID
 
 import redis.asyncio as aioredis
 
-from src.main import server_settings
+from src.settings import server_settings
 
 rclient = aioredis.from_url(
     f'redis://{server_settings.REDIS_HOST}:{server_settings.REDIS_PORT}/0')

@@ -25,6 +25,8 @@ async def test_update_user(insert_user1, async_session):
     user_repository = UserRepository(async_session)
     expected_last_name = 'Bobbis'
     updated_user = await user_repository.update({'email': user1.email}, {'last_name': expected_last_name})
+    await async_session.commit()  # remember to commit changes
+    await async_session.refresh(updated_user)  # refresh object from db to prevent stale user pointer
     assert updated_user.last_name == expected_last_name, "returned updated user's last_name is not as expected"
     q = select(m.User).where(m.User.email == user1.email)
     user_from_db = await async_session.scalar(q)

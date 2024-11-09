@@ -24,7 +24,7 @@ class ServerSettings(BaseSettings):
 
 def configure_server_settings():
     """ Configures Server settings
-    Must be called before all local imports,
+    Must be called before all local imports in main.py,
      so that dependencies get the environment variables populated
     """
     if os.getenv('ENV') != 'development':
@@ -32,4 +32,7 @@ def configure_server_settings():
         pass
     else:
         load_dotenv(find_dotenv('.env.dev'))
+
     return ServerSettings()
+
+server_settings = configure_server_settings()

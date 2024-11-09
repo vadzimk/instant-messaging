@@ -8,13 +8,13 @@ from fastapi.encoders import jsonable_encoder
 from pydantic import BaseModel, ValidationError
 from sqlalchemy import select
 
-from src.api.dependencies import get_user, get_current_user_id
+from src.api.dependencies import authenticated_user, get_current_user_id
 from src.db import models as m
 
 from src import redis_client
 from src import schemas as p
-from src.db.session import get_db, Session
-from src.main import server_settings
+from src.db.session import Session
+from src.settings import server_settings
 from src.services.user_service import UserService
 from src.unit_of_work.sqlalchemy_uow import SqlAlchemyUnitOfWork
 
@@ -67,10 +67,10 @@ async def connect(sid, environ, auth):
     token = auth.get('token')
     user_email = get_current_user_id(token)
 
-    async with Session() as session:
-        async with SqlAlchemyUnitOfWork(session) as uow:
+    async with Session() as db_session:
+        async with SqlAlchemyUnitOfWork(db_session) as uow:
             user_service = UserService(uow)
-            user: m.User = await get_user(user_email, user_service)
+            user: m.User = await authenticated_user(user_email, user_service)
 
             await sio.save_session(sid, {'user_id': user.id})
 
@@ -87,7 +87,7 @@ async def connect(sid, environ, auth):
 async def message_send(sid, msg: p.CreateMessageSchema):
     sio_session = await sio.get_session(sid)
     user_id_from = sio_session.get("user_id")
-    async for db_session in get_db():
+    async with Session() as db_session:
         user_from = await db_session.scalar(select(m.User).where(m.User.id == user_id_from))
         user_to = await db_session.scalar(select(m.User).where(m.User.id == msg.contact_id))
         msg = m.Message(user_from=user_from, user_to=user_to, content=msg.content)
