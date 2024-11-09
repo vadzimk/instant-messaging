@@ -1,12 +1,10 @@
 import logging
-import os
 from functools import wraps
 from typing import Callable, Type
 
 import socketio
 from fastapi.encoders import jsonable_encoder
 from pydantic import BaseModel, ValidationError
-from sqlalchemy import select
 
 from src.api.dependencies import authenticated_user, get_current_user_id
 from src.db import models as m
@@ -14,6 +12,7 @@ from src.db import models as m
 from src import redis_client
 from src import schemas as p
 from src.db.session import Session
+from src.services.message_service import MessageService
 from src.settings import server_settings
 from src.services.user_service import UserService
 from src.unit_of_work.sqlalchemy_uow import SqlAlchemyUnitOfWork
@@ -88,23 +87,25 @@ async def message_send(sid, msg: p.CreateMessageSchema):
     sio_session = await sio.get_session(sid)
     user_id_from = sio_session.get("user_id")
     async with Session() as db_session:
-        user_from = await db_session.scalar(select(m.User).where(m.User.id == user_id_from))
-        user_to = await db_session.scalar(select(m.User).where(m.User.id == msg.contact_id))
-        msg = m.Message(user_from=user_from, user_to=user_to, content=msg.content)
-        db_session.add(msg)
-        await db_session.commit()
+        async with SqlAlchemyUnitOfWork(db_session) as uow:
+            message_service = MessageService(uow)
+            saved_msg = await message_service.save_message(
+                user_id_from=user_id_from,
+                user_id_to=msg.contact_id,
+                content=msg.content
+            )
 
         # emit the event to user_to if he is online
-        user_to__sid = await redis_client.get_user_sid(user_to.id)
-        logger.info(f'>>> sending message to user_to.id {user_to.id} >>> user_to__sid {user_to__sid}')
+        user_to__sid = await redis_client.get_user_sid(msg.contact_id)
+        logger.info(f'>>> sending message to user_to.id {msg.contact_id} >>> user_to__sid {user_to__sid}')
         if user_to__sid:  # is online
             await sio.emit('message_receive',
-                           data=jsonable_encoder(p.GetMessageSchema.model_validate(msg)),
+                           data=jsonable_encoder(p.GetMessageSchema.model_validate(saved_msg)),
                            to=user_to__sid,
                            # callback=lambda acknowledgment_data: logger.info(f'>>> message_receive event callback: {acknowledgment_data}')
                            )
         logger.info(f'>>> msg sent to {user_to__sid}')
-        return p.GetMessageSchema.model_validate(msg)
+        return p.GetMessageSchema.model_validate(saved_msg)
 
 
 # @sio.event

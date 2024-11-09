@@ -20,3 +20,16 @@ class MessageService:
     async def list_messages(self, current_user: m.User, contact_id: UUID) -> List[m.Message]:
         self._uow.mark_read_only()
         return await self.message_repo.list_messages(current_user, contact_id)
+
+    async def save_message(self, user_id_from: UUID, user_id_to: UUID, content: str):
+        user_repo = self._uow.get_user_repository()
+
+        user_from = await user_repo.get({'id': user_id_from})
+        user_to = await user_repo.get({'id': user_id_to})
+
+        if not (user_from and user_to):
+            NotImplementedError("Send error response in sio")
+        msg = m.Message(user_from=user_from, user_to=user_to, content=content)
+        msg = await self.message_repo.add(msg)
+        await self._uow.commit()
+        return msg
