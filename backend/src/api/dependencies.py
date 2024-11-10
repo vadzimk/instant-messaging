@@ -1,3 +1,4 @@
+import logging
 from typing import Annotated
 
 from src.services.auth import decode_and_validate_token
@@ -14,6 +15,8 @@ from jwt import (ExpiredSignatureError, ImmatureSignatureError, InvalidAlgorithm
 from src.exceptions import CouldNotValidateCredentials
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl='/api/users/login')
+
+logger = logging.getLogger(__name__)
 
 
 def get_current_user_id(token: Annotated[str, Depends(oauth2_scheme)]) -> str:
@@ -34,7 +37,7 @@ def get_current_user_id(token: Annotated[str, Depends(oauth2_scheme)]) -> str:
     ) as error:
         raise CouldNotValidateCredentials(str(error))
     if user_email is None:
-        raise CouldNotValidateCredentials()
+        raise CouldNotValidateCredentials("user_email is None")
     return user_email
 
 

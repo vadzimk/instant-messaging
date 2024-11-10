@@ -1,9 +1,13 @@
+import logging
 from typing import Optional, List
 from uuid import UUID
 
 from src.repositories.repos import MessageRepository
 from src.unit_of_work.sqlalchemy_uow import AbstractUnitOfWork, SqlAlchemyUnitOfWork
 from src.db import models as m
+from src import exceptions as e
+
+logger = logging.getLogger()
 
 
 class MessageService:
@@ -27,8 +31,11 @@ class MessageService:
         user_from = await user_repo.get({'id': user_id_from})
         user_to = await user_repo.get({'id': user_id_to})
 
-        if not (user_from and user_to):
-            NotImplementedError("Send error response in sio")
+        if not user_from:
+            raise e.UserNotFoundException(f'user_from with id {user_id_from} not found')
+        elif not user_to:
+            raise e.UserNotFoundException(f'user_to with id {user_id_to} not found')
+
         msg = m.Message(user_from=user_from, user_to=user_to, content=content)
         msg = await self.message_repo.add(msg)
         await self._uow.commit()

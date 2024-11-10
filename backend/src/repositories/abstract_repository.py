@@ -1,3 +1,4 @@
+import logging
 from datetime import datetime
 from typing import TypeVar, Generic, Dict, Any, List, Optional, Tuple
 from uuid import UUID
@@ -7,6 +8,8 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.exceptions import EntityNotFoundError, IntegrityErrorException
+
+logger = logging.getLogger(__name__)
 
 T = TypeVar('T')
 

@@ -15,6 +15,7 @@ logger = logging.getLogger(__name__)
 
 
 async def custom_exception_handler(request: Request, exc: Exception):
+    logger.error(exc)
     status_code = status.HTTP_500_INTERNAL_SERVER_ERROR  # Default status code
     detail = str(exc)  # Default detail message
     headers = {}
@@ -24,12 +25,15 @@ async def custom_exception_handler(request: Request, exc: Exception):
 
     elif isinstance(exc, e.UserNotFoundException):
         status_code = status.HTTP_404_NOT_FOUND
+        detail = "User not found"
 
     elif isinstance(exc, e.AlreadyRegisteredException):
         status_code = status.HTTP_400_BAD_REQUEST
+        detail = "User already registered"
 
     elif isinstance(exc, e.IncorrectCredentialsException):
         status_code = status.HTTP_400_BAD_REQUEST
+        detail = "Incorrect credentials"
 
     elif isinstance(exc, e.CouldNotValidateCredentials):
         status_code = status.HTTP_401_UNAUTHORIZED

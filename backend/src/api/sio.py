@@ -16,6 +16,7 @@ from src.services.message_service import MessageService
 from src.settings import server_settings
 from src.services.user_service import UserService
 from src.unit_of_work.sqlalchemy_uow import SqlAlchemyUnitOfWork
+from src import exceptions as e
 
 logger = logging.getLogger(__name__)
 
@@ -39,11 +40,18 @@ def validate(request_model: Type[BaseModel], response_model: Type[BaseModel]):
             # Validate incoming data
             try:
                 validated_data = request_model.model_validate(data)
-            except ValidationError as e:
-                return jsonable_encoder(p.SioResponseSchema(success=False, data=data, errors=e.errors()))
+            except ValidationError as err:
+                return jsonable_encoder(p.SioResponseSchema(success=False, data=data, errors=err.errors()))
 
             # Execute the handler and get the response
-            func_response = await func(sid, validated_data, *args, **kwargs)
+            try:
+                func_response = await func(sid, validated_data, *args, **kwargs)
+            except Exception as exc:
+                logger.error(exc)
+                response = p.SioResponseSchema(success=False, data=None, errors=["Internal server error"])
+                if isinstance(exc, e.UserNotFoundException):
+                    response = p.SioResponseSchema(success=False, data=None, errors=[str(exc)])
+                return jsonable_encoder(response)
 
             # Validate the response data before sending it to the client
             if not isinstance(func_response, response_model):

@@ -12,13 +12,14 @@ from src import schemas as p
 from ..data.data import user1, user2
 
 
-@pytest.mark.only
+
 def test_signup_user(signup_user1_response):
-    print(signup_user1_response)
+    print(signup_user1_response.json())
     assert signup_user1_response.status_code == status.HTTP_201_CREATED, \
         f"Expected status code {status.HTTP_201_CREATED}, got {signup_user1_response.status_code}"
     assert signup_user1_response.json().get("email") == user1.email, \
         f"Expected email {user1.email}, got {signup_user1_response.json().get('email')}"
+
 
 
 async def test_login_user_using_authorization_header(login_user1_response):
@@ -38,7 +39,8 @@ async def test_authenticated_request_rejects_if_not_authenticated():
         res = await client.post('/api/me', headers={'Authorization': auth_header})
     print(res.status_code)
     print(res.json())
-    assert res.status_code == status.HTTP_401_UNAUTHORIZED, "unauthenticated request is not rejected on protected path"
+    assert res.status_code == status.HTTP_401_UNAUTHORIZED, "Unauthenticated request accepted on protected path, but should be rejected"
+
 
 
 async def test_authenticated_request_accepts_valid_header(client_with_auth_user1):
@@ -46,7 +48,8 @@ async def test_authenticated_request_accepts_valid_header(client_with_auth_user1
     print(res.status_code)
     print(res.json())
     assert res.status_code == status.HTTP_200_OK, \
-        "authenticated request is rejected on protected path"
+        "Authenticated request is rejected on protected path but should be accepted"
+
 
 
 async def test_create_contact(login_user1_response, signup_user2_response, create_u2_contact_for_u1_response):
@@ -76,7 +79,7 @@ async def test_create_contact(login_user1_response, signup_user2_response, creat
             assert found, f"Could not find {user2.email} in among contacts of user {login_user1_response.json().get('email')}"
 
 
-# @pytest.mark.only
+
 async def test_get_contacts(client_with_auth_user1, create_u2_contact_for_u1_response):
     res = await client_with_auth_user1.get('/api/contacts')
     print(res.json())
@@ -84,7 +87,7 @@ async def test_get_contacts(client_with_auth_user1, create_u2_contact_for_u1_res
         'contacts'), "Created contact not found in get_contacts response"
 
 
-# @pytest.mark.only
+
 async def test_get_messages(client_with_auth_user1, send_message_u1_u2):
     async with Session() as session:
         q = select(m.User).where(m.User.email == user2.email)
