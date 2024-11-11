@@ -1,5 +1,6 @@
 import os
 
+from aiogram import Bot
 from dotenv import load_dotenv, find_dotenv
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -11,6 +12,7 @@ class ServerSettings(BaseSettings):
     )
 
     TELEGRAM_BOT_TOKEN: str
+    WEB_APP_PORT: int  # aiohttp port
 
 
 def configure_server_settings():
@@ -24,3 +26,8 @@ def configure_server_settings():
     else:
         load_dotenv(find_dotenv('.env.dev'))
     return ServerSettings()
+
+
+server_settings = configure_server_settings()
+
+bot = Bot(token=server_settings.TELEGRAM_BOT_TOKEN)

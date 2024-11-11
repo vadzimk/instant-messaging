@@ -18,7 +18,7 @@ class NotificationService:
                         return "You've subscribed to message notifications"
                     else:
                         logger.error(f'Failed to subscribe. Status code: {res.status}. Response: {await res.json()}')
-                        return f"Failed to subscribe\n{(await res.json()).get('detail')}\nUse /start to try again to register for notifications"
+                        return f"Failed to subscribe\n{f'User with email: {user_email} does not exist' if res.status == 404 else (await res.json()).get('detail')}\nUse /start to try again to register for notifications"
         except aiohttp.ClientError as e:
             logger.error(f'Error wile subscribing user: {str(e)}')
             return "Failed to subscribe\nInternal server error"
