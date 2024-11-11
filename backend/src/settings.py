@@ -20,6 +20,7 @@ class ServerSettings(BaseSettings):
     REDIS_PORT: int = 6379
 
     AUTH_ON: bool = True
+    BOT_BASE_URL: str = 'http://localhost:8003'
 
 
 def configure_server_settings():

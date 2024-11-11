@@ -23,7 +23,7 @@ class UserService:
             self._user_repo = self._uow.get_user_repository()
         return self._user_repo
 
-    async def get_existing_user(self, filters: Dict[str, Any]):
+    async def get_existing_user(self, filters: Dict[str, Any]) -> Optional[m.User]:
         self._uow.mark_read_only()
         return await self.user_repo.get(filters)
 

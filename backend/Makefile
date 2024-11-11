@@ -19,3 +19,5 @@ backend.test:
 backend.dev:
 	ENV=development pipenv run uvicorn src.main:app --reload
 
+celery.start:
+	celery -A src.celery_app.worker.celery worker --loglevel=info

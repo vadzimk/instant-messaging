@@ -7,6 +7,7 @@ from fastapi.encoders import jsonable_encoder
 from pydantic import BaseModel, ValidationError
 
 from src.api.dependencies import authenticated_user, get_current_user_id
+from src.celery_app.tasks import send_telegram_notification
 from src.db import models as m
 
 from src import redis_client
@@ -86,12 +87,20 @@ async def connect(sid, environ, auth):
             #  and messages on the first device will not go through
             await redis_client.set_user_sid(user_id=user.id, sid=sid)
             user_sid_in_redis = await redis_client.get_user_sid(user.id)
-            logger.info(f'on connection >>> {user.id} user_sid_in_redis {user_sid_in_redis}')
+            logger.info(f'Connected user.id: {user.id}, user_sid_in_redis: {user_sid_in_redis}')
 
 
 @sio.event
 @validate(p.CreateMessageSchema, p.GetMessageSchema)
 async def message_send(sid, msg: p.CreateMessageSchema):
+    """
+    Event to send a message to another user in the chat,
+    if user is online, he gets to listen on the event 'message_receive'
+    if user is offline, he gets telegram notification if subscribed
+    @param sid: The socket.io session id of the client of the user_from
+    @param msg: payload form the client
+    @return: p.GetMessageSchema
+    """
     sio_session = await sio.get_session(sid)
     user_id_from = sio_session.get("user_id")
     async with Session() as db_session:
@@ -103,17 +112,30 @@ async def message_send(sid, msg: p.CreateMessageSchema):
                 content=msg.content
             )
 
-        # emit the event to user_to if he is online
-        user_to__sid = await redis_client.get_user_sid(msg.contact_id)
-        logger.info(f'>>> sending message to user_to.id {msg.contact_id} >>> user_to__sid {user_to__sid}')
-        if user_to__sid:  # is online
-            await sio.emit('message_receive',
-                           data=jsonable_encoder(p.GetMessageSchema.model_validate(saved_msg)),
-                           to=user_to__sid,
-                           # callback=lambda acknowledgment_data: logger.info(f'>>> message_receive event callback: {acknowledgment_data}')
-                           )
-        logger.info(f'>>> msg sent to {user_to__sid}')
-        return p.GetMessageSchema.model_validate(saved_msg)
+            # emit the event to user_to if he is online
+            user_to__sid = await redis_client.get_user_sid(msg.contact_id)
+            logger.info(f'Sending message to user_to.id: {msg.contact_id}, user_to__sid: {user_to__sid}')
+            get_message_response = p.GetMessageSchema.model_validate(saved_msg)
+            if user_to__sid:  # is online
+                await sio.emit('message_receive',
+                               data=jsonable_encoder(get_message_response),
+                               to=user_to__sid,
+                               # callback=lambda acknowledgment_data: logger.info(f'>>> message_receive event callback: {acknowledgment_data}')
+                               )
+                logger.info(f'Message sent to online user {user_to__sid}')
+            else:  # user is offline
+                user_service = UserService(uow)
+                user_to = await user_service.get_existing_user({'id': msg.contact_id})
+                user_from = await user_service.get_existing_user({'id': user_id_from})
+                if not user_to:
+                    raise e.UserNotFoundException(f'User with id {msg.contact_id} not found')
+                content = f"{get_message_response.created_at.strftime('%B %d, %Y %I:%M %p')}\n" \
+                          f"New message from\n{user_from.first_name} {user_from.last_name}\n{user_from.email}\n" \
+                          f"{get_message_response.content}"
+
+                celery_task = send_telegram_notification.delay(user_to.telegram_id, content)
+
+        return get_message_response
 
 
 # @sio.event

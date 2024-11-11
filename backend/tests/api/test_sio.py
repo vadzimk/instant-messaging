@@ -1,9 +1,13 @@
 import asyncio
+from unittest.mock import patch, MagicMock, AsyncMock
 
+import pytest
 from sqlalchemy import select, or_
 from sqlalchemy.orm import aliased
 
+from src.api.sio import message_send
 from src.db import models as m
+from src import schemas as p
 from src.db.session import Session
 from tests.data.data import user1, user2
 
@@ -60,3 +64,30 @@ async def test_message_receive(socketio_client_u2_receive_message_future, send_m
     data = socketio_client_u2_receive_message_future.result()
     print(f'>>> data_received {data}')
     assert data.get("content") == expected_content
+
+
+# this test will give a warning that the event loop was not properly closed because it uses message_send from the actual fastapi app
+@pytest.mark.filterwarnings('ignore')
+async def test_message_send_when_user_offline_calls_celery_task(signup_user1_response, signup_user2_response,
+                                                                send_message_u1_u2):
+    with patch('src.celery_app.tasks.send_telegram_notification.delay') as mock_send_telegram:
+        user_from_id = signup_user1_response.json().get('id')
+        user_to_id = signup_user2_response.json().get('id')
+        user_to_telegram_id_expected = signup_user2_response.json().get('telegram_id')
+        # create mock sio_session with predefined user id
+        sio_session_mock = MagicMock()
+        sio_session_mock.get.return_value = user_from_id
+
+        # mock sio.get_session to return the mock sio_session_mock
+        with patch('src.api.sio.sio.get_session', AsyncMock(return_value=sio_session_mock)):
+            msg = p.CreateMessageSchema(
+                contact_id=user_to_id,
+                content='hello from me'
+            )
+            result = await message_send('sid', msg)
+
+            mock_send_telegram.assert_called_once()
+            called_args, _ = mock_send_telegram.call_args
+            print("call args", mock_send_telegram.call_args)
+            assert called_args[0] == user_to_telegram_id_expected or called_args[0] is None, \
+                "User to telegram id must match but it did not"
