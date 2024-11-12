@@ -12,7 +12,9 @@ class ServerSettings(BaseSettings):
     )
 
     TELEGRAM_BOT_TOKEN: str
-    WEB_APP_PORT: int  # aiohttp port
+    WEB_APP_PORT: int = 8003  # aiohttp port
+    BACKEND_API_HOST: str = 'localhost'  # fastapi host
+    BACKEND_API_PORT: int = 8000  # fastapi port
 
 
 def configure_server_settings():

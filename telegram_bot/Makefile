@@ -5,3 +5,6 @@ bot.start:
 bot.test:
 	ENV=development pipenv run python -m pytest -vv -s tests
 
+bot.build:
+	docker build -t telegram_bot:latest .
+

@@ -7,8 +7,9 @@ ENV PYTHONFAULTHANDLER=1 \
     PYTHONUNBUFFERED=1
 
 RUN apt-get update &&\
-    apt-get install -y --no-install-recommends gcc libffi-dev g++ postgresql-client && \
+    apt-get install -y --no-install-recommends gcc libffi-dev g++ && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
+
 
 # Dependencies stage
 FROM base AS dependencies
@@ -19,6 +20,7 @@ RUN pip install --no-cache-dir pipenv
 ENV PIPENV_VENV_IN_PROJECT=1
 RUN pipenv install --deploy --ignore-pipfile
 
+
 # Final stage
 FROM base AS final
 COPY --from=dependencies /usr/src/app/.venv/ /usr/src/app/.venv/
@@ -27,9 +29,7 @@ ENV PATH="/usr/src/app/.venv/bin:$PATH"
 
 COPY ./ ./
 
-RUN chmod +x wait-for-postgres.sh docker-entrypoint.sh
-EXPOSE 8000
+EXPOSE 8003
 # for debugging only
 #CMD ["tail", "-f", "/dev/null"]
-CMD ["./docker-entrypoint.sh"]
-
+CMD ENV=demo python -m src.main

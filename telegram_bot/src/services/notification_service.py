@@ -2,9 +2,9 @@ import logging
 
 import aiohttp
 
-logger = logging.getLogger(__name__)
+from src.settings import server_settings
 
-API_BASE_URL = 'http://localhost:8000/service/telegram'
+logger = logging.getLogger(__name__)
 
 
 class NotificationService:
@@ -13,7 +13,11 @@ class NotificationService:
         user_data = {'tg_user_id': tg_user_id, 'user_email': user_email}
         try:
             async with aiohttp.ClientSession() as session:
-                async with session.post(API_BASE_URL + '/subscriptions', json=user_data) as res:
+                async with session.post(
+                        f'http://{server_settings.BACKEND_API_HOST}:{server_settings.BACKEND_API_PORT}'
+                        '/service/telegram/subscriptions',
+                        json=user_data
+                ) as res:
                     if res.status == 204:
                         return "You've subscribed to message notifications"
                     else:

@@ -9,7 +9,7 @@ echo "wait-for-postgres.sh script completed"
 cd /usr/src/app || { echo "Failed to change to /usr/src/app directory"; exit 1; };
 
 if [ ! -d migrations ]; then
-  echo "Existing `migrations` directory not found, Initializing migrations...."
+  echo "Existing migrations directory not found, Initializing migrations...."
   alembic init -t async migrations || { echo "Failed to initialize migrations"; exit 1; };
   alembic revision --autogenerate -m "Initial migration" || { echo "Failed to create initial migration"; exit 1; }
 fi;

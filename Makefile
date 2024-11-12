@@ -9,4 +9,4 @@ demo.down:
 demo.clean:
 	docker-compose \
 	-f docker-compose.demo.yml \
-	-p messaging-demo down --volumes --remove-orphans
+	-p messaging-demo down --volumes --remove-orphans --rmi all
