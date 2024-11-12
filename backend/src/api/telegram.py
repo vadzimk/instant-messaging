@@ -17,8 +17,3 @@ async def subscribe_to_notifications(
 ):
     logger.info(f'subscribe user {user_data}')
     await user_service.subscribe_notifications(user_data)
-
-
-# @router.get('/test-user-not-found')
-# async def test_user_not_found():
-#     raise e.UserNotFoundException("Test user not found")

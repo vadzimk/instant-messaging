@@ -80,7 +80,8 @@ async def connect(sid, environ, auth):
             user_service = UserService(uow)
             user: m.User = await authenticated_user(user_email, user_service)
 
-            await sio.save_session(sid, {'user_id': user.id})
+            await sio.save_session(sid,
+                                   {'user_id': user.id})  # is user_id retrieved from sio_session in other endpoints
 
             # store sid in redis by user_id
             # TODO if the client connects from second device the first device sid will be overridden
@@ -129,8 +130,7 @@ async def message_send(sid, msg: p.CreateMessageSchema):
                 user_from = await user_service.get_existing_user({'id': user_id_from})
                 if not user_to:
                     raise e.UserNotFoundException(f'User with id {msg.contact_id} not found')
-                content = f"{get_message_response.created_at.strftime('%B %d, %Y %I:%M %p')}\n" \
-                          f"New message from\n{user_from.first_name} {user_from.last_name}\n{user_from.email}\n" \
+                content = f"New message from\n{user_from.first_name} {user_from.last_name} ({user_from.email})\n" \
                           f"{get_message_response.content}"
 
                 celery_task = send_telegram_notification.delay(user_to.telegram_id, content)
@@ -144,12 +144,13 @@ async def message_send(sid, msg: p.CreateMessageSchema):
 
 @sio.event
 async def disconnect(sid):
-    msg = f'Client {sid} disconnected'
-    logger.info(msg)
+    sio_session = await sio.get_session(sid)
+    user_id = sio_session.get('user_id')
+    await redis_client.delete_user_sid(user_id)
+    logger.info(f'Client {sid} disconnected')
 
 
 @sio.event
 async def ping(sid, data):
-    msg = f'Client {sid}, data {data}'
-    logger.info(msg)
+    logger.info(f'Client {sid}, data {data}')
     return data
