@@ -1,8 +1,9 @@
-from aiogram import types
+from aiogram import types, Dispatcher
 from aiogram.filters import CommandStart
 
-from src.main import dp
 from src.services.notification_service import NotificationService
+
+dp = Dispatcher()  # must register messages before start polling
 
 
 @dp.message(CommandStart())
