@@ -2,6 +2,8 @@ from asyncio import Future
 from typing import AsyncGenerator, Tuple
 import pytest
 import asyncio
+
+import pytest_asyncio
 from httpx import AsyncClient, ASGITransport, Response
 from sqlalchemy import select
 from pathlib import Path
@@ -43,6 +45,7 @@ async def signup_user_helper(user_to_create: p.CreateUserSchema) -> AsyncGenerat
                 await session.delete(test_user_from_db)
 
 
+# this is not a fixture
 async def signup_user(user: p.CreateUserSchema) -> AsyncGenerator[Response, None]:
     signup_res_iterator = signup_user_helper(user)
     signup_res = await anext(signup_res_iterator)

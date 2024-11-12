@@ -1,8 +1,8 @@
 from datetime import datetime
 from typing import Optional
 from uuid import UUID, uuid4
-from sqlalchemy.dialects.postgresql import UUID as PSQL_UUID
-from sqlalchemy import MetaData, event, inspect, String, Boolean, Text, ForeignKey, Table, Column, UniqueConstraint
+from sqlalchemy import MetaData, event, inspect, String, Boolean, Text, ForeignKey, UniqueConstraint, Integer, \
+    BigInteger
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship, WriteOnlyMapped
 
 
@@ -61,6 +61,8 @@ class User(Model):
     first_name: Mapped[str] = mapped_column(String(64), index=True)
     last_name: Mapped[Optional[str]] = mapped_column(String(64), index=True)
     created_at: Mapped[datetime] = mapped_column(default=datetime.utcnow, index=True)
+    last_active_at: Mapped[datetime] = mapped_column(default=datetime.utcnow)
+    telegram_id: Mapped[Optional[int]] = mapped_column(BigInteger(), index=True)
     messages_sent: WriteOnlyMapped[list['Message']] = relationship(
         back_populates='user_from',
         foreign_keys='Message.user_from_id',

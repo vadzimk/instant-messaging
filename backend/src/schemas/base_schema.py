@@ -21,7 +21,7 @@ class ValidationError(BaseModel):
 class SioResponseSchema(BaseModel):
     success: bool = True
     data: Any
-    errors: List[ValidationError] = field(default_factory=list)
+    errors: List[ValidationError | str] = field(default_factory=list)
 
     model_config = {
         'arbitrary_types_allowed': True

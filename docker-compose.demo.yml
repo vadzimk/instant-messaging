@@ -12,12 +12,34 @@ services:
     depends_on:
       - postgres
       - redis
-    # healthcheck:
-    #   test: ["CMD-SHELL", "curl -f http://localhost:8000 || exit 1"]
-    #   interval: 30s
-    #   timeout: 10s
-    #   retries: 3
     restart: unless-stopped
+
+  celery_worker:
+    container_name: celery_worker
+    build:
+      context: ./backend
+      dockerfile: Dockerfile # same as backend
+    command: celery -A src.celery_app.worker.celery worker --loglevel=info
+    env_file:
+      - ./backend/.env.demo
+    expose:
+      - 8000
+    depends_on:
+      - postgres
+      - redis
+    restart: unless-stopped
+
+  telegram_bot:
+    container_name: telegram_bot
+    build:
+      context: ./telegram_bot
+      dockerfile: Dockerfile
+    expose:
+      - 8003
+    env_file:
+      - ./telegram_bot/.env.demo
+    depends_on:
+      - backend
 
 
   postgres:

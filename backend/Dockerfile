@@ -13,7 +13,7 @@ RUN apt-get update &&\
 # Dependencies stage
 FROM base AS dependencies
 COPY ./Pipfile ./Pipfile.lock ./
-RUN pip install pipenv
+RUN pip install --no-cache-dir pipenv
 
 # installs dependecies in .venv
 ENV PIPENV_VENV_IN_PROJECT=1

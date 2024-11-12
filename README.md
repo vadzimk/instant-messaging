@@ -3,9 +3,9 @@
 
 ## User stories
 - [x] user wants to authenticate
-- [x] user wants to send and recieve messages
+- [x] user wants to send and receive messages
 - [x] user wants to see the message history
-- [ ] user wants to receive notifications about new messages in telegram if user is offline
+- [x] user wants to receive notifications about new messages in telegram if user is offline
   
 ## Technical stack requirements
 - FastAPI
@@ -21,16 +21,12 @@
 - [x] send messages
 - [x] receive messages
 - [x] view message history
-- [ ] offline notifications
-    - when user connects, his status becomes online
-    - when user disconnects, his status becomes offline
-      - last_active_at timestamp is saved in db
-    - you can query redis for sio to see who is online
-    - chatbot and celery notification queue when offline
-      - add telegram username to user model
+- [x] offline notifications
 - [x] deployment
-  - [x] make app docker image
+  - [x] make backend app docker image and service
   - [x] make nginx reverse-proxy service
+  - [x] make telegram_bot docker image and service
+  - [x] make celery_worker service
 
 ## System design considerations
 - Repository pattern
@@ -38,12 +34,15 @@
 - Service classes handle business logic
 
 ## Start Demo 
-Serves frontend on ***localhost:80***
+For telegram notifications to be working you need to provide your own TELEGRAM_BOT_TOKEN environment variable in `telegram/.env.demo` but you can run demo without it.
+
 ```shell
 git clone https://gitlab.com/telei/instant-messaging.git && \
 cd instant-messaging && \
 make demo.up
 ```
+Serves frontend on ***localhost:80***
+
 
 ## Finish Demo
 ```shell
@@ -59,12 +58,26 @@ make demo.clean
   - https://pnpm.io/installation
 - nodejs v22
 - python v3.10
+
+### Create telegram bot token
+In your telegram app search for `BotFather`  
+/start  
+/newbot
+
+### Create .env files:
+- `backend/.env.dev` Copy from `backend/.env.dev.example` 
+- `telegram_bot/.env.dev` Copy from `telegram_bot/.env.dev.example` 
+
 ```shell
 cd backend && \
 make docker.up.dev && \
 make jwt.keys && \
 make backend.dev && \
+make celery.start && \
 make backend.test && \
+cd telegram_bot && \
+make bot.test && \
+make bot.start && \
 cd ../frontend && \
 pnpm i && \
 pnpm run dev
@@ -73,6 +86,10 @@ pnpm run dev
 ## Database ERD relationship model
 shows actual ORM relationships only, all columns are not shown  
 ![ERD](backend/migrations/diagrams/ERD_contacts_association_object_step2.jpg)
+
+## Deployment diagram
+![DD](Diagram.svg)
+
 <details>
 <summary>Requirements specification</summary>
 

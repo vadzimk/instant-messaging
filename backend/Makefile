@@ -1,12 +1,3 @@
-docker.up.dev:
-	docker-compose -f docker-compose.dev.yml up -d
-
-backend.test:
-	ENV=development pipenv run python -m pytest -vv -s
-
-backend.dev:
-	ENV=development pipenv run uvicorn src.main:app --reload
-
 # generate public private key pair
 jwt.keys:
 	mkdir -p jwt_keys \
@@ -17,3 +8,16 @@ jwt.keys:
 
 # pre-commit is running at ../.git/hooks/pre-commit
 # will not allow commit if tests inside /backend did not pass
+
+
+docker.up.dev:
+	docker-compose -f docker-compose.dev.yml up -d
+
+backend.test:
+	ENV=development pipenv run python -m pytest -vv -s
+
+backend.dev:
+	ENV=development pipenv run uvicorn src.main:app --reload
+
+celery.start:
+	celery -A src.celery_app.worker.celery worker --loglevel=info
