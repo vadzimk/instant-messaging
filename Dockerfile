@@ -19,4 +19,6 @@ COPY --from=dependencies /usr/src/app/node_modules /usr/src/app/node_modules
 COPY --from=build /usr/src/app/dist/ /usr/share/nginx/html/
 COPY ./nginx.conf /etc/nginx/nginx.conf
 EXPOSE 80
+# for debugging only
+#CMD ["tail", "-f", "/dev/null"]
 CMD ["nginx", "-g", "daemon off;"]
