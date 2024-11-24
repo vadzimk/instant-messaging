@@ -90,6 +90,7 @@ test-server-job:
   image: python:3.10
   needs:
     - job: install-server-dependencies-job
+      optional: true # if used cache
   variables:
     ENV_FILE_VARIABLE: ENV_TEST
   before_script:
