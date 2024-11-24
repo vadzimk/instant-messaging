@@ -25,25 +25,25 @@ stages:
     - export TARGET_USER=$POSTGRES_APP_USER;
     - export TARGET_USER_PASSWORD=$POSTGRES_APP_PASSWORD;
     - export DATABASE_NAME=$POSTGRES_DB
-    - ssh -o StrictHostKeyChecking=no -i $WS_KEY ubuntu@$WS_HOST "
-      docker exec -i pgbackups bash -c \"
+    - ssh -o StrictHostKeyChecking=no -i $WS_KEY ubuntu@$WS_HOST '
+      docker exec -i pgbackups bash -c "
       set -e;
       export PGPASSWORD=$POSTGRES_PASSWORD
       if psql -h $DATABASE_HOST -p $DATABASE_PORT -U $POSTGRES_USER -lqt | cut -d \| -f 1 | grep -qw $DATABASE_NAME;
       then
-      echo $DATABASE_NAME exists;
+        echo $DATABASE_NAME exists;
       else
-      createdb -h $DATABASE_HOST -p $DATABASE_PORT -U $POSTGRES_USER -T template0 $DATABASE_NAME;
-      echo $DATABASE_NAME created;
-      ./restore.sh $DATABASE_NAME;
+        createdb -h $DATABASE_HOST -p $DATABASE_PORT -U $POSTGRES_USER -T template0 $DATABASE_NAME;
+        echo $DATABASE_NAME created;
+        ./restore.sh $DATABASE_NAME;
       fi;
-      USER_EXISTS=\$(psql -h $DATABASE_HOST -p $DATABASE_PORT -U $POSTGRES_USER -tc \"SELECT 1 FROM pg_roles WHERE rolname = '$TARGET_USER';\" | xargs);
-      if [ \"\$USER_EXISTS\" != \"1\" ]; then
-        psql -h $DATABASE_HOST -p $DATABASE_PORT -U $POSTGRES_USER -c \"CREATE USER $TARGET_USER WITH PASSWORD '$TARGET_USER_PASSWORD';\";
+      USER_EXISTS=$(psql -h $DATABASE_HOST -p $DATABASE_PORT -U $POSTGRES_USER -tc "SELECT 1 FROM pg_roles WHERE rolname = '$TARGET_USER';" | xargs);
+      if [ "$USER_EXISTS" != "1" ]; then
+        psql -h $DATABASE_HOST -p $DATABASE_PORT -U $POSTGRES_USER -c "CREATE USER $TARGET_USER WITH PASSWORD '$TARGET_USER_PASSWORD';";
         echo User $TARGET_USER created;
       fi;
-      psql -h $DATABASE_HOST -p $DATABASE_PORT -U $POSTGRES_USER -c \"GRANT ALL PRIVILEGES ON DATABASE $DATABASE_NAME TO $TARGET_USER;\";
-      \" "
+      psql -h $DATABASE_HOST -p $DATABASE_PORT -U $POSTGRES_USER -c "GRANT ALL PRIVILEGES ON DATABASE $DATABASE_NAME TO $TARGET_USER;";
+      "'
 
 init-test-postgres-job:
   extends: .iniit-db-base
