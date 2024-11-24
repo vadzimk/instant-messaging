@@ -108,6 +108,6 @@ test-server-job:
     when: always
     reports:
       junit: backend/junit.xml
-  only:
-    changes:
-      - backend/**/*
+#  only:
+#    changes:
+#      - backend/**/*
