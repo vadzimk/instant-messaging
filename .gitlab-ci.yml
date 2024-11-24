@@ -109,7 +109,7 @@ test-server-job:
     ENV_FILE_VARIABLE: ENV_TEST
     CHECKOUT_DIR: "backend/"
   before_script:
-    - *checkout-only-script
+#    - *checkout-only-script
     - *export-env-vars-script
     - *export-jwt-keys-script
   script:
