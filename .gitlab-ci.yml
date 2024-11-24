@@ -22,19 +22,19 @@ stages:
   script:
     - chmod 400 $WS_KEY # private key
     - scp -o StrictHostKeyChecking=no -i $WS_KEY init-postgres-db.sh ubuntu@$WS_HOST:/tmp/init-postgres-db.sh
-    - ssh -o StrictHostKeyChecking=no -i $WS_KEY ubuntu@$WS_HOST "chmod +x /tmp/init-postgres-db.sh"
-    - ssh -o StrictHostKeyChecking=no -i $WS_KEY ubuntu@$WS_HOST "ls -l /tmp/init-postgres-db.sh"
     - |
       ssh -o StrictHostKeyChecking=no -i $WS_KEY ubuntu@$WS_HOST "
-        export POSTGRES_PASSWORD=\"$POSTGRES_PASSWORD\" &&
-        export POSTGRES_USER=\"$POSTGRES_USER\" &&
-        export TARGET_USER=\"$POSTGRES_APP_USER\" &&
-        export TARGET_USER_PASSWORD=\"$POSTGRES_APP_PASSWORD\" &&
-        export DATABASE_NAME=\"$POSTGRES_DB\" &&
-        export DATABASE_HOST=\"$POSTGRES_HOST\" &&
-        export DATABASE_PORT=\"$POSTGRES_PORT\" &&
         chmod +x /tmp/init-postgres-db.sh &&
-        docker exec -i pgbackups bash /tmp/init-postgres-db.sh"
+        docker cp /tmp/init-postgres-db.sh pgbackups:/tmp-init-postgres-db.sh
+        docker exec -i \
+          -e POSTGRES_PASSWORD=\"$POSTGRES_PASSWORD\" \
+          -e POSTGRES_USER=\"$POSTGRES_USER\" \
+          -e TARGET_USER=\"$POSTGRES_APP_USER\" \
+          -e TARGET_USER_PASSWORD=\"$POSTGRES_APP_PASSWORD\" \
+          -e DATABASE_NAME=\"$POSTGRES_DB\" \
+          -e DATABASE_HOST=\"$POSTGRES_HOST\" \
+          -e DATABASE_PORT=\"$POSTGRES_PORT\" \
+        pgbackups bash /tmp/init-postgres-db.sh
       "
 
 
