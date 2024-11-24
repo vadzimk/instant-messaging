@@ -46,8 +46,8 @@ init-test-postgres-job:
     ENV_FILE_VARIABLE: ENV_TEST
 
 
-# init-production-postgres-job:
-#   extends: .iniit-db-base
-#   stage: build
-#   variables:
-#     ENV_FILE_VARIABLE: ENV_PROD
+init-production-postgres-job:
+  extends: .iniit-db-base
+  stage: build
+  variables:
+    ENV_FILE_VARIABLE: ENV_PROD
