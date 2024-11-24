@@ -23,6 +23,12 @@ class ServerSettings(BaseSettings):
     AUTH_ON: bool = True
     BOT_BASE_URL: str = 'http://localhost:8003'
 
+    JWT_ISSUER: str = 'https://example.com'
+    JWT_AUDIENCE: str = 'http://127.0.0.1:8000'
+    JWT_SCOPE: str = 'openid'
+    JWT_PRIVATE_KEY: Optional[str] = None
+    JWT_PUBLIC_KEY: Optional[str] = None
+
 
 def configure_server_settings():
     """ Configures Server settings

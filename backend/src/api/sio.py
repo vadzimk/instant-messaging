@@ -1,4 +1,5 @@
 import logging
+import os
 from functools import wraps
 from typing import Callable, Type
 
@@ -30,7 +31,9 @@ sio = socketio.AsyncServer(
     cors_allowed_origins=[],  # empty list to disable cors handling, bc fastapi cors middleware is in conflict
     client_manager=redis_manager
 )
-sio.instrument(auth=False, mode='development')  # only in development admin ui
+
+if os.getenv('ENV') == 'development':
+    sio.instrument(auth=False, mode='development')  # only in development admin ui
 
 
 # Validation decorator for both request and response
