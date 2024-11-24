@@ -11,11 +11,13 @@ from src import exceptions as e
 
 from starlette.responses import Response
 
+from src.settings import server_settings
+
 logger = logging.getLogger(__name__)
 
 
 async def custom_exception_handler(request: Request, exc: Exception):
-    logger.error(exc)
+    logger.error(f"{type(exc).__name__} {exc}")
     status_code = status.HTTP_500_INTERNAL_SERVER_ERROR  # Default status code
     detail = str(exc)  # Default detail message
     headers = {}
@@ -39,6 +41,16 @@ async def custom_exception_handler(request: Request, exc: Exception):
         status_code = status.HTTP_401_UNAUTHORIZED
         headers = {"WWW-Authenticate": "Bearer"}
         detail = "Could not validate credentials"
+
+    else:
+        if server_settings.ENV == 'production':
+            detail = "Unhandled exception occurred"
+        else:  # not in production
+            # error detail in response will contain exception detail
+            logger.error(
+                "Unhandled exception occurred",
+                exc_info=(server_settings.LOG_LEVEL == logging.DEBUG)  # includes Stack Trace
+            )
 
     return JSONResponse(status_code=status_code, content={'detail': detail}, headers=headers)
 

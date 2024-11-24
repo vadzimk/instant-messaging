@@ -27,7 +27,7 @@ class Tables:
 @pytest_asyncio.fixture(loop_scope='session', scope='session')  # loop_scope > cache_scope
 async def db_engine() -> AsyncGenerator[AsyncEngine, None]:
     db_path = f'postgresql+asyncpg://' \
-              f"{os.getenv('POSTGRES_USER')}:{os.getenv('POSTGRES_PASSWORD')}@{os.getenv('POSTGRES_HOST')}:{os.getenv('POSTGRES_PORT')}/{os.getenv('POSTGRES_DB')}"
+              f"{os.getenv('POSTGRES_APP_USER')}:{os.getenv('POSTGRES_APP_PASSWORD')}@{os.getenv('POSTGRES_HOST')}:{os.getenv('POSTGRES_PORT')}/{os.getenv('POSTGRES_DB')}"
     print("db_path", db_path)
     engine = create_async_engine(db_path)
     yield engine

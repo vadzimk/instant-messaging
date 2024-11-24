@@ -1,3 +1,4 @@
+import os
 from asyncio import Future
 from typing import AsyncGenerator, Tuple
 import pytest
@@ -90,11 +91,17 @@ async def login_user2_response(signup_user2_response, httpx_client) -> AsyncGene
 
 def decode_access_token(access_token) -> str:
     # validate token on the client for each request
-    private_key_path = Path(__file__).parent.parent.parent / 'jwt_keys/public_key.pem'
-    public_key_text = private_key_path.read_text()
+    if os.getenv('ENV') == 'development':
+        public_key_path = Path(__file__).parent.parent.parent / 'jwt_keys/public_key.pem'
+        public_key_text = public_key_path.read_text()
+    else:
+        public_key_text = os.getenv('JWT_PUBLIC_KEY')
     public_key = load_pem_x509_certificate(public_key_text.encode('utf-8')).public_key()
-    validated_result_payload = jwt.decode(access_token, key=public_key, algorithms=['RS256'],
-                                          audience=[baseUrl])
+    validated_result_payload = jwt.decode(
+        access_token,
+        key=public_key,
+        algorithms=['RS256'],
+        audience=[os.getenv('JWT_AUDIENCE')])
     return validated_result_payload
 
 
