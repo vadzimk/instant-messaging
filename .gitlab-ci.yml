@@ -11,7 +11,7 @@ stages:
 init-test-postgres-job:
   stage: build
   variables:
-    ENV_FILE_VARIABLE: "ENV_TEST"
+    ENV_FILE_VARIABLE: ENV_TEST
   before_script:
     - set -o allexport &&
       source $ENV_FILE_VARIABLE &&
