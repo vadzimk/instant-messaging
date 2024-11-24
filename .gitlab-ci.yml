@@ -13,8 +13,12 @@ init-test-postgres-job:
   variables:
     ENV_FILE_VARIABLE: ENV_TEST
   before_script:
+    # Debug the value of ENV_FILE_VARIABLE
+    - echo "ENV_FILE_VARIABLE=$ENV_FILE_VARIABLE" 
     # Access the value of the file variable indirectly
     - eval "FILE_CONTENT=\$$ENV_FILE_VARIABLE"
+    # Debug the resolved content
+    - echo "$FILE_CONTENT"
     # Write the content of the dynamically referenced file variable to a temporary file
     - echo "$FILE_CONTENT" > .env
     # Source the temporary file to export variables
