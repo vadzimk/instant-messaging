@@ -97,7 +97,9 @@ test-server-job:
     - *export-env-vars-script
     - *export-jwt-keys-script
   script:
+    - ls -htal
     - cd backend
+    - ls -htal
     - source .venv/bin/activate
     - python -m pytest -vv --junitxml=backend/junit.xml
   cache:
