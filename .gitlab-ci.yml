@@ -22,5 +22,5 @@ init-test-postgres-job:
       source .env &&
       set +o allexport
   script:
-    - echo $REDIS_PORT
+    - echo $AUTH_ON
 
