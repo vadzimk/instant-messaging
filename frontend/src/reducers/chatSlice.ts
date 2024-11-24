@@ -113,7 +113,7 @@ export const getMessages = createAsyncThunk<{ data: GetMessagesSchema, contactId
 )
 
 
-// eslint-disable-next-line no-empty-pattern
+
 export const {messageReceived} = chatSlice.actions
 
 export default chatSlice

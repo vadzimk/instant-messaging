@@ -27,9 +27,22 @@ COPY --from=dependencies /usr/src/app/.venv/ /usr/src/app/.venv/
 # Set the PATH to include the virtualenv's bin
 ENV PATH="/usr/src/app/.venv/bin:$PATH"
 
+# set default username
+ARG APP_USER_NAME=appuser
+# Create a non-root user and group
+RUN groupadd -r "$APP_USER_NAME" \
+    && useradd -r -g "$APP_USER_NAME" -m "$APP_USER_NAME" \
+    && chown -R "$APP_USER_NAME" /usr/src/app
+
 COPY ./ ./
 
 EXPOSE 8003
+
+# Switch to the non-root user
+USER "$APP_USER_NAME"
+
+ENV ENV=production
+
 # for debugging only
 #CMD ["tail", "-f", "/dev/null"]
-CMD ENV=demo python -m src.main
+ENTRYPOINT ["python", "-m", "src.main"]

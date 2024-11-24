@@ -1,0 +1,292 @@
+# workflow:
+#   rules:
+#     - if: $CI_COMMIT_BRANCH != "master" && $CI_PIPELINE_SOURCE != "merge_request_event"
+#       when: never
+#     - when: always
+
+variables:
+  FLUSHCACHE: "false" # trigger job to produce cache always when $FLUSHCACHE == "true"
+
+
+stages:
+  - install
+  - test
+
+
+.before-script-secrets-anchor: &export-env-vars-script
+  # Access the value of the file variable indirectly
+  - eval "FILE_CONTENT=\$$ENV_FILE_VARIABLE"
+  - cat "$FILE_CONTENT" > .env
+  - set -o allexport &&
+    source .env &&
+    set +o allexport
+
+
+.before-script-checkout-anchor: &checkout-only-script
+  # Limits which directory to check out in the working tree
+  - git sparse-checkout init --cone
+  - echo "git sparse-checkout set ${CHECKOUT_DIR}"
+  - git sparse-checkout set "$CHECKOUT_DIR" # dir to include in the working tree only
+
+
+.before-script-install-packages: &install-packages-script
+  - |
+    if [ -z ${PACKAGES} ]; then
+      echo "ERROR: The PACKAGES variable is not set. Define it in the pipeline or job variables."
+      exit 1
+    fi
+
+    if [ -f /etc/os-release ]; then
+      . /etc/os-release
+      case "$ID" in
+        alpine)
+          echo "Distribution name: alpine, package manager: apk"
+          apk add ${PACKAGES}
+          ;;
+        debian|ubuntu)
+          echo "Distribution name: debian|ubuntu, package manager: apt"
+          apt-get update && apt-get install -y ${PACKAGES}
+          ;;
+        centos|fedora)
+          echo "Distribution name: centos|fedora, package manager: yum"
+          yum install -y ${PACKAGES}
+          ;;
+        *)
+          echo "Unsupported OS: $ID"
+          exit 1
+          ;;
+      esac
+    else
+      echo "/etc/os-release not found. Unsupported environment."
+      exit 1
+    fi
+
+
+set-variables-from-terraform-artifact:
+  stage: install
+  variables:
+    ARTIFACT_PROJECT_ID: "37029027"
+    BRANCH: "master"
+    JOB_NAME: "apply"
+    PACKAGES: "jq curl"
+    GIT_STRATEGY: none # no code will be checked out from repo
+  before_script:
+    - *install-packages-script
+  script: # https://docs.gitlab.com/ee/api/job_artifacts.html#download-a-single-artifact-file-from-specific-tag-or-branch
+    # create variables
+    - |
+      curl --location -o ./ter_output.json \
+      --header "PRIVATE-TOKEN: ${GITLAB_JOB_ARTIFACTS_API_ACCESS_TOKEN}" \
+      -X GET https://gitlab.com/api/v4/projects/${ARTIFACT_PROJECT_ID}/jobs/artifacts/${BRANCH}/raw/ter_output.json?job=${JOB_NAME};
+    - |
+      {
+        echo WEBSERVER_PRIVATE_IP=$(cat ter_output.json | jq -r '."webserver-private_ip".value');
+        echo GITLAB_RUNNER_PRIVATE_IP=$(cat ter_output.json | jq -r '."gitlab-runner-private_ip".value');
+      } >> terraform_output.env
+  artifacts:
+    reports:
+      dotenv: terraform_output.env # its variables are available in all subsequent jobs as any other variables
+
+
+.pgbackups-script-job-template:
+  # common configuration to create or drop db/user
+  needs:
+    - set-variables-from-terraform-artifact
+  variables:
+    # must override empty variables in concrete jobs
+    ENV_FILE_VARIABLE: ""
+    DB_SCRIPT: ""
+    SCRIPT_REMOTE_DIR: "/tmp/"
+  before_script:
+    - *export-env-vars-script
+  script:
+    - chmod 400 $WS_KEY # private key
+    - |
+      scp -o StrictHostKeyChecking=no -i $WS_KEY \
+      "$DB_SCRIPT" \
+      ubuntu@$WS_HOST:${SCRIPT_REMOTE_DIR}
+    - |
+      ssh -o StrictHostKeyChecking=no -i $WS_KEY ubuntu@$WS_HOST "
+        chmod +x \"${SCRIPT_REMOTE_DIR}${DB_SCRIPT}\" &&
+        docker cp \"${SCRIPT_REMOTE_DIR}${DB_SCRIPT}\" pgbackups:/ &&
+        docker exec -i \
+          -e POSTGRES_PASSWORD=\"$POSTGRES_PASSWORD\" \
+          -e POSTGRES_USER=\"$POSTGRES_USER\" \
+          -e TARGET_USER=\"$POSTGRES_APP_USER\" \
+          -e TARGET_USER_PASSWORD=\"$POSTGRES_APP_PASSWORD\" \
+          -e DATABASE_NAME=\"$POSTGRES_DB\" \
+          -e DATABASE_HOST=\"$POSTGRES_HOST\" \
+          -e DATABASE_PORT=\"$POSTGRES_PORT\" \
+        pgbackups bash \"$DB_SCRIPT\"
+      "
+
+
+drop-test-postgres-db:
+  # Drop postgres database and postgres app user
+  extends: .pgbackups-script-job-template
+  stage: install
+  variables:
+    ENV_FILE_VARIABLE: ENV_TEST
+    DB_SCRIPT: "drop-postgres-db.sh"
+
+
+init-test-postgres-job:
+  # Initialize postgres database and postgres app user
+  needs:
+    - drop-test-postgres-db
+  extends: .pgbackups-script-job-template
+  stage: install
+  variables:
+    ENV_FILE_VARIABLE: ENV_TEST
+    DB_SCRIPT: "init-postgres-db.sh"
+
+
+# init-production-postgres-job:
+#   extends: .iniit-db-base
+#   stage: install
+#   variables:
+#     ENV_FILE_VARIABLE: ENV_PROD
+
+
+.install-dependencies-job-template:
+  stage: install
+  image: python:3.10
+  variables:
+    # must override in concrete job
+    CHECKOUT_DIR: ""
+    CACHE_KEY: ""
+  before_script:
+    - *checkout-only-script
+  script:
+    - ls -htla
+    - cd "$CHECKOUT_DIR"
+    - pip install --no-cache-dir pipenv
+    - export PIPENV_VENV_IN_PROJECT=1
+    - pipenv install --ignore-pipfile --dev
+    - pipenv run pip list
+  cache:
+    key: "$CACHE_KEY"
+    paths:
+      - "${CHECKOUT_DIR}/.venv"
+    policy: push
+  rules:
+    - if: $FLUSHCACHE == "true"
+      when: always
+    - if: $FLUSHCACHE == "false"
+      changes:
+        - ${CHECKOUT_DIR}/Pipfile.lock
+        - ${CHECKOUT_DIR}/Pipfile
+      when: always
+    - if: $FLUSHCACHE == "false"
+      exists:
+        - "${CHECKOUT_DIR}/.venv"
+      when: never
+    - when: always # Fallback to ensure job runs if cache is not found
+
+
+install-backend-dependencies-job:
+  extends: .install-dependencies-job-template
+  variables:
+    CHECKOUT_DIR: "backend"
+    CACHE_KEY: "DEP-Backend-${CI_COMMIT_REF_SLUG}"
+
+
+install-telegram-bot-dependencies-job:
+  extends: .install-dependencies-job-template
+  variables:
+    CHECKOUT_DIR: "telegram_bot"
+    CACHE_KEY: "DEP-Bot-${CI_COMMIT_REF_SLUG}"
+
+
+.before-script-jwt-anchor: &export-jwt-keys-script
+  # create JWT keys and save in environment variables
+  - export JWT_PRIVATE_KEY=$(openssl genpkey -algorithm RSA -outform PEM -pkeyopt rsa_keygen_bits:4096)
+  - export JWT_PUBLIC_KEY=$(openssl req -x509 -new -key <(echo "$JWT_PRIVATE_KEY") -outform PEM -days 36500 -subj "/CN=${JWT_ISSUER}")
+
+
+test-backend-job:
+  stage: test
+  image: python:3.10
+  needs:
+    - job: install-server-dependencies-job
+      optional: true # if used cache
+    - init-test-postgres-job
+  variables:
+    ENV_FILE_VARIABLE: ENV_TEST
+  cache:
+    key: "DEP-Backend-${CI_COMMIT_REF_SLUG}"
+    paths:
+      - backend/.venv
+    policy: pull
+  services:
+    - name: redis:alpine
+  before_script:
+    # SPARSE CHECKOUT IS INCOMPATIBLE WITH CACHE RESTORATION,
+    # Sparse Checkout Behavior:
+    # The .venv folder is not part of the repository. When you run git sparse-checkout, only tracked files in CHECKOUT_DIR are included, excluding the cached .venv.
+    # Cache Restoration:
+    # The cache is restored to the working directory before sparse-checkout is applied. If sparse-checkout excludes CHECKOUT_DIR/.venv, it gets effectively removed.
+    - *export-env-vars-script
+    - *export-jwt-keys-script
+  script:
+    - cd backend
+    - source .venv/bin/activate
+    - export POSTGRES_HOST="$WS_HOST"
+    - alembic upgrade head
+    - uvicorn src.main:app --host 127.0.0.1 --port 8000 --workers=1 &
+    - BACKEND_PID=$!
+    - sleep 5
+    - python -m pytest -vv --junitxml=junit.xml
+  after_script:
+    - kill $BACKEND_PID
+  artifacts:
+    when: always
+    paths:
+      - backend/junit.xml
+    reports:
+      junit: backend/junit.xml
+  only:
+    changes:
+      - backend/**/*
+
+
+
+test-telegram-bot-job:
+  stage: test
+  image: python:3.10
+  needs:
+    - job: install-telegram-bot-dependencies-job
+      optional: true # if used cache
+  variables:
+    ENV_FILE_VARIABLE: ENV_TEST
+  cache:
+    key: "DEP-Bot-${CI_COMMIT_REF_SLUG}"
+    paths:
+      - telegram_bot/.venv
+    policy: pull
+  before_script:
+    - *export-env-vars-script
+  script:
+    # start services in docker compose for testing because services in separate jobs cannot communicate between each other
+    - echo "not implemented" && exit 1
+
+
+#test-network:
+#  stage: install
+#  variables:
+#    POSTGRES_HOST: 172.16.0.24
+#    POSTGRES_PORT: 5432
+#  before_script:
+#    - |
+#      apt-get update && apt-get install -y \
+#      netcat-openbsd \
+#      && apt-get clean \
+#      && rm -rf /var/lib/apt/lists/*
+#  script:
+#    - nc -zv $WS_HOST "$POSTGRES_PORT"
+
+# problems that made me move away from this approach:
+  # - docker executor network is closed and cannot reach local network of the host even with networking=host parameter
+    # even if networking=host parameter helped it causes other problems down the road
+  # - jobs running in parallel cannot communicate between each other over network,
+    # so have I to containerise services using docker-compose for testing

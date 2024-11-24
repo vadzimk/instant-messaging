@@ -1,0 +1,53 @@
+#version: "3.8"
+# redis and postgres services are coming form common_db on webhost
+
+services:
+  backend:
+    container_name: messaging_backend
+    image: "${IMAGE_NAME_IMAGE_TAG_backend_prod_service}"
+    env_file:
+      - .ENV_FILE # created in gitlab-ci from .env.prod
+    expose:
+      - 8000
+    depends_on:
+      - celery_worker
+      - telegram_bot
+    restart: unless-stopped
+    environment:
+      JWT_PUBLIC_KEY: "${JWT_PUBLIC_KEY}"
+      JWT_PRIVATE_KEY: "${JWT_PRIVATE_KEY}"
+    healthcheck:
+      test: [ 'CMD', 'curl', '-f', 'http://localhost:8000/health' ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - common_network
+
+  celery_worker:
+    container_name: messaging_celery_worker
+    image: "${IMAGE_NAME_IMAGE_TAG_backend_prod_service}"
+    entrypoint: [ "celery", "-A", "src.celery_app.worker.celery", "worker", "--loglevel=info" ]
+    env_file:
+      - .ENV_FILE # created in gitlab-ci from .env.prod
+    expose:
+      - 8000
+    restart: unless-stopped
+    networks:
+      - common_network
+
+  telegram_bot:
+    container_name: messaging_telegram_bot
+    image: "${IMAGE_NAME_IMAGE_TAG_telegram_bot_prod_service}"
+    expose:
+      - 8003
+    env_file:
+      - .ENV_FILE # created in gitlab-ci from .env.prod
+    restart: unless-stopped
+    networks:
+      - common_network
+
+networks:
+  common_network:
+    external: true
+    name: common_network # must match the actual name of the network created in the external file

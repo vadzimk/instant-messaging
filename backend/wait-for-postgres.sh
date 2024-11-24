@@ -5,8 +5,8 @@ set -e
 UNSET_VARS=""
 
 # Check if required environment variables are set
-[ -z "$POSTGRES_USER" ] && UNSET_VARS="$UNSET_VARS POSTGRES_USER"
-[ -z "$POSTGRES_PASSWORD" ] && UNSET_VARS="$UNSET_VARS POSTGRES_PASSWORD"
+[ -z "$POSTGRES_APP_USER" ] && UNSET_VARS="$UNSET_VARS POSTGRES_APP_USER"
+[ -z "$POSTGRES_APP_PASSWORD" ] && UNSET_VARS="$UNSET_VARS POSTGRES_APP_PASSWORD"
 [ -z "$POSTGRES_HOST" ] && UNSET_VARS="$UNSET_VARS POSTGRES_HOST"
 [ -z "$POSTGRES_PORT" ] && UNSET_VARS="$UNSET_VARS POSTGRES_PORT"
 [ -z "$POSTGRES_DB" ] && UNSET_VARS="$UNSET_VARS POSTGRES_DB"
@@ -17,7 +17,7 @@ if [ -n "$UNSET_VARS" ]; then
   exit 1
 fi
 
-CONNECTION_STRING="postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}"
+CONNECTION_STRING="postgres://${POSTGRES_APP_USER}:${POSTGRES_APP_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}"
 #shift  # shifts the positional parameters to the left, effectively removing the first argument (the connection string)
 
 until pg_isready -d "$CONNECTION_STRING"; do
