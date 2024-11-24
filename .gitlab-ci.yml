@@ -5,7 +5,7 @@
 #     - when: always
 
 stages:
-  - build
+  - install
 
 .iniit-db-base: # generic job, will not run, starts with dot
   variables:
@@ -38,12 +38,23 @@ stages:
 
 init-test-postgres-job:
   extends: .iniit-db-base
-  stage: build
+  stage: install
   variables:
     ENV_FILE_VARIABLE: ENV_TEST
 
 init-production-postgres-job:
   extends: .iniit-db-base
-  stage: build
+  stage: install
   variables:
     ENV_FILE_VARIABLE: ENV_PROD
+
+install-server-dependencies:
+  stage: install
+  image: python:3.10
+  script:
+    - cd backend
+    - pip install --no-cache-dir pipenv
+    - export PIPENV_VENV_IN_PROJECT=1
+    - pipenv install --deploy --ignore-pipfile
+    - pwd
+    - ls -htal
