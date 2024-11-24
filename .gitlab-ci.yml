@@ -5,7 +5,7 @@
 #     - when: always
 
 variables:
-  FLUSHCACHE: "false" # trigger job to produce cache always when $FLUSHCACHE == "true"
+  FLUSHCACHE: "true" # trigger job to produce cache always when $FLUSHCACHE == "true"
 
 stages:
   - install
@@ -19,12 +19,19 @@ stages:
     source .env &&
     set +o allexport
 
+.before-script-checkout-anchor: &checkout-only-script
+  # Limits which directory to check out in the working tree
+  - git sparse-checkout init --cone
+  - git sparse-checkout set $CHECKOUT_DIR # dir to include in the working tree only
+
 .iniit-db-base: # generic job, will not run, starts with dot
+  # Initialize postgres database and postgres app user
+  strategy: none  # No code will be checked out
   variables:
     ENV_FILE_VARIABLE: ""
     SCRIPT_REMOTE_PATH: "/tmp/init-postgres-db.sh"
   before_script:
-    <<: *export-env-vars-script
+    - *export-env-vars-script
   script:
     - chmod 400 $WS_KEY # private key
     - scp -o StrictHostKeyChecking=no -i $WS_KEY init-postgres-db.sh ubuntu@$WS_HOST:${SCRIPT_REMOTE_PATH}
@@ -58,11 +65,17 @@ stages:
 install-server-dependencies-job:
   stage: install
   image: python:3.10
+  variables:
+    CHECKOUT_DIR: "/backend"
+  before_script:
+    - *checkout-only-script
   script:
+    - ls -htla
     - cd backend
     - pip install --no-cache-dir pipenv
     - export PIPENV_VENV_IN_PROJECT=1
     - pipenv install --deploy --ignore-pipfile
+    - ls -htla
   cache:
     key: DEP-S-$CI_COMMIT_REF_SLUG
     paths:
@@ -93,7 +106,9 @@ test-server-job:
       optional: true # if used cache
   variables:
     ENV_FILE_VARIABLE: ENV_TEST
+    CHECKOUT_DIR: "/backend"
   before_script:
+    - *checkout-only-script
     - *export-env-vars-script
     - *export-jwt-keys-script
   script:
