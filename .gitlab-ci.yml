@@ -25,7 +25,7 @@ stages:
     - export TARGET_USER=$POSTGRES_APP_USER;
     - export TARGET_USER_PASSWORD=$POSTGRES_APP_PASSWORD;
     - export DATABASE_NAME=$POSTGRES_DB
-    - ssh -o StrictHostKeyChecking=no -i $WS_KEY ubuntu@$WS_HOST '
+    - ssh -o StrictHostKeyChecking=no -i $WS_KEY ubuntu@$WS_HOST "
       docker exec -i pgbackups bash -c \"
       set -e;
       export PGPASSWORD=$POSTGRES_PASSWORD;
@@ -43,7 +43,7 @@ stages:
         echo User $TARGET_USER created;
       fi;
       psql -h $DATABASE_HOST -p $DATABASE_PORT -U $POSTGRES_USER -c \"GRANT ALL PRIVILEGES ON DATABASE $DATABASE_NAME TO $TARGET_USER;\";
-      \"'
+      \" "
 
 init-test-postgres-job:
   extends: .iniit-db-base
@@ -52,8 +52,8 @@ init-test-postgres-job:
     ENV_FILE_VARIABLE: ENV_TEST
 
 
-init-production-postgres-job:
-  extends: .iniit-db-base
-  stage: build
-  variables:
-    ENV_FILE_VARIABLE: ENV_PROD
+# init-production-postgres-job:
+#   extends: .iniit-db-base
+#   stage: build
+#   variables:
+#     ENV_FILE_VARIABLE: ENV_PROD
