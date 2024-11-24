@@ -80,7 +80,7 @@ install-server-dependencies-job:
   cache:
     key: DEP-S-$CI_COMMIT_REF_SLUG
     paths:
-      - backend/.venv/
+      - backend/.venv
     policy: push
   rules:
     - if: $FLUSHCACHE == "true"
@@ -109,7 +109,7 @@ test-server-job:
     ENV_FILE_VARIABLE: ENV_TEST
     CHECKOUT_DIR: "backend/"
   before_script:
-    - *checkout-only-script
+#    - *checkout-only-script
     - *export-env-vars-script
     - *export-jwt-keys-script
   script:
@@ -119,13 +119,12 @@ test-server-job:
     - ls -htal backend
     - pwd
     - cd backend
-    - ls -htla backend/.venv || echo 'Error Cache not restored'
     - source .venv/bin/activate
     - python -m pytest -vv --junitxml=backend/junit.xml
   cache:
     key: DEP-S-$CI_COMMIT_REF_SLUG
     paths:
-      - backend/.venv/
+      - backend/.venv
     policy: pull
   artifacts:
     when: always
