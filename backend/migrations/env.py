@@ -10,7 +10,7 @@ from sqlalchemy.ext.asyncio import async_engine_from_config
 from alembic import context
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))  # ensures that the parent directory is in the Python path.
 from src.db.session import engine # <-- new
-import src.db.models as models
+import src.db.models as models # <-- new
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

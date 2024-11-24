@@ -3,3 +3,4 @@ result.log
 /diagrams/
 .env.dev
 **/*.bkp
+.env.test

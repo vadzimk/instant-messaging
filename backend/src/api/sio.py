@@ -77,7 +77,7 @@ async def connect(sid, environ, auth):
 
     async with Session() as db_session:
         async with SqlAlchemyUnitOfWork(db_session) as uow:
-            user_service = UserService(uow)
+            user_service = UserService(uow) # TODO replace with Depends(get_user_service)
             user: m.User = await authenticated_user(user_email, user_service)
 
             await sio.save_session(sid,

@@ -1,0 +1,21 @@
+workflow:
+  rules:
+    - if: $CI_COMMIT_BRANCH != "master" && $CI_PIPELINE_SOURCE != "merge_request_event"
+      when: never
+    - when: always
+
+
+stages:
+  - build
+
+init-test-postgres-job:
+  stage: build
+  variables:
+    ENV_FILE_VARIABLE: "ENV_TEST"
+  before_script:
+    - set -o allexport &&
+      source $ENV_FILE_VARIABLE &&
+      set +o allexport
+  script:
+    - echo $POSTGRES_USER
+
