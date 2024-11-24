@@ -67,7 +67,7 @@ install-server-dependencies-job:
   stage: install
   image: python:3.10
   variables:
-    CHECKOUT_DIR: "/backend"
+    CHECKOUT_DIR: "backend/"
   before_script:
     - *checkout-only-script
   script:
