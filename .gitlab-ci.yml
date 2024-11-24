@@ -10,9 +10,16 @@ stages:
 
 init-test-postgres-job:
   stage: build
+  variables:
+    ENV_FILE_VARIABLE: ENV_TEST
   before_script:
+    # Access the value of the file variable indirectly
+    - eval "FILE_CONTENT=\$$ENV_FILE_VARIABLE"
+    # Write the content of the dynamically referenced file variable to a temporary file
+    - echo "$FILE_CONTENT" > .env
+    # Source the temporary file to export variables
     - set -o allexport &&
-      source $ENV_TEST &&
+      source .env &&
       set +o allexport
   script:
     - echo $AUTH_ON
