@@ -22,6 +22,7 @@ stages:
   script:
     - chmod 400 $WS_KEY # private key
     - scp -o StrictHostKeyChecking=no -i $WS_KEY init-postgres-db.sh ubuntu@$WS_HOST:/tmp/init-postgres-db.sh
+    - ssh -o StrictHostKeyChecking=no -i $WS_KEY ubuntu@$WS_HOST "chmod +x /tmp/init-postgres-db.sh"
     - ssh -o StrictHostKeyChecking=no -i $WS_KEY ubuntu@$WS_HOST "ls -l /tmp/init-postgres-db.sh"
     - |
       ssh -o StrictHostKeyChecking=no -i $WS_KEY ubuntu@$WS_HOST "
