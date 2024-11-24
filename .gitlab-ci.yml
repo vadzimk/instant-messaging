@@ -22,7 +22,8 @@ stages:
 .before-script-checkout-anchor: &checkout-only-script
   # Limits which directory to check out in the working tree
   - git sparse-checkout init --cone
-  - git sparse-checkout set $CHECKOUT_DIR # dir to include in the working tree only
+  - echo "git sparse-checkout set ${CHECKOUT_DIR}"
+  - git sparse-checkout set "$CHECKOUT_DIR" # dir to include in the working tree only
 
 .iniit-db-base: # generic job, will not run, starts with dot
   # Initialize postgres database and postgres app user
