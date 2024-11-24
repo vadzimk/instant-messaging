@@ -10,14 +10,15 @@ class ServerSettings(BaseSettings):
         extra='ignore'
     )
 
-    POSTGRES_USER: str = 'postgres'
-    POSTGRES_PASSWORD: str = 'postgres'
+    POSTGRES_APP_USER: str = 'postgres'
+    POSTGRES_APP_PASSWORD: str = 'postgres'
     POSTGRES_HOST: str = 'localhost'
     POSTGRES_PORT: int = 5432
     POSTGRES_DB: str = 'postgres'
 
     REDIS_HOST: str = 'localhost'
     REDIS_PORT: int = 6379
+    REDIS_DB: int = 0
 
     AUTH_ON: bool = True
     BOT_BASE_URL: str = 'http://localhost:8003'

@@ -22,7 +22,7 @@ from src import exceptions as e
 logger = logging.getLogger(__name__)
 
 redis_manager = socketio.AsyncRedisManager(
-    url=f'redis://{server_settings.REDIS_HOST}:{server_settings.REDIS_PORT}/0')
+    url=f'redis://{server_settings.REDIS_HOST}:{server_settings.REDIS_PORT}/{server_settings.REDIS_DB}')
 
 # test client https://github.com/serajhqi/socketio-test-client
 sio = socketio.AsyncServer(

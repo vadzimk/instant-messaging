@@ -4,3 +4,4 @@ result.log
 .env.dev
 **/*.bkp
 .env.test
+.env.prod

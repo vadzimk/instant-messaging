@@ -8,19 +8,51 @@
 stages:
   - build
 
-init-test-postgres-job:
-  stage: build
+.iniit-db-base: # generic job, will not run, starts with dot
   variables:
-    ENV_FILE_VARIABLE: ENV_TEST
+    ENV_FILE_VARIABLE: ""
   before_script:
     # Access the value of the file variable indirectly
     - eval "FILE_CONTENT=\$$ENV_FILE_VARIABLE"
-    # Write the content of the dynamically referenced file variable to a temporary file
     - cat "$FILE_CONTENT" > .env
-    # Source the temporary file to export variables
     - set -o allexport &&
       source .env &&
       set +o allexport
   script:
-    - echo $POSTGRES_USER
+    - chmod 400 $WS_KEY # private key
+    - export POSTGRES_PASSWORD=$POSTGRES_PASSWORD;
+    - export POSTGRES_USER=$POSTGRES_USER;
+    - export TARGET_USER=$POSTGRES_APP_USER;
+    - export TARGET_USER_PASSWORD=$POSTGRES_APP_PASSWORD;
+    - export DATABASE_NAME=$POSTGRES_DB
+    - ssh -o StrictHostKeyChecking=no -i $WS_KEY ubuntu@$WS_HOST "
+      docker exec -i pgbackups bash -c \"
+      set -e;
+      if psql -h $DATABASE_HOST -p $DATABASE_PORT -U $POSTGRES_USER -lqt | cut -d \| -f 1 | grep -qw $DATABASE_NAME;
+      then
+      echo $DATABASE_NAME exists;
+      else
+      createdb -h $DATABASE_HOST -p $DATABASE_PORT -U $POSTGRES_USER -T template0 $DATABASE_NAME;
+      echo $DATABASE_NAME created;
+      ./restore.sh $DATABASE_NAME;
+      fi;
+      USER_EXISTS=\$(psql -h $DATABASE_HOST -p $DATABASE_PORT -U $POSTGRES_USER -tc \"SELECT 1 FROM pg_roles WHERE rolname = '$TARGET_USER';\" | xargs);
+      if [ \"\$USER_EXISTS\" != \"1\" ]; then
+        psql -h $DATABASE_HOST -p $DATABASE_PORT -U $POSTGRES_USER -c \"CREATE USER $TARGET_USER WITH PASSWORD '$TARGET_USER_PASSWORD';\";
+        echo User $TARGET_USER created;
+      fi;
+      psql -h $DATABASE_HOST -p $DATABASE_PORT -U $POSTGRES_USER -c \"GRANT ALL PRIVILEGES ON DATABASE $DATABASE_NAME TO $TARGET_USER;\";
+      \" "
 
+init-test-postgres-job:
+  extends: .iniit-db-base
+  stage: build
+  variables:
+    ENV_FILE_VARIABLE: ENV_TEST
+
+
+init-production-postgres-job:
+  extends: .iniit-db-base
+  stage: build
+  variables:
+    ENV_FILE_VARIABLE: ENV_PROD
