@@ -34,7 +34,7 @@ stages:
           -e DATABASE_NAME=\"$POSTGRES_DB\" \
           -e DATABASE_HOST=\"$POSTGRES_HOST\" \
           -e DATABASE_PORT=\"$POSTGRES_PORT\" \
-        pgbackups bash \"SCRIPT_REMOTE_PATH\"
+        pgbackups bash \"$SCRIPT_REMOTE_PATH\"
       "
 
 
