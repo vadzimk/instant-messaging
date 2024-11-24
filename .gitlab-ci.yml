@@ -21,11 +21,11 @@ stages:
       set +o allexport
   script:
     - chmod 400 $WS_KEY # private key
-    - scp -o StrictHostKeyChecking=no -i $WS_KEY init-postgres-db.sh ubuntu@$WS_HOST:/tmp/init-postgres-db.sh
+    - scp -o StrictHostKeyChecking=no -i $WS_KEY init-postgres-db.sh ubuntu@$WS_HOST:${SCRIPT_REMOTE_PATH}
     - |
       ssh -o StrictHostKeyChecking=no -i $WS_KEY ubuntu@$WS_HOST "
-        chmod +x /tmp/init-postgres-db.sh &&
-        docker cp /tmp/init-postgres-db.sh pgbackups:/tmp-init-postgres-db.sh
+        chmod +x \"$SCRIPT_REMOTE_PATH\" &&
+        docker cp \"$SCRIPT_REMOTE_PATH\" \"pgbackups:${SCRIPT_REMOTE_PATH}\"
         docker exec -i \
           -e POSTGRES_PASSWORD=\"$POSTGRES_PASSWORD\" \
           -e POSTGRES_USER=\"$POSTGRES_USER\" \
@@ -34,7 +34,7 @@ stages:
           -e DATABASE_NAME=\"$POSTGRES_DB\" \
           -e DATABASE_HOST=\"$POSTGRES_HOST\" \
           -e DATABASE_PORT=\"$POSTGRES_PORT\" \
-        pgbackups bash /tmp/init-postgres-db.sh
+        pgbackups bash \"SCRIPT_REMOTE_PATH\"
       "
 
 
