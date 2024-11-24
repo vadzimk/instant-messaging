@@ -79,7 +79,7 @@ install-server-dependencies-job:
 
 
 .before-script-jwt-anchor: &export-jwt-keys-script
-  # create keys and save in environment variables
+  # create JWT keys and save in environment variables
   - export JWT_PRIVATE_KEY=$(openssl genpkey -algorithm RSA -outform PEM -pkeyopt rsa_keygen_bits:4096)
   - export JWT_PUBLIC_KEY=$(openssl req -x509 -new -key <(echo "$JWT_PRIVATE_KEY") -outform PEM -days 36500 -subj "/CN=${JWT_ISSUER}")
   - echo $JWT_PUBLIC_KEY # TODO remove
@@ -97,6 +97,7 @@ test-server-job:
     - *export-env-vars-script
     - *export-jwt-keys-script
   script:
+    - pwd
     - ls -htal
     - cd backend
     - ls -htal
