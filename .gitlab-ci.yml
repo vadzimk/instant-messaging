@@ -113,7 +113,8 @@ test-server-job:
     - *export-env-vars-script
     - *export-jwt-keys-script
   script:
-    - find . -name ".venv" -type d
+    - find / -name ".venv" -type d || echo "Cache not found in filesystem"
+    - find . -name ".venv" -type d || echo "Cache not found in working directory"
     - ls -htal
     - ls -htal backend
     - pwd
