@@ -22,5 +22,5 @@ init-test-postgres-job:
       source .env &&
       set +o allexport
   script:
-    - echo $AUTH_ON
+    - echo $POSTGRES_USER
 
