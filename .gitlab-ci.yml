@@ -113,10 +113,12 @@ test-server-job:
     - *export-env-vars-script
     - *export-jwt-keys-script
   script:
+    - find . -name ".venv" -type d
+    - ls -htal
+    - ls -htal backend
     - pwd
-    - ls -htal
     - cd backend
-    - ls -htal
+    - ls -htla backend/.venv || echo 'Error Cache not restored'
     - source .venv/bin/activate
     - python -m pytest -vv --junitxml=backend/junit.xml
   cache:
