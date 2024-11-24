@@ -11,6 +11,7 @@ stages:
 .iniit-db-base: # generic job, will not run, starts with dot
   variables:
     ENV_FILE_VARIABLE: ""
+    SCRIPT_REMOTE_PATH: "/tmp/init-postgres-db.sh"
   before_script:
     # Access the value of the file variable indirectly
     - eval "FILE_CONTENT=\$$ENV_FILE_VARIABLE"
@@ -20,18 +21,17 @@ stages:
       set +o allexport
   script:
     - chmod 400 $WS_KEY # private key
-
-    - scp -o StrictHostKeyChecking=no -i $WS_KEY init-postgres-db.sh ubuntu@$WS_HOST:/tmp/init-postgres-db.sh
+    - scp -o StrictHostKeyChecking=no -i $WS_KEY init-postgres-db.sh ubuntu@$WS_HOST:${SCRIPT_REMOTE_PATH}
     - |
       ssh -o StrictHostKeyChecking=no -i $WS_KEY ubuntu@$WS_HOST "
-        export POSTGRES_PASSWORD=$POSTGRES_PASSWORD &&
-        export POSTGRES_USER=$POSTGRES_USER &&
-        export TARGET_USER=$POSTGRES_APP_USER &&
-        export TARGET_USER_PASSWORD=$POSTGRES_APP_PASSWORD &&
-        export DATABASE_NAME=$POSTGRES_DB &&
-        export DATABASE_HOST=$POSTGRES_HOST &&
-        export DATABASE_PORT=$POSTGRES_PORT &&
-        docker exec -i pgbackups bash /tmp/script.sh
+        export POSTGRES_PASSWORD=\"$POSTGRES_PASSWORD\" &&
+        export POSTGRES_USER=\"$POSTGRES_USER\" &&
+        export TARGET_USER=\"$POSTGRES_APP_USER\" &&
+        export TARGET_USER_PASSWORD=\"$POSTGRES_APP_PASSWORD\" &&
+        export DATABASE_NAME=\"$POSTGRES_DB\" &&
+        export DATABASE_HOST=\"$POSTGRES_HOST\" &&
+        export DATABASE_PORT=\"$POSTGRES_PORT\" &&
+        docker exec -i pgbackups bash \"$SCRIPT_REMOTE_PATH\"
       "
 
 
