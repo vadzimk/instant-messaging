@@ -5,7 +5,7 @@
 #     - when: always
 
 variables:
-  FLUSHCACHE: "true" # trigger job to produce cache always when $FLUSHCACHE == "true"
+  FLUSHCACHE: "false" # trigger job to produce cache always when $FLUSHCACHE == "true"
 
 stages:
   - install
@@ -88,6 +88,7 @@ install-backend-dependencies-job:
     - if: $FLUSHCACHE == "false"
       changes:
         - backend/Pipfile.lock
+        - backend/Pipfile
       when: always
     - when: never
 
