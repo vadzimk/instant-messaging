@@ -63,7 +63,7 @@ stages:
 #   variables:
 #     ENV_FILE_VARIABLE: ENV_PROD
 
-install-server-dependencies-job:
+install-backend-dependencies-job:
   stage: install
   image: python:3.10
   variables:
@@ -75,8 +75,8 @@ install-server-dependencies-job:
     - cd backend
     - pip install --no-cache-dir pipenv
     - export PIPENV_VENV_IN_PROJECT=1
-    - pipenv install --ignore-pipfile
-    - ls -htla
+    - pipenv install --ignore-pipfile --dev
+    - pipenv run pip list
   cache:
     key: DEP-S-$CI_COMMIT_REF_SLUG
     paths:
@@ -96,10 +96,9 @@ install-server-dependencies-job:
   # create JWT keys and save in environment variables
   - export JWT_PRIVATE_KEY=$(openssl genpkey -algorithm RSA -outform PEM -pkeyopt rsa_keygen_bits:4096)
   - export JWT_PUBLIC_KEY=$(openssl req -x509 -new -key <(echo "$JWT_PRIVATE_KEY") -outform PEM -days 36500 -subj "/CN=${JWT_ISSUER}")
-  - echo $JWT_PUBLIC_KEY # TODO remove
 
 
-test-server-job:
+test-backend-job:
   stage: test
   image: python:3.10
   needs:
@@ -116,13 +115,14 @@ test-server-job:
     - *export-env-vars-script
     - *export-jwt-keys-script
   script:
-    - find / -name ".venv" -type d || echo "Cache not found in filesystem"
-    - find . -name ".venv" -type d || echo "Cache not found in working directory"
-    - ls -htal
-    - ls -htal backend
-    - pwd
+#    - find / -name ".venv" -type d || echo "Cache not found in filesystem"
+#    - find . -name ".venv" -type d || echo "Cache not found in working directory"
+#    - ls -htal
+#    - ls -htal backend
+#    - pwd
     - cd backend
     - source .venv/bin/activate
+    - pip list
     - python -m pytest -vv --junitxml=backend/junit.xml
   cache:
     key: DEP-S-$CI_COMMIT_REF_SLUG
