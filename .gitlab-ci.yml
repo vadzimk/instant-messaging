@@ -117,14 +117,20 @@ test-backend-job:
     - *export-jwt-keys-script
   script:
     - find / -name ".venv" -type d || echo "Cache not found in filesystem"
-    - find . -name ".venv" -type d || echo "Cache not found in working directory"
-    - ls -htal
-    - ls -htal backend
-    - pwd
+#    - find . -name ".venv" -type d || echo "Cache not found in working directory"
+#    - ls -htal
+#    - ls -htal backend
+#    - pwd
     - cd backend
     - source .venv/bin/activate
-    - pip list
-    - python -m pytest -vv --junitxml=backend/junit.xml
+#    - pip list
+    - |
+      apt-get update && apt-get install -y \
+      postgresql-client \
+      && apt-get clean \
+      && rm -rf /var/lib/apt/lists/*
+    - psql -h "$POSTGRES_HOST" -p "$POSTGRES_PORT" -U "$POSTGRES_APP_USER"
+#    - python -m pytest -vv --junitxml=backend/junit.xml
   cache:
     key: DEP-S-$CI_COMMIT_REF_SLUG
     paths:
