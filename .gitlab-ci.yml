@@ -98,6 +98,39 @@ install-backend-dependencies-job:
   - export JWT_PRIVATE_KEY=$(openssl genpkey -algorithm RSA -outform PEM -pkeyopt rsa_keygen_bits:4096)
   - export JWT_PUBLIC_KEY=$(openssl req -x509 -new -key <(echo "$JWT_PRIVATE_KEY") -outform PEM -days 36500 -subj "/CN=${JWT_ISSUER}")
 
+
+.before-script-install-packages: &install-packages-script
+  - |
+    if [ -z "${PACKAGES}" ]; then
+      echo "ERROR: The PACKAGES variable is not set. Define it in the pipeline or job variables."
+      exit 1
+    fi
+    
+    if [ -f /etc/os-release ]; then
+      . /etc/os-release
+      case "$ID" in
+        alpine)
+          echo "Distribution name: alpine, package manager: apk"
+          apk add "${PACKAGES}"
+          ;;
+        debian|ubuntu)
+          echo "Distribution name: debian|ubuntu, package manager: apt"
+          apt-get update && apt-get install -y "${PACKAGES}"
+          ;;
+        centos|fedora)
+          echo "Distribution name: centos|fedora, package manager: yum"
+          yum install -y "${PACKAGES}"
+          ;;
+        *)
+          echo "Unsupported OS: $ID"
+          exit 1
+          ;;
+      esac
+    else
+      echo "/etc/os-release not found. Unsupported environment."
+      exit 1
+    fi
+
 set-variables-from-terraform-artifact:
   stage: install
   variables:
@@ -105,7 +138,7 @@ set-variables-from-terraform-artifact:
     BRANCH: "master"
     JOB_NAME: "apply"
   before_script:
-    - apk add jq curl
+    - PACKAGES="jq curl" *install-packages-script
   script: # https://docs.gitlab.com/ee/api/job_artifacts.html#download-a-single-artifact-file-from-specific-tag-or-branch
     # create variables
     - |
