@@ -98,6 +98,28 @@ install-backend-dependencies-job:
   - export JWT_PRIVATE_KEY=$(openssl genpkey -algorithm RSA -outform PEM -pkeyopt rsa_keygen_bits:4096)
   - export JWT_PUBLIC_KEY=$(openssl req -x509 -new -key <(echo "$JWT_PRIVATE_KEY") -outform PEM -days 36500 -subj "/CN=${JWT_ISSUER}")
 
+set-variables-from-terraform-artifact:
+  stage: install
+  variables:
+    ARTIFACT_PROJECT_ID: "37029027"
+    BRANCH: "master"
+    JOB_NAME: "apply"
+  before_script:
+    - apk add jq curl
+  script: # https://docs.gitlab.com/ee/api/job_artifacts.html#download-a-single-artifact-file-from-specific-tag-or-branch
+    # create variables
+    - |
+      curl --location -o ./ter_output.json \
+      --header "PRIVATE-TOKEN: ${GITLAB_JOB_ARTIFACTS_API_ACCESS_TOKEN}" \
+      -X GET https://gitlab.com/api/v4/projects/${ARTIFACT_PROJECT_ID}/jobs/artifacts/${BRANCH}/raw/ter_output.json?job=${JOB_NAME};
+    - |
+      { 
+        echo WEBSERVER_PRIVATE_IP=$(cat ter_output.json | jq -r '."webserver-private_ip".value');
+      } >> terraform_output.env
+  artifacts:
+    reports:
+      dotenv: terraform_output.env # its variables are available in all subsequent jobs as any other variables
+
 
 test-backend-job:
   stage: test
@@ -129,6 +151,7 @@ test-backend-job:
       postgresql-client \
       && apt-get clean \
       && rm -rf /var/lib/apt/lists/*
+    - export POSTGRES_HOST=$WEBSERVER_PRIVATE_IP
     - psql -h "$POSTGRES_HOST" -p "$POSTGRES_PORT" -U "$POSTGRES_APP_USER"
 #    - python -m pytest -vv --junitxml=backend/junit.xml
   cache:
