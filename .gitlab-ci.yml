@@ -137,8 +137,9 @@ set-variables-from-terraform-artifact:
     ARTIFACT_PROJECT_ID: "37029027"
     BRANCH: "master"
     JOB_NAME: "apply"
+    PACKAGES: "jq curl"
   before_script:
-    - PACKAGES="jq curl" *install-packages-script
+    - *install-packages-script
   script: # https://docs.gitlab.com/ee/api/job_artifacts.html#download-a-single-artifact-file-from-specific-tag-or-branch
     # create variables
     - |
