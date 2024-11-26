@@ -101,7 +101,7 @@ install-backend-dependencies-job:
 
 .before-script-install-packages: &install-packages-script
   - |
-    if [ -z "${PACKAGES}" ]; then
+    if [ -z ${PACKAGES} ]; then
       echo "ERROR: The PACKAGES variable is not set. Define it in the pipeline or job variables."
       exit 1
     fi
@@ -111,15 +111,15 @@ install-backend-dependencies-job:
       case "$ID" in
         alpine)
           echo "Distribution name: alpine, package manager: apk"
-          apk add "${PACKAGES}"
+          apk add ${PACKAGES}
           ;;
         debian|ubuntu)
           echo "Distribution name: debian|ubuntu, package manager: apt"
-          apt-get update && apt-get install -y "${PACKAGES}"
+          apt-get update && apt-get install -y ${PACKAGES}
           ;;
         centos|fedora)
           echo "Distribution name: centos|fedora, package manager: yum"
-          yum install -y "${PACKAGES}"
+          yum install -y ${PACKAGES}
           ;;
         *)
           echo "Unsupported OS: $ID"
@@ -161,6 +161,7 @@ test-backend-job:
   needs:
     - job: install-server-dependencies-job
       optional: true # if used cache
+    - set-variables-from-terraform-artifact
   variables:
     ENV_FILE_VARIABLE: ENV_TEST
   before_script:
