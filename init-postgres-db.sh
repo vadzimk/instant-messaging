@@ -51,7 +51,7 @@ USER_EXISTS=$(psql -h "$DATABASE_HOST" -p "$DATABASE_PORT" -U "$POSTGRES_USER" -
 "SELECT 1 FROM pg_roles WHERE rolname = '$TARGET_USER';" | xargs)
 if [ "$USER_EXISTS" != '1' ]; then
     if psql -h "$DATABASE_HOST" -p "$DATABASE_PORT" -U "$POSTGRES_USER" -c \
-    "CREATE USER \"$TARGET_USER\" WITH PASSWORD '$TARGET_USER_PASSWORD' ENCRYPTED USING SCRAM-SHA-256;"; then
+    "CREATE USER \"$TARGET_USER\" WITH PASSWORD '$TARGET_USER_PASSWORD';"; then
         echo "User ${TARGET_USER} created";
     else
         echo "Error creating user $TARGET_USER" >&2;
