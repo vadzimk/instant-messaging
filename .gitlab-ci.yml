@@ -89,7 +89,8 @@ set-variables-from-terraform-artifact:
 
 .iniit-db-base: # generic job, will not run, starts with dot
   # Initialize postgres database and postgres app user
-  strategy: none  # No code will be checked out
+  git:
+    strategy: none # No code will be checked out
   needs:
     - set-variables-from-terraform-artifact
   variables:
