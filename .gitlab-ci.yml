@@ -7,9 +7,11 @@
 variables:
   FLUSHCACHE: "false" # trigger job to produce cache always when $FLUSHCACHE == "true"
 
+
 stages:
   - install
   - test
+
 
 .before-script-secrets-anchor: &export-env-vars-script
   # Access the value of the file variable indirectly
@@ -19,18 +21,81 @@ stages:
     source .env &&
     set +o allexport
 
+
 .before-script-checkout-anchor: &checkout-only-script
   # Limits which directory to check out in the working tree
   - git sparse-checkout init --cone
   - echo "git sparse-checkout set ${CHECKOUT_DIR}"
   - git sparse-checkout set "$CHECKOUT_DIR" # dir to include in the working tree only
 
+
+.before-script-install-packages: &install-packages-script
+  - |
+    if [ -z ${PACKAGES} ]; then
+      echo "ERROR: The PACKAGES variable is not set. Define it in the pipeline or job variables."
+      exit 1
+    fi
+    
+    if [ -f /etc/os-release ]; then
+      . /etc/os-release
+      case "$ID" in
+        alpine)
+          echo "Distribution name: alpine, package manager: apk"
+          apk add ${PACKAGES}
+          ;;
+        debian|ubuntu)
+          echo "Distribution name: debian|ubuntu, package manager: apt"
+          apt-get update && apt-get install -y ${PACKAGES}
+          ;;
+        centos|fedora)
+          echo "Distribution name: centos|fedora, package manager: yum"
+          yum install -y ${PACKAGES}
+          ;;
+        *)
+          echo "Unsupported OS: $ID"
+          exit 1
+          ;;
+      esac
+    else
+      echo "/etc/os-release not found. Unsupported environment."
+      exit 1
+    fi
+
+
+set-variables-from-terraform-artifact:
+  stage: install
+  variables:
+    ARTIFACT_PROJECT_ID: "37029027"
+    BRANCH: "master"
+    JOB_NAME: "apply"
+    PACKAGES: "jq curl"
+  before_script:
+    - *install-packages-script
+  script: # https://docs.gitlab.com/ee/api/job_artifacts.html#download-a-single-artifact-file-from-specific-tag-or-branch
+    # create variables
+    - |
+      curl --location -o ./ter_output.json \
+      --header "PRIVATE-TOKEN: ${GITLAB_JOB_ARTIFACTS_API_ACCESS_TOKEN}" \
+      -X GET https://gitlab.com/api/v4/projects/${ARTIFACT_PROJECT_ID}/jobs/artifacts/${BRANCH}/raw/ter_output.json?job=${JOB_NAME};
+    - |
+      { 
+        echo WEBSERVER_PRIVATE_IP=$(cat ter_output.json | jq -r '."webserver-private_ip".value');
+        echo GITLAB_RUNNER_PRIVATE_IP=$(cat ter_output.json | jq -r '."gitlab-runner-private_ip".value');
+      } >> terraform_output.env
+  artifacts:
+    reports:
+      dotenv: terraform_output.env # its variables are available in all subsequent jobs as any other variables
+
+
 .iniit-db-base: # generic job, will not run, starts with dot
   # Initialize postgres database and postgres app user
   strategy: none  # No code will be checked out
+  needs:
+    - set-variables-from-terraform-artifact
   variables:
     ENV_FILE_VARIABLE: ""
     SCRIPT_REMOTE_PATH: "/tmp/init-postgres-db.sh"
+    ALLOWED_IP: "$GITLAB_RUNNER_PRIVATE_IP"
   before_script:
     - *export-env-vars-script
   script:
@@ -39,7 +104,7 @@ stages:
     - |
       ssh -o StrictHostKeyChecking=no -i $WS_KEY ubuntu@$WS_HOST "
         chmod +x \"$SCRIPT_REMOTE_PATH\" &&
-        docker cp \"$SCRIPT_REMOTE_PATH\" \"pgbackups:${SCRIPT_REMOTE_PATH}\"
+        docker cp \"$SCRIPT_REMOTE_PATH\" \"pgbackups:${SCRIPT_REMOTE_PATH}\" &&
         docker exec -i \
           -e POSTGRES_PASSWORD=\"$POSTGRES_PASSWORD\" \
           -e POSTGRES_USER=\"$POSTGRES_USER\" \
@@ -48,20 +113,25 @@ stages:
           -e DATABASE_NAME=\"$POSTGRES_DB\" \
           -e DATABASE_HOST=\"$POSTGRES_HOST\" \
           -e DATABASE_PORT=\"$POSTGRES_PORT\" \
-        pgbackups bash \"$SCRIPT_REMOTE_PATH\"
+          -e ALLOWED_IP=\"$ALLOWED_IP\" \
+        pgbackups bash \"$SCRIPT_REMOTE_PATH\" &&
+        docker exec -u postgres postgres pg_ctl reload
       "
+      
 
-# init-test-postgres-job:
-#   extends: .iniit-db-base
-#   stage: install
-#   variables:
-#     ENV_FILE_VARIABLE: ENV_TEST
+init-test-postgres-job:
+  extends: .iniit-db-base
+  stage: install
+  variables:
+    ENV_FILE_VARIABLE: ENV_TEST
+
 
 # init-production-postgres-job:
 #   extends: .iniit-db-base
 #   stage: install
 #   variables:
 #     ENV_FILE_VARIABLE: ENV_PROD
+
 
 install-backend-dependencies-job:
   stage: install
@@ -99,62 +169,6 @@ install-backend-dependencies-job:
   - export JWT_PUBLIC_KEY=$(openssl req -x509 -new -key <(echo "$JWT_PRIVATE_KEY") -outform PEM -days 36500 -subj "/CN=${JWT_ISSUER}")
 
 
-.before-script-install-packages: &install-packages-script
-  - |
-    if [ -z ${PACKAGES} ]; then
-      echo "ERROR: The PACKAGES variable is not set. Define it in the pipeline or job variables."
-      exit 1
-    fi
-    
-    if [ -f /etc/os-release ]; then
-      . /etc/os-release
-      case "$ID" in
-        alpine)
-          echo "Distribution name: alpine, package manager: apk"
-          apk add ${PACKAGES}
-          ;;
-        debian|ubuntu)
-          echo "Distribution name: debian|ubuntu, package manager: apt"
-          apt-get update && apt-get install -y ${PACKAGES}
-          ;;
-        centos|fedora)
-          echo "Distribution name: centos|fedora, package manager: yum"
-          yum install -y ${PACKAGES}
-          ;;
-        *)
-          echo "Unsupported OS: $ID"
-          exit 1
-          ;;
-      esac
-    else
-      echo "/etc/os-release not found. Unsupported environment."
-      exit 1
-    fi
-
-set-variables-from-terraform-artifact:
-  stage: install
-  variables:
-    ARTIFACT_PROJECT_ID: "37029027"
-    BRANCH: "master"
-    JOB_NAME: "apply"
-    PACKAGES: "jq curl"
-  before_script:
-    - *install-packages-script
-  script: # https://docs.gitlab.com/ee/api/job_artifacts.html#download-a-single-artifact-file-from-specific-tag-or-branch
-    # create variables
-    - |
-      curl --location -o ./ter_output.json \
-      --header "PRIVATE-TOKEN: ${GITLAB_JOB_ARTIFACTS_API_ACCESS_TOKEN}" \
-      -X GET https://gitlab.com/api/v4/projects/${ARTIFACT_PROJECT_ID}/jobs/artifacts/${BRANCH}/raw/ter_output.json?job=${JOB_NAME};
-    - |
-      { 
-        echo WEBSERVER_PRIVATE_IP=$(cat ter_output.json | jq -r '."webserver-private_ip".value');
-      } >> terraform_output.env
-  artifacts:
-    reports:
-      dotenv: terraform_output.env # its variables are available in all subsequent jobs as any other variables
-
-
 test-backend-job:
   stage: test
   image: python:3.10
@@ -174,13 +188,13 @@ test-backend-job:
     - *export-jwt-keys-script
   script:
     - find / -name ".venv" -type d || echo "Cache not found in filesystem"
-#    - find . -name ".venv" -type d || echo "Cache not found in working directory"
-#    - ls -htal
-#    - ls -htal backend
-#    - pwd
+    #    - find . -name ".venv" -type d || echo "Cache not found in working directory"
+    #    - ls -htal
+    #    - ls -htal backend
+    #    - pwd
     - cd backend
     - source .venv/bin/activate
-#    - pip list
+    #    - pip list
     - |
       apt-get update && apt-get install -y \
       postgresql-client \
@@ -189,7 +203,7 @@ test-backend-job:
     - export POSTGRES_HOST="$WEBSERVER_PRIVATE_IP"
     - export PGPASSWORD="$POSTGRES_APP_PASSWORD"
     - psql -h "$POSTGRES_HOST" -p "$POSTGRES_PORT" -U "$POSTGRES_APP_USER" -d "$POSTGRES_DB"
-#    - python -m pytest -vv --junitxml=backend/junit.xml
+  #    - python -m pytest -vv --junitxml=backend/junit.xml
   cache:
     key: DEP-S-$CI_COMMIT_REF_SLUG
     paths:
