@@ -59,16 +59,6 @@ else
     echo "User ${TARGET_USER} already exists. Skipping..."
 fi;
 
-# get the path of pb_hba.conf
-HBA_FILE_PATH=$(psql -U postgres -t -A -c "SHOW hba_file;")
-# modify pb_hba.conf to allow remote access
-if ! grep -q "host\s\+${DATABASE_NAME}\s\+${TARGET_USER}\s\+${ALLOWED_IP}/32" "$HBA_FILE_PATH"; then
-  # If it doesn't exist, append the new record
-  echo "host    ${DATABASE_NAME}    ${TARGET_USER}    ${ALLOWED_IP}/32    md5" >> "$HBA_FILE_PATH"
-else
-  echo "Record already exists in ${HBA_FILE_PATH} Skipping..."
-fi
-
 # Grant user privileges to the database
 if ! psql -h "$DATABASE_HOST" -p "$DATABASE_PORT" -U "$POSTGRES_USER" -c \
 "GRANT ALL PRIVILEGES ON DATABASE \"$DATABASE_NAME\" TO \"$TARGET_USER\";"; then
