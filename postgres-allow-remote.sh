@@ -29,19 +29,18 @@ if ! grep -q "host\s\+${DATABASE_NAME}\s\+${TARGET_USER}\s\+${ALLOWED_IP}/32" "$
   # If it doesn't exist, append the new record
   echo "host    ${DATABASE_NAME}    ${TARGET_USER}    ${ALLOWED_IP}/32    md5" >> "$HBA_FILE_PATH"
   echo "Added ip address record to allow access"
-
-  # Count the number of occurrences of 'scram-sha-256' before replacing
-  REPLACEMENT_COUNT=$(sed -n 's/scram-sha-256/md5/gp' "$HBA_FILE_PATH" | wc -l)
-
-  # Replace 'scram-sha-256' with 'md5' globally in the file
-  sed -i 's/scram-sha-256/md5/g' "$HBA_FILE_PATH"
-
-  # Echo the number of replacements
-  echo "$REPLACEMENT_COUNT 'scram-sha-256' to 'md5' replacements made."
-
-  # Reload PostgreSQL configuration to apply changes
-  pg_ctl reload || { echo "Failed to reload PostgreSQL configuration"; exit 1; }
 else
   echo "Record already exists in ${HBA_FILE_PATH} Skipping..."
 fi
 
+# Count the number of occurrences of 'scram-sha-256' before replacing
+REPLACEMENT_COUNT=$(sed -n 's/scram-sha-256/md5/gp' "$HBA_FILE_PATH" | wc -l)
+
+# Replace 'scram-sha-256' with 'md5' globally in the file
+sed -i 's/scram-sha-256/md5/g' "$HBA_FILE_PATH"
+
+# Echo the number of replacements
+echo "$REPLACEMENT_COUNT 'scram-sha-256' to 'md5' replacements made."
+
+# Reload PostgreSQL configuration to apply changes
+pg_ctl reload || { echo "Failed to reload PostgreSQL configuration"; exit 1; }
