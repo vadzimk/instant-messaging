@@ -28,6 +28,7 @@ set -eu; # if varibales unset raise error, if error terminate
 export PGPASSWORD="$POSTGRES_PASSWORD";
 
 # Create database if not exists
+echo "Creating database: ${DATABASE_NAME}"
 if psql -h "$DATABASE_HOST" -p "$DATABASE_PORT" -U "$POSTGRES_USER" -lqt | cut -d \| -f 1 | grep -qw "$DATABASE_NAME";
 then
     echo "${DATABASE_NAME} already exists. Skipping...";
@@ -45,6 +46,7 @@ else
 fi;
 
 # Create user if it doesn't exist
+echo "Creating user: ${TARGET_USER}"
 USER_EXISTS=$(psql -h "$DATABASE_HOST" -p "$DATABASE_PORT" -U "$POSTGRES_USER" -tc \
 "SELECT 1 FROM pg_roles WHERE rolname = '$TARGET_USER';" | xargs)
 if [ "$USER_EXISTS" != '1' ]; then
@@ -60,6 +62,7 @@ else
 fi;
 
 # Grant user privileges to the database
+echo "Granting privileges to user: ${TARGET_USER} for database: ${DATABASE_NAME} "
 if ! psql -h "$DATABASE_HOST" -p "$DATABASE_PORT" -U "$POSTGRES_USER" -c \
 "GRANT ALL PRIVILEGES ON DATABASE \"$DATABASE_NAME\" TO \"$TARGET_USER\";"; then
     echo "Error granting privileges to ${TARGET_USER}" >&2;
