@@ -109,7 +109,8 @@ set-variables-from-terraform-artifact:
       ssh -o StrictHostKeyChecking=no -i $WS_KEY ubuntu@$WS_HOST "
         chmod +x \"${SCRIPT_REMOTE_DIR}init-postgres-db.sh\" &&
         chmod +x \"${SCRIPT_REMOTE_DIR}postgres-allow-remote.sh\" &&
-        docker cp \"$SCRIPT_REMOTE_DIR\" \"pgbackups:${SCRIPT_REMOTE_DIR}\" &&
+        docker cp \"${SCRIPT_REMOTE_DIR}init-postgres-db.sh\" pgbackups:/ &&
+        docker cp \"${SCRIPT_REMOTE_DIR}postgres-allow-remote.sh\" postgres:/ &&
         docker exec -i \
           -e POSTGRES_PASSWORD=\"$POSTGRES_PASSWORD\" \
           -e POSTGRES_USER=\"$POSTGRES_USER\" \
@@ -119,12 +120,12 @@ set-variables-from-terraform-artifact:
           -e DATABASE_HOST=\"$POSTGRES_HOST\" \
           -e DATABASE_PORT=\"$POSTGRES_PORT\" \
           -e ALLOWED_IP=\"$ALLOWED_IP\" \
-        pgbackups bash \"${SCRIPT_REMOTE_DIR}init-postgres-db.sh\" &&
+        pgbackups bash init-postgres-db.sh &&
         docker exec -i -u $POSTGRES_USER \
           -e DATABASE_NAME=\"$POSTGRES_DB\" \
           -e TARGET_USER=\"$POSTGRES_APP_USER\" \
           -e ALLOWED_IP=\"$ALLOWED_IP\" \
-        postgres bash \"${SCRIPT_REMOTE_DIR}postgres-allow-remote.sh\"
+        postgres bash postgres-allow-remote.sh
       "
       
 
