@@ -186,8 +186,9 @@ test-backend-job:
       postgresql-client \
       && apt-get clean \
       && rm -rf /var/lib/apt/lists/*
-    - export POSTGRES_HOST=$WEBSERVER_PRIVATE_IP
-    - psql -h "$POSTGRES_HOST" -p "$POSTGRES_PORT" -U "$POSTGRES_APP_USER"
+    - export POSTGRES_HOST="$WEBSERVER_PRIVATE_IP"
+    - export PGPASSWORD="$POSTGRES_APP_PASSWORD"
+    - psql -h "$POSTGRES_HOST" -p "$POSTGRES_PORT" -U "$POSTGRES_APP_USER" -d "$POSTGRES_DB"
 #    - python -m pytest -vv --junitxml=backend/junit.xml
   cache:
     key: DEP-S-$CI_COMMIT_REF_SLUG
