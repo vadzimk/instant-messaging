@@ -207,7 +207,7 @@ test-backend-job:
     #    - pip list
     - |
       apt-get update && apt-get install -y \
-      postgresql-client netcat\
+      postgresql-client netcat-openbsd\
       && apt-get clean \
       && rm -rf /var/lib/apt/lists/*
     - export POSTGRES_HOST="$WEBSERVER_PRIVATE_IP"
