@@ -5,7 +5,7 @@
 #     - when: always
 
 variables:
-  FLUSHCACHE: "false" # trigger job to produce cache always when $FLUSHCACHE == "true"
+  FLUSHCACHE: "true" # trigger job to produce cache always when $FLUSHCACHE == "true"
 
 
 stages:
