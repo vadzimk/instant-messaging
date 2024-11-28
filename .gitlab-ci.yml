@@ -95,7 +95,6 @@ set-variables-from-terraform-artifact:
   variables:
     ENV_FILE_VARIABLE: ""
     SCRIPT_REMOTE_DIR: "/tmp/"
-    ALLOWED_IP: "$GITLAB_RUNNER_PRIVATE_IP"
   before_script:
     - *export-env-vars-script
   script:
@@ -116,12 +115,48 @@ set-variables-from-terraform-artifact:
           -e DATABASE_NAME=\"$POSTGRES_DB\" \
           -e DATABASE_HOST=\"$POSTGRES_HOST\" \
           -e DATABASE_PORT=\"$POSTGRES_PORT\" \
-          -e ALLOWED_IP=\"$ALLOWED_IP\" \
         pgbackups bash init-postgres-db.sh
       "
 
+.drop-db-base:
+  # Drop postgres database and postgres app user
+  needs:
+    - set-variables-from-terraform-artifact
+  variables:
+    ENV_FILE_VARIABLE: ""
+    SCRIPT_REMOTE_DIR: "/tmp/"
+  before_script:
+    - *export-env-vars-script
+  script:
+    - chmod 400 $WS_KEY # private key
+    - |
+      scp -o StrictHostKeyChecking=no -i $WS_KEY \
+      drop-postgres-db.sh \
+      ubuntu@$WS_HOST:${SCRIPT_REMOTE_DIR}
+    - |
+      ssh -o StrictHostKeyChecking=no -i $WS_KEY ubuntu@$WS_HOST "
+        chmod +x \"${SCRIPT_REMOTE_DIR}init-postgres-db.sh\" &&
+        docker cp \"${SCRIPT_REMOTE_DIR}init-postgres-db.sh\" pgbackups:/ &&
+        docker exec -i \
+          -e POSTGRES_PASSWORD=\"$POSTGRES_PASSWORD\" \
+          -e POSTGRES_USER=\"$POSTGRES_USER\" \
+          -e DATABASE_NAME=\"$POSTGRES_DB\" \
+          -e DATABASE_HOST=\"$POSTGRES_HOST\" \
+          -e DATABASE_PORT=\"$POSTGRES_PORT\" \
+          -e TARGET_USER=\"$POSTGRES_APP_USER\" \
+          pgbackups bash drop-postgres-db.sh
+      "
+
+drop-test-postgres-db:
+  extends: .drop-db-base
+  stage: install
+  variables:
+    ENV_FILE_VARIABLE: ENV_TEST
+
 
 init-test-postgres-job:
+  needs:
+    - drop-test-postgres-db
   extends: .iniit-db-base
   stage: install
   variables:
@@ -197,20 +232,20 @@ test-backend-job:
     - cd backend
     - source .venv/bin/activate
     #    - pip list
-#    - |
-#      apt-get update && apt-get install -y \
-#      postgresql-client netcat-openbsd\
-#      && apt-get clean \
-#      && rm -rf /var/lib/apt/lists/*
+    - |
+      apt-get update && apt-get install -y \
+      postgresql-client netcat-openbsd\
+      && apt-get clean \
+      && rm -rf /var/lib/apt/lists/*
     - export POSTGRES_HOST="$WS_HOST"
     - export PGPASSWORD="$POSTGRES_APP_PASSWORD"
-#    - echo "$POSTGRES_HOST"
-#    - echo "$POSTGRES_PORT"
-#    - echo "$POSTGRES_APP_USER"
-#    - echo "$POSTGRES_DB"
-#    - echo "$PGPASSWORD"
-#    - nc -zv "$POSTGRES_HOST" "$POSTGRES_PORT"
-#    - psql -h "$POSTGRES_HOST" -p "$POSTGRES_PORT" -U "$POSTGRES_APP_USER" -d "$POSTGRES_DB"
+    #    - echo "$POSTGRES_HOST"
+    #    - echo "$POSTGRES_PORT"
+    #    - echo "$POSTGRES_APP_USER"
+    #    - echo "$POSTGRES_DB"
+    #    - echo "$PGPASSWORD"
+    #    - nc -zv "$POSTGRES_HOST" "$POSTGRES_PORT"
+    - psql -h "$POSTGRES_HOST" -p "$POSTGRES_PORT" -U "$POSTGRES_APP_USER" -d "$POSTGRES_DB"
     - alembic upgrade head
     - python -m pytest -vv --junitxml=backend/junit.xml tests/api/test_api.py::test_signup_user
   cache:

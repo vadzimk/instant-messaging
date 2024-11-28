@@ -2,14 +2,7 @@
 
 # This script creates:
 # a PostgreSQL database and tries to restore it from the backup,
-# a user, grants privileges,
-# and modifies pg_hba.conf to allow remote access.
-# Because it is responsible for restoring db on a separate container, it cannot reload configuration
-#
-# ----- Client code must run: -------
-# docker exec -u postgres postgres pg_ctl reload
-# -----------------------------------
-
+# a user, grants privileges
 #
 # REQUIRED ENVIRONMENT VARIABLES:
 #   POSTGRES_PASSWORD      - Password for the PostgreSQL superuser (e.g., postgres).
@@ -19,7 +12,6 @@
 #   DATABASE_NAME          - Name of the database to be created or used.
 #   TARGET_USER            - The username of the new user.
 #   TARGET_USER_PASSWORD   - The password for the new user.
-#   ALLOWED_IP             - The IP address from which the user is allowed to connect.
 #
 # This script assumes you have psql, createdb, and restore.sh available.
 
@@ -71,3 +63,11 @@ else
     echo "Granted priviliges to user ${TARGET_USER}"
 fi;
 
+# Grant privileges on the public schema
+if ! psql -h "$DATABASE_HOST" -p "$DATABASE_PORT" -U "$POSTGRES_USER" -d "$DATABASE_NAME" -c \
+"GRANT USAGE, CREATE ON SCHEMA public TO \"$TARGET_USER\";"; then
+    echo "Error granting schema privileges to ${TARGET_USER}" >&2;
+    exit 1;
+else
+    echo "Granted schema privileges (USAGE, CREATE) on public schema to ${TARGET_USER}"
+fi;
