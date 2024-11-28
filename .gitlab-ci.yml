@@ -13,237 +13,237 @@ stages:
   - test
 
 
-#.before-script-secrets-anchor: &export-env-vars-script
-#  # Access the value of the file variable indirectly
-#  - eval "FILE_CONTENT=\$$ENV_FILE_VARIABLE"
-#  - cat "$FILE_CONTENT" > .env
-#  - set -o allexport &&
-#    source .env &&
-#    set +o allexport
-#
-#
-#.before-script-checkout-anchor: &checkout-only-script
-#  # Limits which directory to check out in the working tree
-#  - git sparse-checkout init --cone
-#  - echo "git sparse-checkout set ${CHECKOUT_DIR}"
-#  - git sparse-checkout set "$CHECKOUT_DIR" # dir to include in the working tree only
-#
-#
-#.before-script-install-packages: &install-packages-script
-#  - |
-#    if [ -z ${PACKAGES} ]; then
-#      echo "ERROR: The PACKAGES variable is not set. Define it in the pipeline or job variables."
-#      exit 1
-#    fi
-#
-#    if [ -f /etc/os-release ]; then
-#      . /etc/os-release
-#      case "$ID" in
-#        alpine)
-#          echo "Distribution name: alpine, package manager: apk"
-#          apk add ${PACKAGES}
-#          ;;
-#        debian|ubuntu)
-#          echo "Distribution name: debian|ubuntu, package manager: apt"
-#          apt-get update && apt-get install -y ${PACKAGES}
-#          ;;
-#        centos|fedora)
-#          echo "Distribution name: centos|fedora, package manager: yum"
-#          yum install -y ${PACKAGES}
-#          ;;
-#        *)
-#          echo "Unsupported OS: $ID"
-#          exit 1
-#          ;;
-#      esac
-#    else
-#      echo "/etc/os-release not found. Unsupported environment."
-#      exit 1
-#    fi
-#
-#
-#set-variables-from-terraform-artifact:
-#  stage: install
-#  variables:
-#    ARTIFACT_PROJECT_ID: "37029027"
-#    BRANCH: "master"
-#    JOB_NAME: "apply"
-#    PACKAGES: "jq curl"
-#    GIT_STRATEGY: none # no code will be checked out from repo
-#  before_script:
-#    - *install-packages-script
-#  script: # https://docs.gitlab.com/ee/api/job_artifacts.html#download-a-single-artifact-file-from-specific-tag-or-branch
-#    # create variables
-#    - |
-#      curl --location -o ./ter_output.json \
-#      --header "PRIVATE-TOKEN: ${GITLAB_JOB_ARTIFACTS_API_ACCESS_TOKEN}" \
-#      -X GET https://gitlab.com/api/v4/projects/${ARTIFACT_PROJECT_ID}/jobs/artifacts/${BRANCH}/raw/ter_output.json?job=${JOB_NAME};
-#    - |
-#      {
-#        echo WEBSERVER_PRIVATE_IP=$(cat ter_output.json | jq -r '."webserver-private_ip".value');
-#        echo GITLAB_RUNNER_PRIVATE_IP=$(cat ter_output.json | jq -r '."gitlab-runner-private_ip".value');
-#      } >> terraform_output.env
-#  artifacts:
-#    reports:
-#      dotenv: terraform_output.env # its variables are available in all subsequent jobs as any other variables
-#
-#
-#.iniit-db-base: # generic job, will not run, starts with dot
-#  # Initialize postgres database and postgres app user
-#  needs:
-#    - set-variables-from-terraform-artifact
-#  variables:
-#    ENV_FILE_VARIABLE: ""
-#    SCRIPT_REMOTE_DIR: "/tmp/"
-#    ALLOWED_IP: "$GITLAB_RUNNER_PRIVATE_IP"
-#  before_script:
-#    - *export-env-vars-script
-#  script:
-#    - chmod 400 $WS_KEY # private key
-#    - |
-#      scp -o StrictHostKeyChecking=no -i $WS_KEY \
-#      init-postgres-db.sh \
-#      postgres-allow-remote.sh \
-#      ubuntu@$WS_HOST:${SCRIPT_REMOTE_DIR}
-#    - |
-#      ssh -o StrictHostKeyChecking=no -i $WS_KEY ubuntu@$WS_HOST "
-#        chmod +x \"${SCRIPT_REMOTE_DIR}init-postgres-db.sh\" &&
-#        chmod +x \"${SCRIPT_REMOTE_DIR}postgres-allow-remote.sh\" &&
-#        docker cp \"${SCRIPT_REMOTE_DIR}init-postgres-db.sh\" pgbackups:/ &&
-#        docker cp \"${SCRIPT_REMOTE_DIR}postgres-allow-remote.sh\" postgres:/ &&
-#        docker exec -i \
-#          -e POSTGRES_PASSWORD=\"$POSTGRES_PASSWORD\" \
-#          -e POSTGRES_USER=\"$POSTGRES_USER\" \
-#          -e TARGET_USER=\"$POSTGRES_APP_USER\" \
-#          -e TARGET_USER_PASSWORD=\"$POSTGRES_APP_PASSWORD\" \
-#          -e DATABASE_NAME=\"$POSTGRES_DB\" \
-#          -e DATABASE_HOST=\"$POSTGRES_HOST\" \
-#          -e DATABASE_PORT=\"$POSTGRES_PORT\" \
-#          -e ALLOWED_IP=\"$ALLOWED_IP\" \
-#        pgbackups bash init-postgres-db.sh &&
-#        docker exec -i -u $POSTGRES_USER \
-#          -e DATABASE_NAME=\"$POSTGRES_DB\" \
-#          -e TARGET_USER=\"$POSTGRES_APP_USER\" \
-#          -e ALLOWED_IP=\"$ALLOWED_IP\" \
-#        postgres bash postgres-allow-remote.sh
-#      "
-#
-#
-#init-test-postgres-job:
-#  extends: .iniit-db-base
-#  stage: install
-#  variables:
-#    ENV_FILE_VARIABLE: ENV_TEST
-#
-#
-## init-production-postgres-job:
-##   extends: .iniit-db-base
-##   stage: install
-##   variables:
-##     ENV_FILE_VARIABLE: ENV_PROD
-#
-#
-#install-backend-dependencies-job:
-#  stage: install
-#  image: python:3.10
-#  variables:
-#    CHECKOUT_DIR: "backend/"
-#  before_script:
-#    - *checkout-only-script
-#  script:
-#    - ls -htla
-#    - cd backend
-#    - pip install --no-cache-dir pipenv
-#    - export PIPENV_VENV_IN_PROJECT=1
-#    - pipenv install --ignore-pipfile --dev
-#    - pipenv run pip list
-#  cache:
-#    key: DEP-S-$CI_COMMIT_REF_SLUG
-#    paths:
-#      - backend/.venv
-#    policy: push
-#  rules:
-#    - if: $FLUSHCACHE == "true"
-#      when: always
-#    - if: $FLUSHCACHE == "false"
-#      changes:
-#        - backend/Pipfile.lock
-#        - backend/Pipfile
-#      when: always
-#    - when: never
-#
-#
-#.before-script-jwt-anchor: &export-jwt-keys-script
-#  # create JWT keys and save in environment variables
-#  - export JWT_PRIVATE_KEY=$(openssl genpkey -algorithm RSA -outform PEM -pkeyopt rsa_keygen_bits:4096)
-#  - export JWT_PUBLIC_KEY=$(openssl req -x509 -new -key <(echo "$JWT_PRIVATE_KEY") -outform PEM -days 36500 -subj "/CN=${JWT_ISSUER}")
-#
-#
-#test-backend-job:
-#  stage: test
-#  image: python:3.10
-#  needs:
-#    - job: install-server-dependencies-job
-#      optional: true # if used cache
-#    - set-variables-from-terraform-artifact
-#  variables:
-#    ENV_FILE_VARIABLE: ENV_TEST
-#  before_script:
-#    # SPARSE CHECKOUT IS INCOMPATIBLE WITH CACHE RESTORATION,
-#    # Sparse Checkout Behavior:
-#    # The .venv folder is not part of the repository. When you run git sparse-checkout, only tracked files in CHECKOUT_DIR are included, excluding the cached .venv.
-#    # Cache Restoration:
-#    # The cache is restored to the working directory before sparse-checkout is applied. If sparse-checkout excludes CHECKOUT_DIR/.venv, it gets effectively removed.
-#    - *export-env-vars-script
-#    - *export-jwt-keys-script
-#  script:
-#    - find / -name ".venv" -type d || echo "Cache not found in filesystem"
-#    #    - find . -name ".venv" -type d || echo "Cache not found in working directory"
-#    #    - ls -htal
-#    #    - ls -htal backend
-#    #    - pwd
-#    - cd backend
-#    - source .venv/bin/activate
-#    #    - pip list
-#    - |
-#      apt-get update && apt-get install -y \
-#      postgresql-client netcat-openbsd\
-#      && apt-get clean \
-#      && rm -rf /var/lib/apt/lists/*
-#    - export POSTGRES_HOST="$WEBSERVER_PRIVATE_IP"
-#    - export PGPASSWORD="$POSTGRES_APP_PASSWORD"
-#    - echo "$POSTGRES_HOST"
-#    - echo "$POSTGRES_PORT"
-#    - echo "$POSTGRES_APP_USER"
-#    - echo "$POSTGRES_DB"
-#    - echo "$PGPASSWORD"
-#    - nc -zv "$POSTGRES_HOST" "$POSTGRES_PORT"
-#    - psql -h "$POSTGRES_HOST" -p "$POSTGRES_PORT" -U "$POSTGRES_APP_USER" -d "$POSTGRES_DB"
-#  #    - python -m pytest -vv --junitxml=backend/junit.xml
-#  cache:
-#    key: DEP-S-$CI_COMMIT_REF_SLUG
-#    paths:
-#      - backend/.venv
-#    policy: pull
-#  artifacts:
-#    when: always
-#    reports:
-#      junit: backend/junit.xml
-##  only:
-##    changes:
-##      - backend/**/*
+.before-script-secrets-anchor: &export-env-vars-script
+  # Access the value of the file variable indirectly
+  - eval "FILE_CONTENT=\$$ENV_FILE_VARIABLE"
+  - cat "$FILE_CONTENT" > .env
+  - set -o allexport &&
+    source .env &&
+    set +o allexport
 
 
-test-network:
+.before-script-checkout-anchor: &checkout-only-script
+  # Limits which directory to check out in the working tree
+  - git sparse-checkout init --cone
+  - echo "git sparse-checkout set ${CHECKOUT_DIR}"
+  - git sparse-checkout set "$CHECKOUT_DIR" # dir to include in the working tree only
+
+
+.before-script-install-packages: &install-packages-script
+  - |
+    if [ -z ${PACKAGES} ]; then
+      echo "ERROR: The PACKAGES variable is not set. Define it in the pipeline or job variables."
+      exit 1
+    fi
+
+    if [ -f /etc/os-release ]; then
+      . /etc/os-release
+      case "$ID" in
+        alpine)
+          echo "Distribution name: alpine, package manager: apk"
+          apk add ${PACKAGES}
+          ;;
+        debian|ubuntu)
+          echo "Distribution name: debian|ubuntu, package manager: apt"
+          apt-get update && apt-get install -y ${PACKAGES}
+          ;;
+        centos|fedora)
+          echo "Distribution name: centos|fedora, package manager: yum"
+          yum install -y ${PACKAGES}
+          ;;
+        *)
+          echo "Unsupported OS: $ID"
+          exit 1
+          ;;
+      esac
+    else
+      echo "/etc/os-release not found. Unsupported environment."
+      exit 1
+    fi
+
+
+set-variables-from-terraform-artifact:
   stage: install
   variables:
-    POSTGRES_HOST: 172.16.0.24
-    POSTGRES_PORT: 5432
+    ARTIFACT_PROJECT_ID: "37029027"
+    BRANCH: "master"
+    JOB_NAME: "apply"
+    PACKAGES: "jq curl"
+    GIT_STRATEGY: none # no code will be checked out from repo
   before_script:
+    - *install-packages-script
+  script: # https://docs.gitlab.com/ee/api/job_artifacts.html#download-a-single-artifact-file-from-specific-tag-or-branch
+    # create variables
+    - |
+      curl --location -o ./ter_output.json \
+      --header "PRIVATE-TOKEN: ${GITLAB_JOB_ARTIFACTS_API_ACCESS_TOKEN}" \
+      -X GET https://gitlab.com/api/v4/projects/${ARTIFACT_PROJECT_ID}/jobs/artifacts/${BRANCH}/raw/ter_output.json?job=${JOB_NAME};
+    - |
+      {
+        echo WEBSERVER_PRIVATE_IP=$(cat ter_output.json | jq -r '."webserver-private_ip".value');
+        echo GITLAB_RUNNER_PRIVATE_IP=$(cat ter_output.json | jq -r '."gitlab-runner-private_ip".value');
+      } >> terraform_output.env
+  artifacts:
+    reports:
+      dotenv: terraform_output.env # its variables are available in all subsequent jobs as any other variables
+
+
+.iniit-db-base: # generic job, will not run, starts with dot
+  # Initialize postgres database and postgres app user
+  needs:
+    - set-variables-from-terraform-artifact
+  variables:
+    ENV_FILE_VARIABLE: ""
+    SCRIPT_REMOTE_DIR: "/tmp/"
+    ALLOWED_IP: "$GITLAB_RUNNER_PRIVATE_IP"
+  before_script:
+    - *export-env-vars-script
+  script:
+    - chmod 400 $WS_KEY # private key
+    - |
+      scp -o StrictHostKeyChecking=no -i $WS_KEY \
+      init-postgres-db.sh \
+      postgres-allow-remote.sh \
+      ubuntu@$WS_HOST:${SCRIPT_REMOTE_DIR}
+    - |
+      ssh -o StrictHostKeyChecking=no -i $WS_KEY ubuntu@$WS_HOST "
+        chmod +x \"${SCRIPT_REMOTE_DIR}init-postgres-db.sh\" &&
+        chmod +x \"${SCRIPT_REMOTE_DIR}postgres-allow-remote.sh\" &&
+        docker cp \"${SCRIPT_REMOTE_DIR}init-postgres-db.sh\" pgbackups:/ &&
+        docker cp \"${SCRIPT_REMOTE_DIR}postgres-allow-remote.sh\" postgres:/ &&
+        docker exec -i \
+          -e POSTGRES_PASSWORD=\"$POSTGRES_PASSWORD\" \
+          -e POSTGRES_USER=\"$POSTGRES_USER\" \
+          -e TARGET_USER=\"$POSTGRES_APP_USER\" \
+          -e TARGET_USER_PASSWORD=\"$POSTGRES_APP_PASSWORD\" \
+          -e DATABASE_NAME=\"$POSTGRES_DB\" \
+          -e DATABASE_HOST=\"$POSTGRES_HOST\" \
+          -e DATABASE_PORT=\"$POSTGRES_PORT\" \
+          -e ALLOWED_IP=\"$ALLOWED_IP\" \
+        pgbackups bash init-postgres-db.sh &&
+        docker exec -i -u $POSTGRES_USER \
+          -e DATABASE_NAME=\"$POSTGRES_DB\" \
+          -e TARGET_USER=\"$POSTGRES_APP_USER\" \
+          -e ALLOWED_IP=\"$ALLOWED_IP\" \
+        postgres bash postgres-allow-remote.sh
+      "
+
+
+init-test-postgres-job:
+  extends: .iniit-db-base
+  stage: install
+  variables:
+    ENV_FILE_VARIABLE: ENV_TEST
+
+
+# init-production-postgres-job:
+#   extends: .iniit-db-base
+#   stage: install
+#   variables:
+#     ENV_FILE_VARIABLE: ENV_PROD
+
+
+install-backend-dependencies-job:
+  stage: install
+  image: python:3.10
+  variables:
+    CHECKOUT_DIR: "backend/"
+  before_script:
+    - *checkout-only-script
+  script:
+    - ls -htla
+    - cd backend
+    - pip install --no-cache-dir pipenv
+    - export PIPENV_VENV_IN_PROJECT=1
+    - pipenv install --ignore-pipfile --dev
+    - pipenv run pip list
+  cache:
+    key: DEP-S-$CI_COMMIT_REF_SLUG
+    paths:
+      - backend/.venv
+    policy: push
+  rules:
+    - if: $FLUSHCACHE == "true"
+      when: always
+    - if: $FLUSHCACHE == "false"
+      changes:
+        - backend/Pipfile.lock
+        - backend/Pipfile
+      when: always
+    - when: never
+
+
+.before-script-jwt-anchor: &export-jwt-keys-script
+  # create JWT keys and save in environment variables
+  - export JWT_PRIVATE_KEY=$(openssl genpkey -algorithm RSA -outform PEM -pkeyopt rsa_keygen_bits:4096)
+  - export JWT_PUBLIC_KEY=$(openssl req -x509 -new -key <(echo "$JWT_PRIVATE_KEY") -outform PEM -days 36500 -subj "/CN=${JWT_ISSUER}")
+
+
+test-backend-job:
+  stage: test
+  image: python:3.10
+  needs:
+    - job: install-server-dependencies-job
+      optional: true # if used cache
+    - set-variables-from-terraform-artifact
+  variables:
+    ENV_FILE_VARIABLE: ENV_TEST
+  before_script:
+    # SPARSE CHECKOUT IS INCOMPATIBLE WITH CACHE RESTORATION,
+    # Sparse Checkout Behavior:
+    # The .venv folder is not part of the repository. When you run git sparse-checkout, only tracked files in CHECKOUT_DIR are included, excluding the cached .venv.
+    # Cache Restoration:
+    # The cache is restored to the working directory before sparse-checkout is applied. If sparse-checkout excludes CHECKOUT_DIR/.venv, it gets effectively removed.
+    - *export-env-vars-script
+    - *export-jwt-keys-script
+  script:
+    - find / -name ".venv" -type d || echo "Cache not found in filesystem"
+    #    - find . -name ".venv" -type d || echo "Cache not found in working directory"
+    #    - ls -htal
+    #    - ls -htal backend
+    #    - pwd
+    - cd backend
+    - source .venv/bin/activate
+    #    - pip list
     - |
       apt-get update && apt-get install -y \
-      netcat-openbsd \
+      postgresql-client netcat-openbsd\
       && apt-get clean \
       && rm -rf /var/lib/apt/lists/*
-  script:
-    - nc -zv $WS_HOST "$POSTGRES_PORT"
+    - export POSTGRES_HOST="$WS_HOST"
+    - export PGPASSWORD="$POSTGRES_APP_PASSWORD"
+    - echo "$POSTGRES_HOST"
+    - echo "$POSTGRES_PORT"
+    - echo "$POSTGRES_APP_USER"
+    - echo "$POSTGRES_DB"
+    - echo "$PGPASSWORD"
+    - nc -zv "$POSTGRES_HOST" "$POSTGRES_PORT"
+    - psql -h "$POSTGRES_HOST" -p "$POSTGRES_PORT" -U "$POSTGRES_APP_USER" -d "$POSTGRES_DB"
+  #    - python -m pytest -vv --junitxml=backend/junit.xml
+  cache:
+    key: DEP-S-$CI_COMMIT_REF_SLUG
+    paths:
+      - backend/.venv
+    policy: pull
+  artifacts:
+    when: always
+    reports:
+      junit: backend/junit.xml
+#  only:
+#    changes:
+#      - backend/**/*
+
+
+#test-network:
+#  stage: install
+#  variables:
+#    POSTGRES_HOST: 172.16.0.24
+#    POSTGRES_PORT: 5432
+#  before_script:
+#    - |
+#      apt-get update && apt-get install -y \
+#      netcat-openbsd \
+#      && apt-get clean \
+#      && rm -rf /var/lib/apt/lists/*
+#  script:
+#    - nc -zv $WS_HOST "$POSTGRES_PORT"
