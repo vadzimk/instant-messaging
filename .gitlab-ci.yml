@@ -248,7 +248,7 @@ test-backend-job:
     #    - nc -zv "$POSTGRES_HOST" "$POSTGRES_PORT"
     - psql -h "$POSTGRES_HOST" -p "$POSTGRES_PORT" -U "$POSTGRES_APP_USER" -d "$POSTGRES_DB"
     - alembic upgrade head
-    - python -m pytest -vv --junitxml=junit.xml tests/api/test_api.py::test_login_user_using_authorization_header
+    - python -m pytest -vv --junitxml=junit.xml tests/api/test_api.py
   cache:
     key: DEP-S-$CI_COMMIT_REF_SLUG
     paths:
