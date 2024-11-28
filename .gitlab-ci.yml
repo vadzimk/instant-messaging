@@ -242,7 +242,7 @@ test-network:
   before_script:
     - |
       apt-get update && apt-get install -y \
-      postgresql-client netcat-openbsd\
+      postgresql-client netcat-openbsd iputils-ping \
       && apt-get clean \
       && rm -rf /var/lib/apt/lists/*
   script:
