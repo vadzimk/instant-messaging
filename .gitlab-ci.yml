@@ -207,7 +207,7 @@ test-backend-job:
     #    - pip list
     - |
       apt-get update && apt-get install -y \
-      postgresql-client \
+      postgresql-client netcat\
       && apt-get clean \
       && rm -rf /var/lib/apt/lists/*
     - export POSTGRES_HOST="$WEBSERVER_PRIVATE_IP"
@@ -217,6 +217,7 @@ test-backend-job:
     - echo "$POSTGRES_APP_USER"
     - echo "$POSTGRES_DB"
     - echo "$PGPASSWORD"
+    - nc -zv "$POSTGRES_HOST" "$POSTGRES_PORT"
     - psql -h "$POSTGRES_HOST" -p "$POSTGRES_PORT" -U "$POSTGRES_APP_USER" -d "$POSTGRES_DB"
   #    - python -m pytest -vv --junitxml=backend/junit.xml
   cache:
