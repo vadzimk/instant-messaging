@@ -135,8 +135,8 @@ set-variables-from-terraform-artifact:
       ubuntu@$WS_HOST:${SCRIPT_REMOTE_DIR}
     - |
       ssh -o StrictHostKeyChecking=no -i $WS_KEY ubuntu@$WS_HOST "
-        chmod +x \"${SCRIPT_REMOTE_DIR}init-postgres-db.sh\" &&
-        docker cp \"${SCRIPT_REMOTE_DIR}init-postgres-db.sh\" pgbackups:/ &&
+        chmod +x \"${SCRIPT_REMOTE_DIR}drop-postgres-db.sh\" &&
+        docker cp \"${SCRIPT_REMOTE_DIR}drop-postgres-db.sh\" pgbackups:/ &&
         docker exec -i \
           -e POSTGRES_PASSWORD=\"$POSTGRES_PASSWORD\" \
           -e POSTGRES_USER=\"$POSTGRES_USER\" \
