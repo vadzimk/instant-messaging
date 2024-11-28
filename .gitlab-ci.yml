@@ -213,6 +213,7 @@ test-backend-job:
     - job: install-server-dependencies-job
       optional: true # if used cache
     - set-variables-from-terraform-artifact
+    - init-test-postgres-job
   variables:
     ENV_FILE_VARIABLE: ENV_TEST
   before_script:
