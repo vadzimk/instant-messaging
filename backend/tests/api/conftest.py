@@ -97,8 +97,11 @@ def decode_access_token(access_token) -> str:
     else:
         public_key_text = os.getenv('JWT_PUBLIC_KEY')
     public_key = load_pem_x509_certificate(public_key_text.encode('utf-8')).public_key()
-    validated_result_payload = jwt.decode(access_token, key=public_key, algorithms=['RS256'],
-                                          audience=[baseUrl])
+    validated_result_payload = jwt.decode(
+        access_token,
+        key=public_key,
+        algorithms=['RS256'],
+        audience=[os.getenv('JWT_AUDIENCE')])
     return validated_result_payload
 
 
