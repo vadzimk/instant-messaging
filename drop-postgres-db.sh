@@ -19,8 +19,11 @@ export PGPASSWORD="$POSTGRES_PASSWORD";
 
 # Force drop the database
 echo "Forcefully dropping database: ${DATABASE_NAME}"
-DB_EXISTS=$(psql -h "$DATABASE_HOST" -p "$DATABASE_PORT" -U "$POSTGRES_USER" -lqt | cut -d \| -f 1 | grep -qw "$DATABASE_NAME")
-if [ "$DB_EXISTS" == "true" ]; then
+echo "$DATABASE_HOST" "$DATABASE_PORT" "$POSTGRES_USER" "$DATABASE_NAME"
+
+psql_output=$(psql -h "$DATABASE_HOST" -p "$DATABASE_PORT" -U "$POSTGRES_USER" -lqt)
+DB_EXISTS=$(echo "$psql_output" | cut -d '|' -f 1 | grep -qw "$DATABASE_NAME"; echo $?)
+if [ "$DB_EXISTS" -eq 0 ]; then
     if psql -h "$DATABASE_HOST" -p "$DATABASE_PORT" -U "$POSTGRES_USER" -c \
     "DROP DATABASE IF EXISTS \"$DATABASE_NAME\" WITH (FORCE);"; then
         echo "Database ${DATABASE_NAME} dropped";
