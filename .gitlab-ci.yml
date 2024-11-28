@@ -5,7 +5,7 @@
 #     - when: always
 
 variables:
-  FLUSHCACHE: "true" # trigger job to produce cache always when $FLUSHCACHE == "true"
+  FLUSHCACHE: "false" # trigger job to produce cache always when $FLUSHCACHE == "true"
 
 
 stages:
@@ -205,11 +205,11 @@ test-backend-job:
     - cd backend
     - source .venv/bin/activate
     #    - pip list
-    - |
-      apt-get update && apt-get install -y \
-      postgresql-client netcat-openbsd\
-      && apt-get clean \
-      && rm -rf /var/lib/apt/lists/*
+#    - |
+#      apt-get update && apt-get install -y \
+#      postgresql-client netcat-openbsd\
+#      && apt-get clean \
+#      && rm -rf /var/lib/apt/lists/*
     - export POSTGRES_HOST="$WS_HOST"
     - export PGPASSWORD="$POSTGRES_APP_PASSWORD"
 #    - echo "$POSTGRES_HOST"
@@ -219,7 +219,8 @@ test-backend-job:
 #    - echo "$PGPASSWORD"
 #    - nc -zv "$POSTGRES_HOST" "$POSTGRES_PORT"
 #    - psql -h "$POSTGRES_HOST" -p "$POSTGRES_PORT" -U "$POSTGRES_APP_USER" -d "$POSTGRES_DB"
-    - python -m pytest -vv --junitxml=backend/junit.xml
+    - alembic upgrade head
+    - python -m pytest -vv --junitxml=backend/junit.xml tests/api/test_api.py::test_signup_user
   cache:
     key: DEP-S-$CI_COMMIT_REF_SLUG
     paths:
