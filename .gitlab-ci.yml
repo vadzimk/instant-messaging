@@ -212,14 +212,14 @@ test-backend-job:
       && rm -rf /var/lib/apt/lists/*
     - export POSTGRES_HOST="$WS_HOST"
     - export PGPASSWORD="$POSTGRES_APP_PASSWORD"
-    - echo "$POSTGRES_HOST"
-    - echo "$POSTGRES_PORT"
-    - echo "$POSTGRES_APP_USER"
-    - echo "$POSTGRES_DB"
-    - echo "$PGPASSWORD"
-    - nc -zv "$POSTGRES_HOST" "$POSTGRES_PORT"
-    - psql -h "$POSTGRES_HOST" -p "$POSTGRES_PORT" -U "$POSTGRES_APP_USER" -d "$POSTGRES_DB"
-  #    - python -m pytest -vv --junitxml=backend/junit.xml
+#    - echo "$POSTGRES_HOST"
+#    - echo "$POSTGRES_PORT"
+#    - echo "$POSTGRES_APP_USER"
+#    - echo "$POSTGRES_DB"
+#    - echo "$PGPASSWORD"
+#    - nc -zv "$POSTGRES_HOST" "$POSTGRES_PORT"
+#    - psql -h "$POSTGRES_HOST" -p "$POSTGRES_PORT" -U "$POSTGRES_APP_USER" -d "$POSTGRES_DB"
+    - python -m pytest -vv --junitxml=backend/junit.xml
   cache:
     key: DEP-S-$CI_COMMIT_REF_SLUG
     paths:
