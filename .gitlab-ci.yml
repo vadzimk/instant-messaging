@@ -211,7 +211,7 @@ test-backend-job:
   variables:
     ENV_FILE_VARIABLE: ENV_TEST
   cache:
-    key: DEP-S-$CI_COMMIT_REF_SLUG
+    key: "DEP-Backend-${CI_COMMIT_REF_SLUG}"
     paths:
       - backend/.venv
     policy: pull
