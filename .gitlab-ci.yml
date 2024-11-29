@@ -245,7 +245,7 @@ test-backend-job:
 #      postgresql-client netcat-openbsd\
 #      && apt-get clean \
 #      && rm -rf /var/lib/apt/lists/*
-#    - export POSTGRES_HOST="$WS_HOST"
+    - export POSTGRES_HOST="$WS_HOST"
 #    - export PGPASSWORD="$POSTGRES_APP_PASSWORD"
     #    - echo "$POSTGRES_HOST"
     #    - echo "$POSTGRES_PORT"
