@@ -35,9 +35,9 @@ def load_keys() -> Tuple[RSAPublicKey, RSAPrivateKey]:
     @return: (public_key, private_key)
     """
     if os.getenv('ENV') == 'development':
-        private_key_path = DEV_KEYS_DIR / 'jwt_keys/private_key.pem'
+        private_key_path = DEV_KEYS_DIR / 'private_key.pem'
         private_key_text = private_key_path.read_text()
-        public_key_path = DEV_KEYS_DIR / "jwt_keys/public_key.pem"
+        public_key_path = DEV_KEYS_DIR / "public_key.pem"
         public_key_text = public_key_path.read_text()
     else:
         private_key_text = server_settings.JWT_PRIVATE_KEY
