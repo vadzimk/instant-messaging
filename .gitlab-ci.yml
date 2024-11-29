@@ -205,31 +205,6 @@ install-backend-dependencies-job:
   - export JWT_PRIVATE_KEY=$(openssl genpkey -algorithm RSA -outform PEM -pkeyopt rsa_keygen_bits:4096)
   - export JWT_PUBLIC_KEY=$(openssl req -x509 -new -key <(echo "$JWT_PRIVATE_KEY") -outform PEM -days 36500 -subj "/CN=${JWT_ISSUER}")
 
-#backend-service-job:
-#  # this is a background service job that runs in parallel with test-backend-job,
-#  # so that api accepts connections from tests
-#  stage: test
-#  interruptible: true
-#  image: python:3.10
-#  needs:
-#    - job: install-server-dependencies-job
-#      optional: true # if used cache
-#    - set-variables-from-terraform-artifact
-#    - init-test-postgres-job
-#  variables:
-#    ENV_FILE_VARIABLE: ENV_TEST
-#  cache:
-#    key: DEP-S-$CI_COMMIT_REF_SLUG
-#    paths:
-#      - backend/.venv
-#    policy: pull
-#  services:
-#    - name: redis:alpine
-#  before_script:
-#    - *export-env-vars-script
-#    - *export-jwt-keys-script
-#  script:
-#    - nohup uvicorn src.main:app &
 
 test-backend-job:
   stage: test
@@ -257,7 +232,7 @@ test-backend-job:
     - *export-env-vars-script
     - *export-jwt-keys-script
   script:
-    - find / -name ".venv" -type d || echo "Cache not found in filesystem"
+#    - find / -name ".venv" -type d || echo "Cache not found in filesystem"
     #    - find . -name ".venv" -type d || echo "Cache not found in working directory"
     #    - ls -htal
     #    - ls -htal backend
@@ -265,20 +240,20 @@ test-backend-job:
     - cd backend
     - source .venv/bin/activate
     #    - pip list
-    - |
-      apt-get update && apt-get install -y \
-      postgresql-client netcat-openbsd\
-      && apt-get clean \
-      && rm -rf /var/lib/apt/lists/*
-    - export POSTGRES_HOST="$WS_HOST"
-    - export PGPASSWORD="$POSTGRES_APP_PASSWORD"
+#    - |
+#      apt-get update && apt-get install -y \
+#      postgresql-client netcat-openbsd\
+#      && apt-get clean \
+#      && rm -rf /var/lib/apt/lists/*
+#    - export POSTGRES_HOST="$WS_HOST"
+#    - export PGPASSWORD="$POSTGRES_APP_PASSWORD"
     #    - echo "$POSTGRES_HOST"
     #    - echo "$POSTGRES_PORT"
     #    - echo "$POSTGRES_APP_USER"
     #    - echo "$POSTGRES_DB"
     #    - echo "$PGPASSWORD"
     #    - nc -zv "$POSTGRES_HOST" "$POSTGRES_PORT"
-    - psql -h "$POSTGRES_HOST" -p "$POSTGRES_PORT" -U "$POSTGRES_APP_USER" -d "$POSTGRES_DB"
+#    - psql -h "$POSTGRES_HOST" -p "$POSTGRES_PORT" -U "$POSTGRES_APP_USER" -d "$POSTGRES_DB"
     - alembic upgrade head
     - uvicorn src.main:app --host 127.0.0.1 --port 8000 --workers=1 &
     - BACKEND_PID=$!
