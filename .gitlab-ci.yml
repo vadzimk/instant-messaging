@@ -205,11 +205,34 @@ install-backend-dependencies-job:
   - export JWT_PRIVATE_KEY=$(openssl genpkey -algorithm RSA -outform PEM -pkeyopt rsa_keygen_bits:4096)
   - export JWT_PUBLIC_KEY=$(openssl req -x509 -new -key <(echo "$JWT_PRIVATE_KEY") -outform PEM -days 36500 -subj "/CN=${JWT_ISSUER}")
 
-backend-service-job:
-  # this is a background service job that runs in parallel with test-backend-job,
-  # so that api accepts connections from tests
+#backend-service-job:
+#  # this is a background service job that runs in parallel with test-backend-job,
+#  # so that api accepts connections from tests
+#  stage: test
+#  interruptible: true
+#  image: python:3.10
+#  needs:
+#    - job: install-server-dependencies-job
+#      optional: true # if used cache
+#    - set-variables-from-terraform-artifact
+#    - init-test-postgres-job
+#  variables:
+#    ENV_FILE_VARIABLE: ENV_TEST
+#  cache:
+#    key: DEP-S-$CI_COMMIT_REF_SLUG
+#    paths:
+#      - backend/.venv
+#    policy: pull
+#  services:
+#    - name: redis:alpine
+#  before_script:
+#    - *export-env-vars-script
+#    - *export-jwt-keys-script
+#  script:
+#    - nohup uvicorn src.main:app &
+
+test-backend-job:
   stage: test
-  interruptible: true
   image: python:3.10
   needs:
     - job: install-server-dependencies-job
@@ -225,24 +248,6 @@ backend-service-job:
     policy: pull
   services:
     - name: redis:alpine
-  before_script:
-    - *export-env-vars-script
-    - *export-jwt-keys-script
-  script:
-    - nohup uvicorn src.main:app &
-
-test-backend-job:
-  stage: test
-  image: python:3.10
-  needs:
-    - job: install-server-dependencies-job
-      optional: true # if used cache
-    - set-variables-from-terraform-artifact
-    - init-test-postgres-job
-  dependencies:
-    - backend-service-job
-  variables:
-    ENV_FILE_VARIABLE: ENV_TEST
   before_script:
     # SPARSE CHECKOUT IS INCOMPATIBLE WITH CACHE RESTORATION,
     # Sparse Checkout Behavior:
@@ -275,12 +280,12 @@ test-backend-job:
     #    - nc -zv "$POSTGRES_HOST" "$POSTGRES_PORT"
     - psql -h "$POSTGRES_HOST" -p "$POSTGRES_PORT" -U "$POSTGRES_APP_USER" -d "$POSTGRES_DB"
     - alembic upgrade head
+    - uvicorn src.main:app --host 127.0.0.1 --port 8000 --workers=1 &
+    - BACKEND_PID=$!
+    - sleep 5
     - python -m pytest -vv --junitxml=junit.xml tests/api/test_api.py::test_get_messages
-  cache:
-    key: DEP-S-$CI_COMMIT_REF_SLUG
-    paths:
-      - backend/.venv
-    policy: pull
+  after_script:
+    - kill $BACKEND_PID
   artifacts:
     when: always
     paths:
