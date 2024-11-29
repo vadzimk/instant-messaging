@@ -159,7 +159,7 @@ init-test-postgres-job:
     - *checkout-only-script
   script:
     - ls -htla
-    - cd backend
+    - cd "$CHECKOUT_DIR"
     - pip install --no-cache-dir pipenv
     - export PIPENV_VENV_IN_PROJECT=1
     - pipenv install --ignore-pipfile --dev
