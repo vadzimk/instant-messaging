@@ -88,12 +88,14 @@ set-variables-from-terraform-artifact:
       dotenv: terraform_output.env # its variables are available in all subsequent jobs as any other variables
 
 
-.iniit-db-base: # generic job, will not run, starts with dot
-  # Initialize postgres database and postgres app user
+.pgbackups-script-job-template:
+  # common configuration to create or drop db/user
   needs:
     - set-variables-from-terraform-artifact
   variables:
+    # must override empty variables in concrete jobs
     ENV_FILE_VARIABLE: ""
+    DB_SCRIPT: ""
     SCRIPT_REMOTE_DIR: "/tmp/"
   before_script:
     - *export-env-vars-script
@@ -101,12 +103,12 @@ set-variables-from-terraform-artifact:
     - chmod 400 $WS_KEY # private key
     - |
       scp -o StrictHostKeyChecking=no -i $WS_KEY \
-      init-postgres-db.sh \
+      "$DB_SCRIPT" \
       ubuntu@$WS_HOST:${SCRIPT_REMOTE_DIR}
     - |
       ssh -o StrictHostKeyChecking=no -i $WS_KEY ubuntu@$WS_HOST "
-        chmod +x \"${SCRIPT_REMOTE_DIR}init-postgres-db.sh\" &&
-        docker cp \"${SCRIPT_REMOTE_DIR}init-postgres-db.sh\" pgbackups:/ &&
+        chmod +x \"${SCRIPT_REMOTE_DIR}${DB_SCRIPT}\" &&
+        docker cp \"${SCRIPT_REMOTE_DIR}${DB_SCRIPT}\" pgbackups:/ &&
         docker exec -i \
           -e POSTGRES_PASSWORD=\"$POSTGRES_PASSWORD\" \
           -e POSTGRES_USER=\"$POSTGRES_USER\" \
@@ -115,52 +117,28 @@ set-variables-from-terraform-artifact:
           -e DATABASE_NAME=\"$POSTGRES_DB\" \
           -e DATABASE_HOST=\"$POSTGRES_HOST\" \
           -e DATABASE_PORT=\"$POSTGRES_PORT\" \
-        pgbackups bash init-postgres-db.sh
+        pgbackups bash \"$DB_SCRIPT\"
       "
 
-.drop-db-base:
-  # Drop postgres database and postgres app user
-  needs:
-    - set-variables-from-terraform-artifact
-  variables:
-    ENV_FILE_VARIABLE: ""
-    SCRIPT_REMOTE_DIR: "/tmp/"
-  before_script:
-    - *export-env-vars-script
-  script:
-    - chmod 400 $WS_KEY # private key
-    - |
-      scp -o StrictHostKeyChecking=no -i $WS_KEY \
-      drop-postgres-db.sh \
-      ubuntu@$WS_HOST:${SCRIPT_REMOTE_DIR}
-    - |
-      ssh -o StrictHostKeyChecking=no -i $WS_KEY ubuntu@$WS_HOST "
-        chmod +x \"${SCRIPT_REMOTE_DIR}drop-postgres-db.sh\" &&
-        docker cp \"${SCRIPT_REMOTE_DIR}drop-postgres-db.sh\" pgbackups:/ &&
-        docker exec -i \
-          -e POSTGRES_PASSWORD=\"$POSTGRES_PASSWORD\" \
-          -e POSTGRES_USER=\"$POSTGRES_USER\" \
-          -e DATABASE_NAME=\"$POSTGRES_DB\" \
-          -e DATABASE_HOST=\"$POSTGRES_HOST\" \
-          -e DATABASE_PORT=\"$POSTGRES_PORT\" \
-          -e TARGET_USER=\"$POSTGRES_APP_USER\" \
-          pgbackups bash drop-postgres-db.sh
-      "
 
 drop-test-postgres-db:
-  extends: .drop-db-base
+  # Drop postgres database and postgres app user
+  extends: .pgbackups-script-job-template
   stage: install
   variables:
     ENV_FILE_VARIABLE: ENV_TEST
+    DB_SCRIPT: "drop-postgres-db.sh"
 
 
 init-test-postgres-job:
+  # Initialize postgres database and postgres app user
   needs:
     - drop-test-postgres-db
-  extends: .iniit-db-base
+  extends: .pgbackups-script-job-template
   stage: install
   variables:
     ENV_FILE_VARIABLE: ENV_TEST
+    DB_SCRIPT: "init-postgres-db.sh"
 
 
 # init-production-postgres-job:
@@ -170,11 +148,13 @@ init-test-postgres-job:
 #     ENV_FILE_VARIABLE: ENV_PROD
 
 
-install-backend-dependencies-job:
-  stage: install
+.install-dependencies-job-template:
   image: python:3.10
+  stage: install
   variables:
-    CHECKOUT_DIR: "backend/"
+    # must override in concrete job
+    CHECKOUT_DIR: ""
+    CACHE_KEY: ""
   before_script:
     - *checkout-only-script
   script:
@@ -185,19 +165,33 @@ install-backend-dependencies-job:
     - pipenv install --ignore-pipfile --dev
     - pipenv run pip list
   cache:
-    key: DEP-S-$CI_COMMIT_REF_SLUG
+    key: "$CACHE_KEY"
     paths:
-      - backend/.venv
+      - "${CHECKOUT_DIR}/.venv"
     policy: push
   rules:
     - if: $FLUSHCACHE == "true"
       when: always
     - if: $FLUSHCACHE == "false"
       changes:
-        - backend/Pipfile.lock
-        - backend/Pipfile
+        - ${CHECKOUT_DIR}/Pipfile.lock
+        - ${CHECKOUT_DIR}/Pipfile
       when: always
     - when: never
+
+
+install-backend-dependencies-job:
+  extends: .install-dependencies-job-template
+  variables:
+    CHECKOUT_DIR: "backend"
+    CACHE_KEY: "DEP-Backend-${CI_COMMIT_REF_SLUG}"
+
+
+install-telegram-bot-dependencies-job:
+  extends: .install-dependencies-job-template
+  variables:
+    CHECKOUT_DIR: "telegram_bot"
+    CACHE_KEY: "DEP-Bot-${CI_COMMIT_REF_SLUG}"
 
 
 .before-script-jwt-anchor: &export-jwt-keys-script
@@ -232,28 +226,9 @@ test-backend-job:
     - *export-env-vars-script
     - *export-jwt-keys-script
   script:
-#    - find / -name ".venv" -type d || echo "Cache not found in filesystem"
-    #    - find . -name ".venv" -type d || echo "Cache not found in working directory"
-    #    - ls -htal
-    #    - ls -htal backend
-    #    - pwd
     - cd backend
     - source .venv/bin/activate
-    #    - pip list
-#    - |
-#      apt-get update && apt-get install -y \
-#      postgresql-client netcat-openbsd\
-#      && apt-get clean \
-#      && rm -rf /var/lib/apt/lists/*
     - export POSTGRES_HOST="$WS_HOST"
-#    - export PGPASSWORD="$POSTGRES_APP_PASSWORD"
-    #    - echo "$POSTGRES_HOST"
-    #    - echo "$POSTGRES_PORT"
-    #    - echo "$POSTGRES_APP_USER"
-    #    - echo "$POSTGRES_DB"
-    #    - echo "$PGPASSWORD"
-    #    - nc -zv "$POSTGRES_HOST" "$POSTGRES_PORT"
-#    - psql -h "$POSTGRES_HOST" -p "$POSTGRES_PORT" -U "$POSTGRES_APP_USER" -d "$POSTGRES_DB"
     - alembic upgrade head
     - uvicorn src.main:app --host 127.0.0.1 --port 8000 --workers=1 &
     - BACKEND_PID=$!
@@ -270,6 +245,11 @@ test-backend-job:
 #  only:
 #    changes:
 #      - backend/**/*
+
+
+#test-telegram-bot-job:
+#  stage: test
+#  image:
 
 
 #test-network:
