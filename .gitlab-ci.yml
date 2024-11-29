@@ -283,7 +283,7 @@ test-backend-job:
     - uvicorn src.main:app --host 127.0.0.1 --port 8000 --workers=1 &
     - BACKEND_PID=$!
     - sleep 5
-    - python -m pytest -vv --junitxml=junit.xml tests/api/test_api.py
+    - python -m pytest -vv --junitxml=junit.xml
   after_script:
     - kill $BACKEND_PID
   artifacts:
