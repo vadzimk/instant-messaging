@@ -149,8 +149,8 @@ init-test-postgres-job:
 
 
 .install-dependencies-job-template:
-  image: python:3.10
   stage: install
+  image: python:3.10
   variables:
     # must override in concrete job
     CHECKOUT_DIR: ""
@@ -177,7 +177,11 @@ init-test-postgres-job:
         - ${CHECKOUT_DIR}/Pipfile.lock
         - ${CHECKOUT_DIR}/Pipfile
       when: always
-    - when: never
+    - if: $FLUSHCACHE == "false"
+      exists:
+        - "${CHECKOUT_DIR}/.venv"
+      when: never
+    - when: always # Fallback to ensure job runs if cache is not found
 
 
 install-backend-dependencies-job:
