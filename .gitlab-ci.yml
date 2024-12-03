@@ -17,6 +17,7 @@ stages:
 
 .before-script-jwt-anchor: &export-jwt-keys-script
   # create JWT keys and save in environment variables
+  - apt-get update && apt-get install -y openssl
   - export JWT_PRIVATE_KEY=$(openssl genpkey -algorithm RSA -outform PEM -pkeyopt rsa_keygen_bits:4096)
   - export JWT_PUBLIC_KEY=$(openssl req -x509 -new -key <(echo "$JWT_PRIVATE_KEY") -outform PEM -days 36500 -subj "/CN=${JWT_ISSUER}")
   - echo "$JWT_PRIVATE_KEY"
