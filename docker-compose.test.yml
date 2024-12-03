@@ -34,3 +34,10 @@ services:
       - 8003
     env_file:
       - .env # created in gitlab-ci from .env.test
+
+  redis:
+    image: redis
+    expose:
+      - 6379
+    command: [ 'redis-server', '--appendonly', 'yes' ]
+    restart: unless-stopped
