@@ -344,9 +344,9 @@ test-backend-job:
       - backend/junit.xml
     reports:
       junit: backend/junit.xml
-  only:
-    changes:
-      - backend/**/*
+#  only:
+#    changes:
+#      - backend/**/*
 
 
 #test-backend-job:
