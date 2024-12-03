@@ -1,0 +1,26 @@
+# redis and postgres services are coming form common_db on webhost
+
+services:
+  backend:
+    container_name: messaging_backend
+    image: "$IMAGE_NAME_IMAGE_TAG_backend_test_service"
+    expose:
+      - 8000
+    depends_on:
+      - celery_worker
+      - telegram_bot
+    restart: unless-stopped
+
+  celery_worker:
+    container_name: celery_worker
+    image: "$IMAGE_NAME_IMAGE_TAG_backend_test_service"
+    command: celery -A src.celery_app.worker.celery worker --loglevel=info
+    expose:
+      - 8000
+    restart: unless-stopped
+
+  telegram_bot:
+    container_name: telegram_bot
+    image: "$IMAGE_NAME_IMAGE_TAG_telegram_bot_test_service"
+    expose:
+      - 8003
