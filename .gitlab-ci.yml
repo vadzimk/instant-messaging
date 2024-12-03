@@ -307,7 +307,7 @@ build-test-telegram-bot-image-job:
   variables:
     SERVICE_NAME: "telegram_bot_test_service"
     PATH_TO_DOCKER_CONTEXT: "./telegram_bot"
-    PATH_TO_DOCKERFILE: "./backend/Dockerfile.test"
+    PATH_TO_DOCKERFILE: "./telegram_bot/Dockerfile.test"
   before_script:
     - export PACKAGE_VERSION=$(grep 'version' telegram_bot/version.py | cut -d'"' -f2)
 
