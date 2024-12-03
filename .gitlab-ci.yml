@@ -7,8 +7,8 @@
 variables:
   FLUSHCACHE: "false" # trigger job to produce cache always when $FLUSHCACHE == "true"
 
-include:
-  - local: 'templates.gitlab-ci.yml'
+#include:
+#  - local: 'templates.gitlab-ci.yml'
 
 stages:
   - export-variables
