@@ -105,8 +105,6 @@ stages:
   - *install-packages-script
   - export JWT_PRIVATE_KEY=$(openssl genpkey -algorithm RSA -outform PEM -pkeyopt rsa_keygen_bits:4096)
   - export JWT_PUBLIC_KEY=$(openssl req -x509 -new -key <(echo "$JWT_PRIVATE_KEY") -outform PEM -days 36500 -subj "/CN=${JWT_ISSUER}")
-  - echo "$JWT_PRIVATE_KEY"
-
 
 set-variables-from-terraform-artifact:
   stage: export-variables
@@ -340,17 +338,15 @@ test-backend-job:
     - echo "$IMAGE_NAME_IMAGE_TAG_backend_test_service"
     - echo "$IMAGE_NAME_IMAGE_TAG_backend_test_service"
     - echo "$IMAGE_NAME_IMAGE_TAG_telegram_bot_test_service"
-    - echo "$JWT_PRIVATE_KEY"
   script:
     - export DOCKER_BUILDKIT=0  # allows networking during build
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
     - ls -a
     - cat .env
-    - echo "$JWT_PRIVATE_KEY"
     - docker-compose -f docker-compose.test.yml up -d
     - sleep 4 # wait to init containers
-    - docker exec -i backend bash -c "ls -thal"
-    - docker exec -i backend bash -c "./docker-entrypoint.sh"
+#    - docker exec -i backend bash -c "ls -thal"
+#    - docker exec -i backend bash -c "./docker-entrypoint.sh"
     - |
       docker exec -i backend bash -c "python -m pytest -vv --junitxml=junit.xml";
       TEST_EXIT_CODE=$?;

@@ -30,6 +30,6 @@ COPY ./ ./
 RUN chmod +x wait-for-postgres.sh docker-entrypoint.sh
 EXPOSE 8000
 # for debugging only
-CMD ["tail", "-f", "/dev/null"]
-#CMD ["./docker-entrypoint.sh"]
+#CMD ["tail", "-f", "/dev/null"]
+CMD ["./docker-entrypoint.sh"]
 
