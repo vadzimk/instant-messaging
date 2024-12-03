@@ -275,6 +275,7 @@ init-test-postgres-db-job:
 #    - export PACKAGE_VERSION=$(grep 'version' path-to/version.py | cut -d'"' -f2)
   script:
     - export IMAGE_NAME="${CI_REGISTRY_IMAGE}/${SERVICE_NAME}"
+    - echo "$PACKAGE_VERSION"
     - export IMAGE_TAG="${PACKAGE_VERSION}-${CI_PIPELINE_IID}" # Semantic Version with Build Metadata (MAJOR.MINOR.PATCH-BUILD)
     - echo "IMAGE_NAME_IMAGE_TAG_${SERVICE_NAME}=${IMAGE_NAME}:${IMAGE_TAG}"
     - echo "IMAGE_NAME_IMAGE_TAG_${SERVICE_NAME}=${IMAGE_NAME}:${IMAGE_TAG}" >> build.env
