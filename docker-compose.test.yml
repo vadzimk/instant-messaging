@@ -2,7 +2,7 @@
 
 services:
   backend:
-    container_name: messaging_backend
+    container_name: backend
     image: "$IMAGE_NAME_IMAGE_TAG_backend_test_service"
     expose:
       - 8000
