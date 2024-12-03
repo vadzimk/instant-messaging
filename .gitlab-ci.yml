@@ -279,7 +279,6 @@ init-test-postgres-db-job:
     - echo "IMAGE_NAME_IMAGE_TAG_${SERVICE_NAME}=${IMAGE_NAME}:${IMAGE_TAG}" >> build.env
     - export DOCKER_BUILDKIT=0  # allows networking during build
     - docker build -t "${IMAGE_NAME}:${IMAGE_TAG}" -f "$PATH_TO_DOCKERFILE" "$PATH_TO_DOCKER_CONTEXT"
-  after_script:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
     - echo "${IMAGE_NAME}:${IMAGE_TAG}"
     - docker push "${IMAGE_NAME}:${IMAGE_TAG}"
@@ -300,6 +299,9 @@ build-test-backend-image-job:
     PATH_TO_DOCKERFILE: "./backend/Dockerfile.test"
   before_script:
     - export PACKAGE_VERSION=$(grep 'version' backend/version.py | cut -d'"' -f2)
+  #  only:
+  #    changes:
+  #      - backend/**/*
 
 build-test-telegram-bot-image-job:
   stage: prepare-for-test
@@ -310,6 +312,9 @@ build-test-telegram-bot-image-job:
     PATH_TO_DOCKERFILE: "./telegram_bot/Dockerfile.test"
   before_script:
     - export PACKAGE_VERSION=$(grep 'version' telegram_bot/version.py | cut -d'"' -f2)
+  #  only:
+  #    changes:
+  #      - telegram_bot/**/*
 
 test-backend-job:
   stage: test
@@ -331,6 +336,9 @@ test-backend-job:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
     - docker-compose -f docker-compose.test.yml up -d
   script:
+    - echo "$IMAGE_NAME_IMAGE_TAG_backend_test_service"
+    - echo "$IMAGE_NAME_IMAGE_TAG_backend_test_service"
+    - echo "$IMAGE_NAME_IMAGE_TAG_telegram_bot_test_service"
     - |
       docker exec -i backend bash -c "python -m pytest -vv --junitxml=junit.xml";
       TEST_EXIT_CODE=$?;
