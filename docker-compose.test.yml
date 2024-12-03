@@ -4,6 +4,8 @@ services:
   backend:
     container_name: backend
     image: "$IMAGE_NAME_IMAGE_TAG_backend_test_service"
+    env_file:
+      - .env # created in gitlab-ci from .env.test
     expose:
       - 8000
     depends_on:
@@ -15,6 +17,8 @@ services:
     container_name: celery_worker
     image: "$IMAGE_NAME_IMAGE_TAG_backend_test_service"
     command: celery -A src.celery_app.worker.celery worker --loglevel=info
+    env_file:
+      - .env # created in gitlab-ci from .env.test
     expose:
       - 8000
     restart: unless-stopped
@@ -24,3 +28,5 @@ services:
     image: "$IMAGE_NAME_IMAGE_TAG_telegram_bot_test_service"
     expose:
       - 8003
+    env_file:
+      - .env # created in gitlab-ci from .env.test

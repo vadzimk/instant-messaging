@@ -332,7 +332,6 @@ test-backend-job:
   before_script:
     - *export-env-vars-script
     - *export-jwt-keys-script
-    - export POSTGRES_HOST="$WS_HOST"
     - echo "$IMAGE_NAME_IMAGE_TAG_backend_test_service"
     - echo "$IMAGE_NAME_IMAGE_TAG_backend_test_service"
     - echo "$IMAGE_NAME_IMAGE_TAG_telegram_bot_test_service"
