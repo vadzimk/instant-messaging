@@ -341,7 +341,12 @@ test-backend-job:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
     - docker-compose -f docker-compose.test.yml up -d
     - sleep 4 # wait to init containers
-    - docker exec -i backend bash -c "ls -thal"
+    - echo $POSTGRES_APP_USER
+    - echo $POSTGRES_APP_PASSWORD
+    - echo $POSTGRES_HOST
+    - echo $POSTGRES_PORT
+    - echo $POSTGRES_DB
+#    - docker exec -i backend bash -c "ls -thal"
     - docker exec -i backend bash -c "./docker-entrypoint.sh"
     - |
       docker exec -i backend bash -c "python -m pytest -vv --junitxml=junit.xml";
