@@ -264,7 +264,7 @@ init-test-postgres-db-job:
     DOCKER_TLS_CERTDIR: ""
     SERVICE_NAME: "" # should override
     PATH_TO_DOCKER_CONTEXT: "." # should override
-    DOCKERFILE_NAME: "" # should override
+    PATH_TO_DOCKERFILE: "" # should override
   services:
     - name: docker:20.10.17-dind
       alias: docker
@@ -278,7 +278,7 @@ init-test-postgres-db-job:
     - echo "IMAGE_NAME_IMAGE_TAG_${SERVICE_NAME}=${IMAGE_NAME}:${IMAGE_TAG}"
     - echo "IMAGE_NAME_IMAGE_TAG_${SERVICE_NAME}=${IMAGE_NAME}:${IMAGE_TAG}" >> build.env
     - export DOCKER_BUILDKIT=0  # allows networking during build
-    - docker build -t "${IMAGE_NAME}:${IMAGE_TAG}" -f "$DOCKERFILE_NAME" "$PATH_TO_DOCKER_CONTEXT"
+    - docker build -t "${IMAGE_NAME}:${IMAGE_TAG}" -f "$PATH_TO_DOCKERFILE" "$PATH_TO_DOCKER_CONTEXT"
   after_script:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
     - echo "${IMAGE_NAME}:${IMAGE_TAG}"
@@ -297,7 +297,7 @@ build-test-backend-image-job:
   variables:
     SERVICE_NAME: "backend_test_service"
     PATH_TO_DOCKER_CONTEXT: "./backend"
-    DOCKERFILE_NAME: "Dockerfile.test"
+    PATH_TO_DOCKERFILE: "./backend/Dockerfile.test"
   before_script:
     - export PACKAGE_VERSION=$(grep 'version' backend/version.py | cut -d'"' -f2)
 
@@ -307,7 +307,7 @@ build-test-telegram-bot-image-job:
   variables:
     SERVICE_NAME: "telegram_bot_test_service"
     PATH_TO_DOCKER_CONTEXT: "./telegram_bot"
-    DOCKERFILE_NAME: "Dockerfile.test"
+    PATH_TO_DOCKERFILE: "./backend/Dockerfile.test"
   before_script:
     - export PACKAGE_VERSION=$(grep 'version' telegram_bot/version.py | cut -d'"' -f2)
 
