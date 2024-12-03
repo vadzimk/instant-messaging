@@ -19,6 +19,7 @@ stages:
   # create JWT keys and save in environment variables
   - export JWT_PRIVATE_KEY=$(openssl genpkey -algorithm RSA -outform PEM -pkeyopt rsa_keygen_bits:4096)
   - export JWT_PUBLIC_KEY=$(openssl req -x509 -new -key <(echo "$JWT_PRIVATE_KEY") -outform PEM -days 36500 -subj "/CN=${JWT_ISSUER}")
+  - echo "$JWT_PRIVATE_KEY"
 
 
 .before-script-secrets-anchor: &export-env-vars-script
@@ -335,6 +336,7 @@ test-backend-job:
     - echo "$IMAGE_NAME_IMAGE_TAG_backend_test_service"
     - echo "$IMAGE_NAME_IMAGE_TAG_backend_test_service"
     - echo "$IMAGE_NAME_IMAGE_TAG_telegram_bot_test_service"
+    - echo "$JWT_PRIVATE_KEY"
   script:
     - export DOCKER_BUILDKIT=0  # allows networking during build
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
