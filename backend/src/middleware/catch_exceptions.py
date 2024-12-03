@@ -11,7 +11,7 @@ from src import exceptions as e
 
 from starlette.responses import Response
 
-from settings import server_settings
+from src.settings import server_settings
 
 logger = logging.getLogger(__name__)
 
