@@ -333,12 +333,13 @@ test-backend-job:
     - *export-env-vars-script
     - *export-jwt-keys-script
     - export POSTGRES_HOST="$WS_HOST"
-    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
-    - docker-compose -f docker-compose.test.yml up -d
-  script:
     - echo "$IMAGE_NAME_IMAGE_TAG_backend_test_service"
     - echo "$IMAGE_NAME_IMAGE_TAG_backend_test_service"
     - echo "$IMAGE_NAME_IMAGE_TAG_telegram_bot_test_service"
+  script:
+    - export DOCKER_BUILDKIT=0  # allows networking during build
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    - docker-compose -f docker-compose.test.yml up -d
     - |
       docker exec -i backend bash -c "python -m pytest -vv --junitxml=junit.xml";
       TEST_EXIT_CODE=$?;
