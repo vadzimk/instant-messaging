@@ -15,12 +15,6 @@ stages:
   - prepare-for-test
   - test
 
-.before-script-jwt-anchor: &export-jwt-keys-script
-  # create JWT keys and save in environment variables
-  - apt-get update && apt-get install -y openssl
-  - export JWT_PRIVATE_KEY=$(openssl genpkey -algorithm RSA -outform PEM -pkeyopt rsa_keygen_bits:4096)
-  - export JWT_PUBLIC_KEY=$(openssl req -x509 -new -key <(echo "$JWT_PRIVATE_KEY") -outform PEM -days 36500 -subj "/CN=${JWT_ISSUER}")
-  - echo "$JWT_PRIVATE_KEY"
 
 
 .before-script-secrets-anchor: &export-env-vars-script
@@ -104,6 +98,14 @@ stages:
       echo "/etc/os-release not found. Unsupported environment."
       exit 1
     fi
+
+.before-script-jwt-anchor: &export-jwt-keys-script
+  # create JWT keys and save in environment variables
+  - export PACKAGES="openssl"
+  - *install-packages-script
+  - export JWT_PRIVATE_KEY=$(openssl genpkey -algorithm RSA -outform PEM -pkeyopt rsa_keygen_bits:4096)
+  - export JWT_PUBLIC_KEY=$(openssl req -x509 -new -key <(echo "$JWT_PRIVATE_KEY") -outform PEM -days 36500 -subj "/CN=${JWT_ISSUER}")
+  - echo "$JWT_PRIVATE_KEY"
 
 
 set-variables-from-terraform-artifact:
