@@ -339,14 +339,11 @@ test-backend-job:
   script:
     - export DOCKER_BUILDKIT=0  # allows networking during build
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
-    - export $POSTGRES_APP_USER
-    - export $POSTGRES_APP_PASSWORD
-    - export $POSTGRES_HOST
-    - export $POSTGRES_PORT
-    - export $POSTGRES_DB
+    - ls -a
+    - cat .env
     - docker-compose -f docker-compose.test.yml up -d
     - sleep 4 # wait to init containers
-#    - docker exec -i backend bash -c "ls -thal"
+    - docker exec -i backend bash -c "ls -thal"
     - docker exec -i backend bash -c "./docker-entrypoint.sh"
     - |
       docker exec -i backend bash -c "python -m pytest -vv --junitxml=junit.xml";
