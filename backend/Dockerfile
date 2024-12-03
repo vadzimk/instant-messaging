@@ -17,7 +17,7 @@ RUN pip install --no-cache-dir pipenv
 
 # installs dependecies in .venv
 ENV PIPENV_VENV_IN_PROJECT=1
-RUN pipenv install --deploy --ignore-pipfile
+RUN pipenv install --deploy --ignore-pipfile # for production
 
 # Final stage
 FROM base AS final
@@ -26,6 +26,7 @@ COPY --from=dependencies /usr/src/app/.venv/ /usr/src/app/.venv/
 ENV PATH="/usr/src/app/.venv/bin:$PATH"
 
 COPY ./ ./
+RUN rm -rf tests # for production
 
 RUN chmod +x wait-for-postgres.sh docker-entrypoint.sh
 EXPOSE 8000
