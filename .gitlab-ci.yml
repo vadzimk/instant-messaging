@@ -291,7 +291,7 @@ init-test-postgres-db-job:
       dotenv: build.env # loaded in all subsequent jobs (must be relative to working directory of .gitlab-ci.yml)
 
 build-test-backend-image-job:
-  stage: build-test-image
+  stage: prepare-for-test
   extends: .build-image-job-template
   variables:
     SERVICE_NAME: "backend_test_service"
@@ -301,7 +301,7 @@ build-test-backend-image-job:
     - export PACKAGE_VERSION=$(grep 'version' backend/version.py | cut -d'"' -f2)
 
 build-test-telegram-bot-image-job:
-  stage: build-test-image
+  stage: prepare-for-test
   extends: .build-image-job-template
   variables:
     SERVICE_NAME: "telegram_bot_test_service"
