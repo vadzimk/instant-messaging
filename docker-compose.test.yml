@@ -13,8 +13,8 @@ services:
       - telegram_bot
     restart: unless-stopped
     environment:
-      JWT_PUBLIC_KEY="$JWT_PUBLIC_KEY"
-      JWT_PRIVATE_KEY="$JWT_PRIVATE_KEY"
+      JWT_PUBLIC_KEY: "$JWT_PUBLIC_KEY"
+      JWT_PRIVATE_KEY: "$JWT_PRIVATE_KEY"
 
 
   celery_worker:
