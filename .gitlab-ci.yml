@@ -345,8 +345,8 @@ test-backend-job:
 #    - cat .env
 #    - docker container ls -a
 #    - docker image ls -a
-#    - docker-compose -f docker-compose.test.yml up # TODO see the output of entrypoint, bc user table not found
-    - docker-compose -f docker-compose.test.yml up -d
+    - docker-compose -f docker-compose.test.yml up # TODO see the output of entrypoint, bc user table not found
+#    - docker-compose -f docker-compose.test.yml up -d
     - sleep 4 # wait to init containers
 #    - |
 #      echo "Waiting for backend service to be healthy..."
@@ -354,7 +354,7 @@ test-backend-job:
 #    - echo "backend service is healthy, proceeding..."
 #    - docker exec -i backend bash -c "ls -thal"
 #    - docker exec -i backend bash -c "tree -L 2"
-#    - docker exec -i backend bash -c "./docker-entrypoint.sh"
+    - docker exec -i backend bash -c "./docker-entrypoint.sh"
     - |
       docker exec -i backend bash -c "python -m pytest -vv -s --junitxml=junit.xml tests/api/test_api.py::test_signup_user";
       TEST_EXIT_CODE=$?;
