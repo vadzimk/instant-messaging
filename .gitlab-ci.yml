@@ -347,11 +347,11 @@ test-backend-job:
 #    - docker image ls -a
 #    - docker-compose -f docker-compose.test.yml up # TODO see the output of entrypoint, bc user table not found
     - docker-compose -f docker-compose.test.yml up -d
-#    - sleep 4 # wait to init containers
-    - |
-      echo "Waiting for backend service to be healthy..."
-      timeout 60 sh -c 'until [ "$(docker inspect --format="{{.State.Health.Status}}" backend)" == "healthy" ]; do sleep 2; done' || exit 1
-    - echo "backend service is healthy, proceeding..."
+    - sleep 4 # wait to init containers
+#    - |
+#      echo "Waiting for backend service to be healthy..."
+#      timeout 60 sh -c 'until [ "$(docker inspect --format="{{.State.Health.Status}}" backend)" == "healthy" ]; do sleep 2; done' || exit 1
+#    - echo "backend service is healthy, proceeding..."
 #    - docker exec -i backend bash -c "ls -thal"
 #    - docker exec -i backend bash -c "tree -L 2"
 #    - docker exec -i backend bash -c "./docker-entrypoint.sh"
