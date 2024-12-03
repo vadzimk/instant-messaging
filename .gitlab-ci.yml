@@ -281,6 +281,7 @@ init-test-postgres-db-job:
     - docker build -t "${IMAGE_NAME}:${IMAGE_TAG}" -f "$DOCKERFILE_NAME" "$PATH_TO_DOCKER_CONTEXT"
   after_script:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    - echo "${IMAGE_NAME}:${IMAGE_TAG}"
     - docker push "${IMAGE_NAME}:${IMAGE_TAG}"
   artifacts: # by default uploaded to all following stages if not specified in dependencies
     name: "$CI_JOB_NAME"
