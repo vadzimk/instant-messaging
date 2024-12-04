@@ -1,29 +1,8 @@
-# Base stage
-FROM python:3.10-slim AS base
-WORKDIR /usr/src/app
-
-ENV PYTHONFAULTHANDLER=1 \
-    PYTHONHASHSEED=random \
-    PYTHONUNBUFFERED=1
-
-RUN apt-get update &&\
-    apt-get install -y --no-install-recommends gcc libffi-dev g++ && \
-    apt-get clean && rm -rf /var/lib/apt/lists/*
-
-
-# Dependencies stage
-FROM base AS dependencies
-COPY ./Pipfile ./Pipfile.lock ./
-RUN pip install --no-cache-dir pipenv
-
-# installs dependecies in .venv
-ENV PIPENV_VENV_IN_PROJECT=1
-RUN pipenv install --ignore-pipfile --dev  # including dev dependencies for test
-
+ARG BASE_IMAGE
 
 # Final stage
-FROM base AS final
-COPY --from=dependencies /usr/src/app/.venv/ /usr/src/app/.venv/
+FROM $BASE_IMAGE AS final
+COPY /usr/src/app/.venv/ /usr/src/app/.venv/
 # Set the PATH to include the virtualenv's bin
 ENV PATH="/usr/src/app/.venv/bin:$PATH"
 

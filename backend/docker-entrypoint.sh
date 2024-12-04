@@ -1,6 +1,9 @@
 #!/bin/bash
 set -e
 echo "Starting entrypoint script"
+echo "Listing current directory contents:"
+pwd
+ls -htla
 
 . wait-for-postgres.sh
 
