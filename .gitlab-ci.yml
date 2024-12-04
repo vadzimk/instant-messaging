@@ -18,97 +18,6 @@ stages:
   - test
 
 
-
-#.before-script-secrets-anchor: &export-env-vars-script
-#  # Access the value of the file variable indirectly
-#  - eval "FILE_CONTENT=\$$ENV_FILE_VARIABLE"
-#  - cat "$FILE_CONTENT" > .env
-#  - set -o allexport &&
-#    source .env &&
-#    set +o allexport
-
-
-.pgbackups-script-job-template:
-  # common configuration to create or drop db/user
-  needs:
-    - set-variables-from-terraform-artifact
-  variables:
-    # must override empty variables in concrete jobs
-    ENV_FILE_VARIABLE: ""
-    DB_SCRIPT: ""
-    SCRIPT_REMOTE_DIR: "/tmp/"
-  before_script:
-#    - *export-env-vars-script
-    - !reference [.before-script-secrets-anchor]
-  script:
-    - chmod 400 $WS_KEY # private key
-    - |
-      scp -o StrictHostKeyChecking=no -i $WS_KEY \
-      "$DB_SCRIPT" \
-      ubuntu@$WS_HOST:${SCRIPT_REMOTE_DIR}
-    - |
-      ssh -o StrictHostKeyChecking=no -i $WS_KEY ubuntu@$WS_HOST "
-        chmod +x \"${SCRIPT_REMOTE_DIR}${DB_SCRIPT}\" &&
-        docker cp \"${SCRIPT_REMOTE_DIR}${DB_SCRIPT}\" pgbackups:/ &&
-        docker exec -i \
-          -e POSTGRES_PASSWORD=\"$POSTGRES_PASSWORD\" \
-          -e POSTGRES_USER=\"$POSTGRES_USER\" \
-          -e TARGET_USER=\"$POSTGRES_APP_USER\" \
-          -e TARGET_USER_PASSWORD=\"$POSTGRES_APP_PASSWORD\" \
-          -e DATABASE_NAME=\"$POSTGRES_DB\" \
-          -e DATABASE_HOST=\"$POSTGRES_HOST\" \
-          -e DATABASE_PORT=\"$POSTGRES_PORT\" \
-        pgbackups bash \"$DB_SCRIPT\"
-      "
-
-
-
-.before-script-checkout-anchor: &checkout-only-script
-  # Limits which directory to check out in the working tree
-  - git sparse-checkout init --cone
-  - echo "git sparse-checkout set ${CHECKOUT_DIR}"
-  - git sparse-checkout set "$CHECKOUT_DIR" # dir to include in the working tree only
-
-
-.before-script-install-packages-anchor: &install-packages-script
-  - |
-    if [ -z ${PACKAGES} ]; then
-      echo "ERROR: The PACKAGES variable is not set. Define it in the pipeline or job variables."
-      exit 1
-    fi
-
-    if [ -f /etc/os-release ]; then
-      . /etc/os-release
-      case "$ID" in
-        alpine)
-          echo "Distribution name: alpine, package manager: apk"
-          apk add ${PACKAGES}
-          ;;
-        debian|ubuntu)
-          echo "Distribution name: debian|ubuntu, package manager: apt"
-          apt-get update && apt-get install -y ${PACKAGES}
-          ;;
-        centos|fedora)
-          echo "Distribution name: centos|fedora, package manager: yum"
-          yum install -y ${PACKAGES}
-          ;;
-        *)
-          echo "Unsupported OS: $ID"
-          exit 1
-          ;;
-      esac
-    else
-      echo "/etc/os-release not found. Unsupported environment."
-      exit 1
-    fi
-
-.before-script-jwt-anchor: &export-jwt-keys-script
-  # create JWT keys and save in environment variables
-  - export PACKAGES="openssl"
-  - *install-packages-script
-  - export JWT_PRIVATE_KEY=$(openssl genpkey -algorithm RSA -outform PEM -pkeyopt rsa_keygen_bits:4096)
-  - export JWT_PUBLIC_KEY=$(openssl req -x509 -new -key <(echo "$JWT_PRIVATE_KEY") -outform PEM -days 36500 -subj "/CN=${JWT_ISSUER}")
-
 set-variables-from-terraform-artifact:
   stage: export-variables
   variables:
@@ -118,7 +27,7 @@ set-variables-from-terraform-artifact:
     PACKAGES: "jq curl"
     GIT_STRATEGY: none # no code will be checked out from repo
   before_script:
-    - *install-packages-script
+    - ! reference [.before-script-install-packages-anchor]
   script: # https://docs.gitlab.com/ee/api/job_artifacts.html#download-a-single-artifact-file-from-specific-tag-or-branch
     # create variables
     - |
@@ -260,54 +169,6 @@ init-test-postgres-db-job:
 #    changes:
 #      - backend/**/*
 
-.build-image-job-template:
-  image: docker:20.10.17
-  variables:
-    # using "docker" as the host is only possible if you alias the service below
-    DOCKER_HOST: tcp://docker:2375
-    DOCKER_DRIVER: overlay2
-    DOCKER_TLS_CERTDIR: ""
-    SERVICE_NAME: "" # should override
-    PATH_TO_DOCKER_CONTEXT: "." # should override
-    PATH_TO_DOCKERFILE: "" # should override
-    BASE_IMAGE: "" # should override, optional, base image to build from
-  services:
-    - name: docker:20.10.17-dind
-      alias: docker
-      command: [ "--tls=false" ]
-#  before_script: # of the concrete job must export PACKAGE_VERSION variable, here are the examples:
-#    - export PACKAGE_VERSION=$(cat path-to/package.json | jq -r .version)
-#    - export PACKAGE_VERSION=$(grep 'version' path-to/version.py | cut -d'"' -f2)
-  script:
-    # set image name and tag
-    - export IMAGE_NAME="${CI_REGISTRY_IMAGE}/${SERVICE_NAME}"
-    - echo "$PACKAGE_VERSION"
-    - export IMAGE_TAG="${PACKAGE_VERSION}-${CI_PIPELINE_IID}" # Semantic Version with Build Metadata (MAJOR.MINOR.PATCH-BUILD)
-    - echo "IMAGE_NAME_IMAGE_TAG_${SERVICE_NAME}=${IMAGE_NAME}:${IMAGE_TAG}"
-    - echo "IMAGE_NAME_IMAGE_TAG_${SERVICE_NAME}=${IMAGE_NAME}:${IMAGE_TAG}" >> build.env
-    # build image
-    - export DOCKER_BUILDKIT=0  # allows networking during build
-    - | # tag as latest, build-arg IMAGE_NAME_AND_TAG is optional
-      docker build --build-arg BASE_IMAGE="$BASE_IMAGE" \
-      -t "${IMAGE_NAME}" \
-      -f "$PATH_TO_DOCKERFILE" "$PATH_TO_DOCKER_CONTEXT"
-    - docker tag "${IMAGE_NAME}" "${IMAGE_NAME}:${IMAGE_TAG}" # tag as version
-    # push image to container registry
-    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
-    - echo "${IMAGE_NAME}:${IMAGE_TAG}"
-    - docker push "${IMAGE_NAME}" # pushes latest
-    - docker push "${IMAGE_NAME}:${IMAGE_TAG}" # pushes version
-  artifacts: # by default uploaded to all following stages if not specified in dependencies
-    name: "$CI_JOB_NAME"
-    paths:
-      - build.env
-    reports:
-      # In subsequent jobs, the environment variables defined in build.env are automatically available.
-      dotenv: build.env # loaded in all subsequent jobs (must be relative to working directory of .gitlab-ci.yml)
-
-.before-script-export-version-python-anchor: &export-version-py-script
-    - export PACKAGE_VERSION=$(grep 'version' "${PATH_TO_DOCKER_CONTEXT}/version.py" | cut -d'"' -f2)
-
 # Build base images for test jobs:
 
 build-test-backend-base-image-job:
@@ -318,7 +179,7 @@ build-test-backend-base-image-job:
     PATH_TO_DOCKER_CONTEXT: "./backend"
     PATH_TO_DOCKERFILE: "./backend/Dockerfile.test.base"
   before_script:
-    - *export-version-py-script
+    - !reference [.before-script-export-version-python-anchor]
 #  only:
 #    changes:
 #      - ${PATH_TO_DOCKER_CONTEXT}/Pipfile.lock
@@ -332,7 +193,7 @@ build-test-telegram-bot-base-image-job:
     PATH_TO_DOCKER_CONTEXT: "./telegram_bot"
     PATH_TO_DOCKERFILE: "./telegram_bot/Dockerfile.test.base"
   before_script:
-    - *export-version-py-script
+    - !reference [.before-script-export-version-python-anchor]
 #  only:
 #    changes:
 #      - ${PATH_TO_DOCKER_CONTEXT}/Pipfile.lock
@@ -348,7 +209,7 @@ build-test-backend-image-job:
     PATH_TO_DOCKER_CONTEXT: "./backend"
     PATH_TO_DOCKERFILE: "./backend/Dockerfile.test"
   before_script:
-    - *export-version-py-script
+    - !reference [.before-script-export-version-python-anchor]
     - export BASE_IMAGE="IMAGE_NAME_IMAGE_TAG_${SERVICE_NAME}_base:latest"
 #  only:
 #    changes:
@@ -362,7 +223,7 @@ build-test-telegram-bot-image-job:
     PATH_TO_DOCKER_CONTEXT: "./telegram_bot"
     PATH_TO_DOCKERFILE: "./telegram_bot/Dockerfile.test"
   before_script:
-    - *export-version-py-script
+    - !reference [.before-script-export-version-python-anchor]
     - export BASE_IMAGE="IMAGE_NAME_IMAGE_TAG_${SERVICE_NAME}_base:latest"
 #  only:
 #    changes:
@@ -384,7 +245,7 @@ test-backend-job:
   before_script:
 #    - *export-env-vars-script
     - !reference [.before-script-secrets-anchor]
-    - *export-jwt-keys-script
+    - !reference [.before-script-jwt-anchor]
 #    - echo "$IMAGE_NAME_IMAGE_TAG_backend_test_service"
 #    - echo "$IMAGE_NAME_IMAGE_TAG_backend_test_service"
 #    - echo "$IMAGE_NAME_IMAGE_TAG_telegram_bot_test_service"
