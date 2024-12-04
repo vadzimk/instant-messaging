@@ -7,8 +7,8 @@
 variables:
   FLUSHCACHE: "false" # trigger job to produce cache always when $FLUSHCACHE == "true"
 
-#include:
-#  - local: 'templates.gitlab-ci.yml'
+include:
+  - local: .templates.gitlab-ci.yml
 
 stages:
   - export-variables
@@ -38,7 +38,8 @@ stages:
     DB_SCRIPT: ""
     SCRIPT_REMOTE_DIR: "/tmp/"
   before_script:
-    - *export-env-vars-script
+#    - *export-env-vars-script
+    - !reference [.before-script-secrets-anchor]
   script:
     - chmod 400 $WS_KEY # private key
     - |
@@ -315,7 +316,7 @@ build-test-backend-base-image-job:
   variables:
     SERVICE_NAME: "backend_test_service_base"
     PATH_TO_DOCKER_CONTEXT: "./backend"
-    PATH_TO_DOCKERFILE: "./backend/Dockerfile.base"
+    PATH_TO_DOCKERFILE: "./backend/Dockerfile.test.base"
   before_script:
     - *export-version-py-script
 #  only:
@@ -329,7 +330,7 @@ build-test-telegram-bot-base-image-job:
   variables:
     SERVICE_NAME: "telegram_bot_test_service_base"
     PATH_TO_DOCKER_CONTEXT: "./telegram_bot"
-    PATH_TO_DOCKERFILE: "./telegram_bot/Dockerfile.base"
+    PATH_TO_DOCKERFILE: "./telegram_bot/Dockerfile.test.base"
   before_script:
     - *export-version-py-script
 #  only:
