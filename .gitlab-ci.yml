@@ -181,10 +181,10 @@ build-test-backend-base-image-job:
     PATH_TO_DOCKERFILE: "./backend/Dockerfile.test.base"
   before_script:
     - !reference [ .before-script-export-version-python-anchor ]
-#  only:
-#    changes:
-#      - ${PATH_TO_DOCKER_CONTEXT}/Pipfile.lock
-#      - ${PATH_TO_DOCKER_CONTEXT}/Pipfile
+  only:
+    changes:
+      - ${PATH_TO_DOCKER_CONTEXT}/Pipfile.lock
+      - ${PATH_TO_DOCKER_CONTEXT}/Pipfile
 
 build-test-telegram-bot-base-image-job:
   stage: build-base-test-images
@@ -195,10 +195,10 @@ build-test-telegram-bot-base-image-job:
     PATH_TO_DOCKERFILE: "./telegram_bot/Dockerfile.test.base"
   before_script:
     - !reference [ .before-script-export-version-python-anchor ]
-#  only:
-#    changes:
-#      - ${PATH_TO_DOCKER_CONTEXT}/Pipfile.lock
-#      - ${PATH_TO_DOCKER_CONTEXT}/Pipfile
+  only:
+    changes:
+      - ${PATH_TO_DOCKER_CONTEXT}/Pipfile.lock
+      - ${PATH_TO_DOCKER_CONTEXT}/Pipfile
 
 # Build final images for test jobs:
 
