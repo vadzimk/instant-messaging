@@ -19,13 +19,13 @@ stages:
 
 
 
-.before-script-secrets-anchor: &export-env-vars-script
-  # Access the value of the file variable indirectly
-  - eval "FILE_CONTENT=\$$ENV_FILE_VARIABLE"
-  - cat "$FILE_CONTENT" > .env
-  - set -o allexport &&
-    source .env &&
-    set +o allexport
+#.before-script-secrets-anchor: &export-env-vars-script
+#  # Access the value of the file variable indirectly
+#  - eval "FILE_CONTENT=\$$ENV_FILE_VARIABLE"
+#  - cat "$FILE_CONTENT" > .env
+#  - set -o allexport &&
+#    source .env &&
+#    set +o allexport
 
 
 .pgbackups-script-job-template:
@@ -382,7 +382,8 @@ test-backend-job:
       alias: docker
       command: [ "--tls=false" ]
   before_script:
-    - *export-env-vars-script
+#    - *export-env-vars-script
+    - !reference [.before-script-secrets-anchor]
     - *export-jwt-keys-script
 #    - echo "$IMAGE_NAME_IMAGE_TAG_backend_test_service"
 #    - echo "$IMAGE_NAME_IMAGE_TAG_backend_test_service"
