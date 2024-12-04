@@ -57,13 +57,13 @@
     - echo "IMAGE_NAME_IMAGE_TAG_${SERVICE_NAME}=${IMAGE_NAME}:${IMAGE_TAG}" >> build.env
     # build image
     - export DOCKER_BUILDKIT=0  # allows networking during build
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
     - | # tag as latest, build-arg IMAGE_NAME_AND_TAG is optional
       docker build --build-arg BASE_IMAGE="$BASE_IMAGE" \
       -t "${IMAGE_NAME}" \
       -f "$PATH_TO_DOCKERFILE" "$PATH_TO_DOCKER_CONTEXT"
     - docker tag "${IMAGE_NAME}" "${IMAGE_NAME}:${IMAGE_TAG}" # tag as version
     # push image to container registry
-    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
     - echo "${IMAGE_NAME}:${IMAGE_TAG}"
     - docker push "${IMAGE_NAME}" # pushes latest
     - docker push "${IMAGE_NAME}:${IMAGE_TAG}" # pushes version
