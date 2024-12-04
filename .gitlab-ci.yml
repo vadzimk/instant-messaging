@@ -275,11 +275,10 @@ test-backend-job:
     #    - docker exec -i backend bash -c "tree -L 2"
     #    - docker exec -i backend bash -c "./docker-entrypoint.sh"
     - |
-      docker exec -i backend bash -c "python -m pytest -vv -s --junitxml=junit.xml tests/api/test_api.py::test_signup_user";
+      docker exec -i backend bash -c "python -m pytest -vv -s --junitxml=junit.xml";
       TEST_EXIT_CODE=$?;
-      docker cp backend:junit.xml backend/junit.xml || echo "junit.xml not found";
+      docker cp backend:/usr/src/app/junit.xml backend/junit.xml || echo "junit.xml not found";
       docker-compose -f docker-compose.test.yml down --volumes --remove-orphans --rmi all
-      docker image prune --all --force
       exit $TEST_EXIT_CODE;
   artifacts:
     when: always
