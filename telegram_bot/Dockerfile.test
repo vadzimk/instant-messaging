@@ -1,4 +1,5 @@
 ARG BASE_IMAGE
+WORKDIR /usr/src/app
 
 RUN echo "pwd"
 RUN echo "ls -htal"

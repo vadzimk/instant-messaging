@@ -1,4 +1,5 @@
 ARG BASE_IMAGE
+WORKDIR /usr/src/app
 
 # Final stage
 FROM $BASE_IMAGE AS final
