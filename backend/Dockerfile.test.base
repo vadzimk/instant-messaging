@@ -10,8 +10,8 @@ RUN apt-get update &&\
     apt-get install -y --no-install-recommends gcc libffi-dev g++ postgresql-client && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Dependencies stage
-FROM base AS dependencies
+
+FROM base
 COPY ./Pipfile ./Pipfile.lock ./
 RUN pip install --no-cache-dir pipenv
 

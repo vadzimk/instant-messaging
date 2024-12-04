@@ -185,6 +185,7 @@ build-test-backend-base-image-job:
     changes:
       - ${PATH_TO_DOCKER_CONTEXT}/Pipfile.lock
       - ${PATH_TO_DOCKER_CONTEXT}/Pipfile
+      - ${PATH_TO_DOCKER_CONTEXT}/Dockerfile.test.base
 
 build-test-telegram-bot-base-image-job:
   stage: build-base-test-images
@@ -199,10 +200,9 @@ build-test-telegram-bot-base-image-job:
     changes:
       - ${PATH_TO_DOCKER_CONTEXT}/Pipfile.lock
       - ${PATH_TO_DOCKER_CONTEXT}/Pipfile
+      - ${PATH_TO_DOCKER_CONTEXT}/Dockerfile.test.base
 
 # Build final images for test jobs:
-
-
 
 build-test-backend-image-job:
   stage: build-test-images
