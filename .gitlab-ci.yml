@@ -264,8 +264,8 @@ test-backend-job:
     #    - cat .env
     #    - docker container ls -a
     #    - docker image ls -a
-    - docker-compose -f docker-compose.test.yml up # remove this, see the output of entrypoint, bc user table not found
-    #    - docker-compose -f docker-compose.test.yml up -d
+#    - docker-compose -f docker-compose.test.yml up # remove this, see the output of entrypoint, bc user table not found
+    - docker-compose -f docker-compose.test.yml up -d
     - sleep 10 # wait to init containers
     #    - |
     #      echo "Waiting for backend service to be healthy..."
