@@ -172,7 +172,7 @@ init-test-postgres-db-job:
 
 # Build base images for test jobs:
 
-.build-test-backend-base-image-job: # TODO remove dot
+build-test-backend-base-image-job:
   stage: build-base-test-images
   extends: .build-image-job-template
   variables:
@@ -208,7 +208,7 @@ build-test-telegram-bot-base-image-job:
 
 # Build final images for test jobs:
 
-.build-test-backend-image-job: # TODO remove dot
+build-test-backend-image-job:
   stage: build-test-images
   extends: .build-image-job-template
   variables:
@@ -238,7 +238,7 @@ build-test-telegram-bot-image-job:
 #    changes:
 #      - telegram_bot/**/*
 
-.test-backend-job: # TODO remove dot
+test-backend-job:
   stage: test
   image: docker:20.10.17
   variables:
