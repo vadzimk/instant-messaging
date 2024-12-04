@@ -11,5 +11,7 @@ RUN chmod +x wait-for-postgres.sh docker-entrypoint.sh
 EXPOSE 8000
 # for debugging only
 #CMD ["tail", "-f", "/dev/null"]
-ENTRYPOINT ["sh", "./docker-entrypoint.sh"]
+
+ENV ENV=test
+ENTRYPOINT "./docker-entrypoint.sh"
 

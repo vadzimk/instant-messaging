@@ -25,7 +25,7 @@ services:
   celery_worker:
     container_name: celery_worker
     image: "$IMAGE_NAME_IMAGE_TAG_backend_test_service"
-    command: celery -A src.celery_app.worker.celery worker --loglevel=info
+    entrypoint: "celery -A src.celery_app.worker.celery worker --loglevel=info"
     env_file:
       - .env # created in gitlab-ci from .env.test
     expose:

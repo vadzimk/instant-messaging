@@ -10,4 +10,6 @@ COPY ./ ./
 EXPOSE 8003
 # for debugging only
 #CMD ["tail", "-f", "/dev/null"]
-CMD ENV=demo python -m src.main
+
+ENV ENV=test
+ENTRYPOINT "python -m src.main"
