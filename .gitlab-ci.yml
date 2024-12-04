@@ -172,7 +172,7 @@ init-test-postgres-db-job:
 
 # Build base images for test jobs:
 
-build-test-backend-base-image-job:
+.build-test-backend-base-image-job: # TODO remove dot
   stage: build-base-test-images
   extends: .build-image-job-template
   variables:
@@ -181,13 +181,13 @@ build-test-backend-base-image-job:
     PATH_TO_DOCKERFILE: "./backend/Dockerfile.test.base"
   before_script:
     - !reference [ .before-script-export-version-python-anchor ]
-#  rules:
-#    - changes:
-#      - ${PATH_TO_DOCKER_CONTEXT}/Pipfile.lock
-#      - ${PATH_TO_DOCKER_CONTEXT}/Pipfile
-#      - ${PATH_TO_DOCKER_CONTEXT}/Dockerfile.test.base
-#      when: always
-#    - when: never
+  rules:
+    - changes:
+      - ${PATH_TO_DOCKER_CONTEXT}/Pipfile.lock
+      - ${PATH_TO_DOCKER_CONTEXT}/Pipfile
+      - ${PATH_TO_DOCKER_CONTEXT}/Dockerfile.test.base
+      when: always
+    - when: never
 
 build-test-telegram-bot-base-image-job:
   stage: build-base-test-images
@@ -198,17 +198,17 @@ build-test-telegram-bot-base-image-job:
     PATH_TO_DOCKERFILE: "./telegram_bot/Dockerfile.test.base"
   before_script:
     - !reference [ .before-script-export-version-python-anchor ]
-#  rules:
-#    - changes:
-#      - ${PATH_TO_DOCKER_CONTEXT}/Pipfile.lock
-#      - ${PATH_TO_DOCKER_CONTEXT}/Pipfile
-#      - ${PATH_TO_DOCKER_CONTEXT}/Dockerfile.test.base
-#      when: always
-#    - when: never
+  rules:
+    - changes:
+      - ${PATH_TO_DOCKER_CONTEXT}/Pipfile.lock
+      - ${PATH_TO_DOCKER_CONTEXT}/Pipfile
+      - ${PATH_TO_DOCKER_CONTEXT}/Dockerfile.test.base
+      when: always
+    - when: never
 
 # Build final images for test jobs:
 
-build-test-backend-image-job:
+.build-test-backend-image-job: # TODO remove dot
   stage: build-test-images
   extends: .build-image-job-template
   variables:
@@ -223,7 +223,7 @@ build-test-backend-image-job:
 #    changes:
 #      - backend/**/*
 
-.build-test-telegram-bot-image-job: # TODO remove dot
+build-test-telegram-bot-image-job:
   stage: build-test-images
   extends: .build-image-job-template
   variables:
@@ -238,7 +238,7 @@ build-test-backend-image-job:
 #    changes:
 #      - telegram_bot/**/*
 
-test-backend-job:
+.test-backend-job: # TODO remove dot
   stage: test
   image: docker:20.10.17
   variables:

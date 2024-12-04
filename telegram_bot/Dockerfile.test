@@ -1,11 +1,10 @@
 ARG BASE_IMAGE
+FROM $BASE_IMAGE
 WORKDIR /usr/src/app
 
 RUN echo "pwd"
 RUN echo "ls -htal"
 
-# Final stage
-FROM $BASE_IMAGE AS final
 COPY /usr/src/app/.venv/ /usr/src/app/.venv/
 # Set the PATH to include the virtualenv's bin
 ENV PATH="/usr/src/app/.venv/bin:$PATH"
