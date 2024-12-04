@@ -1,6 +1,3 @@
-include:
-  - local: .utils.gitlab-ci.yml
-
 
 .pgbackups-script-job-template:
   # common configuration to create or drop db and user
