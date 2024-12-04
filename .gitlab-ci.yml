@@ -30,7 +30,7 @@ set-variables-from-terraform-artifact:
     PACKAGES: "jq curl"
     GIT_STRATEGY: none # no code will be checked out from repo
   before_script:
-    - !reference [.before-script-install-packages-anchor]
+    - !reference [ .before-script-install-packages-anchor ]
   script: # https://docs.gitlab.com/ee/api/job_artifacts.html#download-a-single-artifact-file-from-specific-tag-or-branch
     # create variables
     - |
@@ -180,7 +180,7 @@ build-test-backend-base-image-job:
     PATH_TO_DOCKER_CONTEXT: "./backend"
     PATH_TO_DOCKERFILE: "./backend/Dockerfile.test.base"
   before_script:
-    - !reference [.before-script-export-version-python-anchor]
+    - !reference [ .before-script-export-version-python-anchor ]
 #  only:
 #    changes:
 #      - ${PATH_TO_DOCKER_CONTEXT}/Pipfile.lock
@@ -194,7 +194,7 @@ build-test-telegram-bot-base-image-job:
     PATH_TO_DOCKER_CONTEXT: "./telegram_bot"
     PATH_TO_DOCKERFILE: "./telegram_bot/Dockerfile.test.base"
   before_script:
-    - !reference [.before-script-export-version-python-anchor]
+    - !reference [ .before-script-export-version-python-anchor ]
 #  only:
 #    changes:
 #      - ${PATH_TO_DOCKER_CONTEXT}/Pipfile.lock
@@ -210,7 +210,7 @@ build-test-backend-image-job:
     PATH_TO_DOCKER_CONTEXT: "./backend"
     PATH_TO_DOCKERFILE: "./backend/Dockerfile.test"
   before_script:
-    - !reference [.before-script-export-version-python-anchor]
+    - !reference [ .before-script-export-version-python-anchor ]
     - export BASE_IMAGE="IMAGE_NAME_IMAGE_TAG_${SERVICE_NAME}_base:latest"
 #  only:
 #    changes:
@@ -224,7 +224,7 @@ build-test-telegram-bot-image-job:
     PATH_TO_DOCKER_CONTEXT: "./telegram_bot"
     PATH_TO_DOCKERFILE: "./telegram_bot/Dockerfile.test"
   before_script:
-    - !reference [.before-script-export-version-python-anchor]
+    - !reference [ .before-script-export-version-python-anchor ]
     - export BASE_IMAGE="IMAGE_NAME_IMAGE_TAG_${SERVICE_NAME}_base:latest"
 #  only:
 #    changes:
@@ -244,29 +244,29 @@ test-backend-job:
       alias: docker
       command: [ "--tls=false" ]
   before_script:
-#    - *export-env-vars-script
-    - !reference [.before-script-secrets-anchor]
-    - !reference [.before-script-jwt-anchor]
-#    - echo "$IMAGE_NAME_IMAGE_TAG_backend_test_service"
-#    - echo "$IMAGE_NAME_IMAGE_TAG_backend_test_service"
-#    - echo "$IMAGE_NAME_IMAGE_TAG_telegram_bot_test_service"
+    #    - *export-env-vars-script
+    - !reference [ .before-script-secrets-anchor ]
+    - !reference [ .before-script-jwt-anchor ]
+  #    - echo "$IMAGE_NAME_IMAGE_TAG_backend_test_service"
+  #    - echo "$IMAGE_NAME_IMAGE_TAG_backend_test_service"
+  #    - echo "$IMAGE_NAME_IMAGE_TAG_telegram_bot_test_service"
   script:
     - export DOCKER_BUILDKIT=0  # allows networking during build
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
-#    - ls -a
-#    - cat .env
-#    - docker container ls -a
-#    - docker image ls -a
+    #    - ls -a
+    #    - cat .env
+    #    - docker container ls -a
+    #    - docker image ls -a
     - docker-compose -f docker-compose.test.yml up # remove this, see the output of entrypoint, bc user table not found
-#    - docker-compose -f docker-compose.test.yml up -d
+    #    - docker-compose -f docker-compose.test.yml up -d
     - sleep 10 # wait to init containers
-#    - |
-#      echo "Waiting for backend service to be healthy..."
-#      timeout 60 sh -c 'until [ "$(docker inspect --format="{{.State.Health.Status}}" backend)" == "healthy" ]; do sleep 2; done' || exit 1
-#    - echo "backend service is healthy, proceeding..."
-#    - docker exec -i backend bash -c "ls -thal"
-#    - docker exec -i backend bash -c "tree -L 2"
-#    - docker exec -i backend bash -c "./docker-entrypoint.sh"
+    #    - |
+    #      echo "Waiting for backend service to be healthy..."
+    #      timeout 60 sh -c 'until [ "$(docker inspect --format="{{.State.Health.Status}}" backend)" == "healthy" ]; do sleep 2; done' || exit 1
+    #    - echo "backend service is healthy, proceeding..."
+    #    - docker exec -i backend bash -c "ls -thal"
+    #    - docker exec -i backend bash -c "tree -L 2"
+    #    - docker exec -i backend bash -c "./docker-entrypoint.sh"
     - |
       docker exec -i backend bash -c "python -m pytest -vv -s --junitxml=junit.xml tests/api/test_api.py::test_signup_user";
       TEST_EXIT_CODE=$?;
