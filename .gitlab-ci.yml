@@ -212,7 +212,7 @@ build-test-backend-image-job:
     PATH_TO_DOCKER_CONTEXT: "./backend"
     PATH_TO_DOCKERFILE: "./backend/Dockerfile.test"
   before_script:
-    - export $BASE_IMAGE="${CI_REGISTRY_IMAGE}/${SERVICE_NAME}:latest"
+    - export BASE_IMAGE="${CI_REGISTRY_IMAGE}/${SERVICE_NAME}:latest"
 #  only:
 #    changes:
 #      - backend/**/*
@@ -225,7 +225,7 @@ build-test-telegram-bot-image-job:
     PATH_TO_DOCKER_CONTEXT: "./telegram_bot"
     PATH_TO_DOCKERFILE: "./telegram_bot/Dockerfile.test"
   before_script:
-    - export $BASE_IMAGE="${CI_REGISTRY_IMAGE}/${SERVICE_NAME}:latest"
+    - export BASE_IMAGE="${CI_REGISTRY_IMAGE}/${SERVICE_NAME}:latest"
 #  only:
 #    changes:
 #      - telegram_bot/**/*
