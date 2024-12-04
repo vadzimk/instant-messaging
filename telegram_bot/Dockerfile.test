@@ -12,14 +12,15 @@ RUN groupadd -r "$APP_USER_NAME" \
     && useradd -r -g "$APP_USER_NAME" -m "$APP_USER_NAME" \
     && chown -R "$APP_USER_NAME" /usr/src/app
 
-# Switch to the non-root user
-USER "$APP_USER_NAME"
-
 COPY ./ ./
 
 EXPOSE 8003
-# for debugging only
-#CMD ["tail", "-f", "/dev/null"]
+
+# Switch to the non-root user
+USER "$APP_USER_NAME"
 
 ENV ENV=test
+
+# for debugging only
+#CMD ["tail", "-f", "/dev/null"]
 ENTRYPOINT "python -m src.main"
