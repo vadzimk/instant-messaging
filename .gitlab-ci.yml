@@ -1,15 +1,18 @@
+include:
+  - local: .utils.gitlab-ci.yml
+  - local: .templates.gitlab-ci.yml
+
+
 # workflow:
 #   rules:
 #     - if: $CI_COMMIT_BRANCH != "master" && $CI_PIPELINE_SOURCE != "merge_request_event"
 #       when: never
 #     - when: always
 
+
 variables:
   FLUSHCACHE: "false" # trigger job to produce cache always when $FLUSHCACHE == "true"
 
-include:
-  - local: .utils.gitlab-ci.yml
-  - local: .templates.gitlab-ci.yml
 
 stages:
   - export-variables
@@ -17,7 +20,6 @@ stages:
   - build-base-test-images
   - build-test-images
   - test
-
 
 set-variables-from-terraform-artifact:
   stage: export-variables
@@ -43,8 +45,6 @@ set-variables-from-terraform-artifact:
   artifacts:
     reports:
       dotenv: terraform_output.env # its variables are available in all subsequent jobs as any other variables
-
-
 
 
 drop-test-postgres-db-job:
