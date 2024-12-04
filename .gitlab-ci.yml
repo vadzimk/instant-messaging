@@ -30,7 +30,7 @@ set-variables-from-terraform-artifact:
     PACKAGES: "jq curl"
     GIT_STRATEGY: none # no code will be checked out from repo
   before_script:
-    - ! reference [.before-script-install-packages-anchor]
+    - !reference [.before-script-install-packages-anchor]
   script: # https://docs.gitlab.com/ee/api/job_artifacts.html#download-a-single-artifact-file-from-specific-tag-or-branch
     # create variables
     - |
