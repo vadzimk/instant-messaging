@@ -1,5 +1,8 @@
 ARG BASE_IMAGE
 
+RUN echo "pwd"
+RUN echo "ls -htal"
+
 # Final stage
 FROM $BASE_IMAGE AS final
 COPY /usr/src/app/.venv/ /usr/src/app/.venv/

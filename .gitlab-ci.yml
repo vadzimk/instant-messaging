@@ -223,7 +223,7 @@ build-test-backend-image-job:
 #    changes:
 #      - backend/**/*
 
-build-test-telegram-bot-image-job:
+.build-test-telegram-bot-image-job: # TODO remove dot
   stage: build-test-images
   extends: .build-image-job-template
   variables:
