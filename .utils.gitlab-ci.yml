@@ -13,6 +13,7 @@
   - echo "git sparse-checkout set ${CHECKOUT_DIR}"
   - git sparse-checkout set "$CHECKOUT_DIR" # dir to include in the working tree only
 
+
 .before-script-install-packages-anchor: &install-packages-script
   - |
     if [ -z ${PACKAGES} ]; then
@@ -45,6 +46,7 @@
       exit 1
     fi
 
+
 .before-script-jwt-anchor: &export-jwt-keys-script
   # create JWT keys and save in environment variables
   - export PACKAGES="openssl"
@@ -52,5 +54,15 @@
   - export JWT_PRIVATE_KEY=$(openssl genpkey -algorithm RSA -outform PEM -pkeyopt rsa_keygen_bits:4096)
   - export JWT_PUBLIC_KEY=$(openssl req -x509 -new -key <(echo "$JWT_PRIVATE_KEY") -outform PEM -days 36500 -subj "/CN=${JWT_ISSUER}")
 
+
 .before-script-export-version-python-anchor: &export-version-py-script
   - export PACKAGE_VERSION=$(grep 'version' "${PATH_TO_DOCKER_CONTEXT}/version.py" | cut -d'"' -f2)
+
+
+.before-script-evaluate-base-image-name-and-export-latest: &export-latest-base-image-name-script
+  # evaluate base image name with tag
+  - BASE_IMAGE_W_VERSION=$(eval echo \${IMAGE_NAME_IMAGE_TAG_${SERVICE_NAME}_base})
+  - echo "$BASE_IMAGE_W_VERSION"
+  # replace package version with :latest
+  - export BASE_IMAGE=$(echo "BASE_IMAGE_W_VERSION" | sed 's/:[^:]*$/:latest/') # latest
+  - echo $BASE_IMAGE
