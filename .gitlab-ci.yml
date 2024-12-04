@@ -202,6 +202,12 @@ build-test-telegram-bot-base-image-job:
 
 # Build final images for test jobs:
 
+.before-script-evaluate-base-image-name-and-export-latest: &export-latest-base-image-name-script
+  # evaluate base image name with tag
+  - BASE_IMAGE=$(eval echo \${IMAGE_NAME_IMAGE_TAG_${SERVICE_NAME}_base}) # :latest
+  # replace package version with :latest
+  - BASE_IMAGE=$(echo "$BASE_IMAGE" | sed 's/:[^:]*$/:latest/')
+
 build-test-backend-image-job:
   stage: build-test-images
   extends: .build-image-job-template
@@ -211,7 +217,8 @@ build-test-backend-image-job:
     PATH_TO_DOCKERFILE: "./backend/Dockerfile.test"
   before_script:
     - !reference [ .before-script-export-version-python-anchor ]
-    - export BASE_IMAGE="IMAGE_NAME_IMAGE_TAG_${SERVICE_NAME}_base:latest"
+    - *export-latest-base-image-name-script
+
 #  only:
 #    changes:
 #      - backend/**/*
@@ -225,7 +232,7 @@ build-test-telegram-bot-image-job:
     PATH_TO_DOCKERFILE: "./telegram_bot/Dockerfile.test"
   before_script:
     - !reference [ .before-script-export-version-python-anchor ]
-    - export BASE_IMAGE="IMAGE_NAME_IMAGE_TAG_${SERVICE_NAME}_base:latest"
+    - *export-latest-base-image-name-script
 #  only:
 #    changes:
 #      - telegram_bot/**/*
@@ -244,7 +251,6 @@ test-backend-job:
       alias: docker
       command: [ "--tls=false" ]
   before_script:
-    #    - *export-env-vars-script
     - !reference [ .before-script-secrets-anchor ]
     - !reference [ .before-script-jwt-anchor ]
   #    - echo "$IMAGE_NAME_IMAGE_TAG_backend_test_service"
