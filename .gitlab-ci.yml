@@ -213,7 +213,7 @@ build-test-backend-image-job:
     PATH_TO_DOCKERFILE: "./backend/Dockerfile.test"
   before_script:
     - !reference [ .before-script-export-version-python-anchor ]
-    - export BASE_IMAGE="${CI_REGISTRY_IMAGE}/${SERVICE_NAME}:latest"
+    - export BASE_IMAGE="${CI_REGISTRY_IMAGE}/${SERVICE_NAME}_base:latest"
     - echo "$BASE_IMAGE"
 #  only:
 #    changes:
@@ -228,7 +228,7 @@ build-test-telegram-bot-image-job:
     PATH_TO_DOCKERFILE: "./telegram_bot/Dockerfile.test"
   before_script:
     - !reference [ .before-script-export-version-python-anchor ]
-    - export BASE_IMAGE="${CI_REGISTRY_IMAGE}/${SERVICE_NAME}:latest"
+    - export BASE_IMAGE="${CI_REGISTRY_IMAGE}/${SERVICE_NAME}_base:latest"
     - echo "$BASE_IMAGE"
 #  only:
 #    changes:
