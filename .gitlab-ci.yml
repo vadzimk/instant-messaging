@@ -206,7 +206,8 @@ build-test-telegram-bot-base-image-job:
   # evaluate base image name with tag
   - BASE_IMAGE=$(eval echo \${IMAGE_NAME_IMAGE_TAG_${SERVICE_NAME}_base}) # :latest
   # replace package version with :latest
-  - BASE_IMAGE=$(echo "$BASE_IMAGE" | sed 's/:[^:]*$/:latest/')
+  - export BASE_IMAGE=$(echo "$BASE_IMAGE" | sed 's/:[^:]*$/:latest/')
+  - echo $BASE_IMAGE
 
 build-test-backend-image-job:
   stage: build-test-images
