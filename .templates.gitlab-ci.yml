@@ -102,7 +102,7 @@
       if [ -z "$IMAGE_NAME_IMAGE_TAG_telegram_bot_test_service" ]; then
         export IMAGE_NAME_IMAGE_TAG_telegram_bot_test_service="${CI_REGISTRY_IMAGE}/telegram_bot_test_service:latest";
       fi;
-  script:
+
     - export DOCKER_BUILDKIT=0  # allows networking during build
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
     - docker-compose -f docker-compose.test.yml up -d
@@ -113,6 +113,7 @@
     #    - echo "backend service is healthy, proceeding..."
     - echo "$CONTAINER_NAME"
     - docker container ls
+  script:
     - |
       docker exec -i "$CONTAINER_NAME" bash -c "python -m pytest -vv --junitxml=junit.xml";
       TEST_EXIT_CODE=$?;

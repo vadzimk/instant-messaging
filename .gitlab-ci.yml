@@ -128,6 +128,10 @@ test-telegram-bot-job:
   variables:
     CONTAINER_NAME: telegram_bot
     DIRECTORY_TO_SAVE_JUNIT_ARTIFACT: telegram_bot
+  script:  # TODO remove this script override
+    - docker exec -i "$CONTAINER_NAME" bash -c "python -m src.main";
+    - docker-compose -f docker-compose.test.yml down --volumes --remove-orphans --rmi all
+
 
 # init-production-postgres-job:
 #   extends: .iniit-db-base
