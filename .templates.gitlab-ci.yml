@@ -106,7 +106,7 @@
     - export DOCKER_BUILDKIT=0  # allows networking during build
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
     - docker-compose -f docker-compose.test.yml up -d
-    - sleep 10 # wait to init containers
+    - sleep 30 # wait to init containers
     #    - |
     #      echo "Waiting for backend service to be healthy..."
     #      timeout 60 sh -c 'until [ "$(docker inspect --format="{{.State.Health.Status}}" backend)" == "healthy" ]; do sleep 2; done' || exit 1
@@ -123,6 +123,8 @@
       - backend/junit.xml
     reports:
       junit: backend/junit.xml
-#  only:
-#    changes:
-#      - backend/**/*
+#  rules:
+#    - changes:
+#      - ${DIRECTORY_TO_SAVE_JUNIT_ARTIFACT}/**/*
+#      when: always
+#    - when: never
