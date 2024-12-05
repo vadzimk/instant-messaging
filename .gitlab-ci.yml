@@ -74,102 +74,6 @@ init-test-postgres-db-job:
 #     ENV_FILE_VARIABLE: ENV_PROD
 
 
-#.install-dependencies-job-template:
-#  stage: install
-#  image: python:3.10
-#  variables:
-#    # must override in concrete job
-#    CHECKOUT_DIR: ""
-#    CACHE_KEY: ""
-#  before_script:
-#    - *checkout-only-script
-#  script:
-#    - ls -htla
-#    - cd "$CHECKOUT_DIR"
-#    - pip install --no-cache-dir pipenv
-#    - export PIPENV_VENV_IN_PROJECT=1
-#    - pipenv install --ignore-pipfile --dev
-#    - pipenv run pip list
-#  cache:
-#    key: "$CACHE_KEY"
-#    paths:
-#      - "${CHECKOUT_DIR}/.venv"
-#    policy: push
-#  rules:
-#    - if: $FLUSHCACHE == "true"
-#      when: always
-#    - if: $FLUSHCACHE == "false"
-#      changes:
-#        - ${CHECKOUT_DIR}/Pipfile.lock
-#        - ${CHECKOUT_DIR}/Pipfile
-#      when: always
-#    - if: $FLUSHCACHE == "false"
-#      exists:
-#        - "${CHECKOUT_DIR}/.venv"
-#      when: never
-#    - when: always # Fallback to ensure job runs if cache is not found
-
-
-#install-backend-dependencies-job:
-#  extends: .install-dependencies-job-template
-#  variables:
-#    CHECKOUT_DIR: "backend"
-#    CACHE_KEY: "DEP-Backend-${CI_COMMIT_REF_SLUG}"
-#
-#
-#install-telegram-bot-dependencies-job:
-#  extends: .install-dependencies-job-template
-#  variables:
-#    CHECKOUT_DIR: "telegram_bot"
-#    CACHE_KEY: "DEP-Bot-${CI_COMMIT_REF_SLUG}"
-
-
-
-#test-backend-job:
-#  stage: test
-#  image: python:3.10
-#  needs:
-#    - job: install-server-dependencies-job
-#      optional: true # if used cache
-#    - init-test-postgres-job
-#  variables:
-#    ENV_FILE_VARIABLE: ENV_TEST
-#  cache:
-#    key: "DEP-Backend-${CI_COMMIT_REF_SLUG}"
-#    paths:
-#      - backend/.venv
-#    policy: pull
-#  services:
-#    - name: redis:alpine
-#  before_script:
-#    # SPARSE CHECKOUT IS INCOMPATIBLE WITH CACHE RESTORATION,
-#    # Sparse Checkout Behavior:
-#    # The .venv folder is not part of the repository. When you run git sparse-checkout, only tracked files in CHECKOUT_DIR are included, excluding the cached .venv.
-#    # Cache Restoration:
-#    # The cache is restored to the working directory before sparse-checkout is applied. If sparse-checkout excludes CHECKOUT_DIR/.venv, it gets effectively removed.
-#    - *export-env-vars-script
-#    - *export-jwt-keys-script
-#  script:
-#    - cd backend
-#    - source .venv/bin/activate
-#    - export POSTGRES_HOST="$WS_HOST"
-#    - alembic upgrade head
-#    - uvicorn src.main:app --host 127.0.0.1 --port 8000 --workers=1 &
-#    - BACKEND_PID=$!
-#    - sleep 5
-#    - python -m pytest -vv --junitxml=junit.xml
-#  after_script:
-#    - kill $BACKEND_PID
-#  artifacts:
-#    when: always
-#    paths:
-#      - backend/junit.xml
-#    reports:
-#      junit: backend/junit.xml
-#  only:
-#    changes:
-#      - backend/**/*
-
 # Build base images for test jobs:
 
 build-test-backend-base-image-job:
@@ -219,9 +123,9 @@ build-test-backend-image-job:
     - !reference [ .before-script-export-version-python-anchor ]
     - export BASE_IMAGE="${CI_REGISTRY_IMAGE}/${SERVICE_NAME}_base:latest"
     - echo "$BASE_IMAGE"
-#  only:
-#    changes:
-#      - backend/**/*
+  only:
+    changes:
+      - backend/**/*
 
 build-test-telegram-bot-image-job:
   stage: build-test-images
@@ -234,9 +138,9 @@ build-test-telegram-bot-image-job:
     - !reference [ .before-script-export-version-python-anchor ]
     - export BASE_IMAGE="${CI_REGISTRY_IMAGE}/${SERVICE_NAME}_base:latest"
     - echo "$BASE_IMAGE"
-#  only:
-#    changes:
-#      - telegram_bot/**/*
+  only:
+    changes:
+      - telegram_bot/**/*
 
 test-backend-job:
   stage: test
@@ -260,22 +164,14 @@ test-backend-job:
   script:
     - export DOCKER_BUILDKIT=0  # allows networking during build
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
-    #    - ls -a
-    #    - cat .env
-    #    - docker container ls -a
-    #    - docker image ls -a
-#    - docker-compose -f docker-compose.test.yml up # remove this, see the output of entrypoint, bc user table not found
     - docker-compose -f docker-compose.test.yml up -d
     - sleep 10 # wait to init containers
     #    - |
     #      echo "Waiting for backend service to be healthy..."
     #      timeout 60 sh -c 'until [ "$(docker inspect --format="{{.State.Health.Status}}" backend)" == "healthy" ]; do sleep 2; done' || exit 1
     #    - echo "backend service is healthy, proceeding..."
-    #    - docker exec -i backend bash -c "ls -thal"
-    #    - docker exec -i backend bash -c "tree -L 2"
-    #    - docker exec -i backend bash -c "./docker-entrypoint.sh"
     - |
-      docker exec -i backend bash -c "python -m pytest -vv -s --junitxml=junit.xml";
+      docker exec -i backend bash -c "python -m pytest -vv --junitxml=junit.xml";
       TEST_EXIT_CODE=$?;
       docker cp backend:/usr/src/app/junit.xml backend/junit.xml || echo "junit.xml not found";
       docker-compose -f docker-compose.test.yml down --volumes --remove-orphans --rmi all
@@ -292,82 +188,39 @@ test-backend-job:
 
 
 
-#test-backend-job:
-#  stage: test
-#  image: docker:20.10.17
-#  needs:
-#    - job: install-server-dependencies-job
-#      optional: true # if used cache
-#    - init-test-postgres-job
-#  variables:
-#    ENV_FILE_VARIABLE: ENV_TEST
-#  cache:
-#    key: "DEP-Backend-${CI_COMMIT_REF_SLUG}"
-#    paths:
-#      - backend/.venv
-#    policy: pull
-#  services:
-#    - name: redis:alpine
-#  before_script:
-#    # SPARSE CHECKOUT IS INCOMPATIBLE WITH CACHE RESTORATION,
-#    # Sparse Checkout Behavior:
-#    # The .venv folder is not part of the repository. When you run git sparse-checkout, only tracked files in CHECKOUT_DIR are included, excluding the cached .venv.
-#    # Cache Restoration:
-#    # The cache is restored to the working directory before sparse-checkout is applied. If sparse-checkout excludes CHECKOUT_DIR/.venv, it gets effectively removed.
-#    - *export-env-vars-script
-#    - *export-jwt-keys-script
-#  script:
-#    - cd backend
-#    - source .venv/bin/activate
-#    - export POSTGRES_HOST="$WS_HOST"
-#    - alembic upgrade head
-#    - uvicorn src.main:app --host 127.0.0.1 --port 8000 --workers=1 &
-#    - BACKEND_PID=$!
-#    - sleep 5
-#    - python -m pytest -vv --junitxml=junit.xml
-#  after_script:
-#    - kill $BACKEND_PID
-#  artifacts:
-#    when: always
-#    paths:
-#      - backend/junit.xml
-#    reports:
-#      junit: backend/junit.xml
+test-telegram-bot-job:
+  stage: test
+  image: docker:20.10.17
+  variables:
+    # using "docker" as the host is only possible if you alias the service below
+    DOCKER_HOST: tcp://docker:2375
+    DOCKER_DRIVER: overlay2
+    DOCKER_TLS_CERTDIR: ""
+    ENV_FILE_VARIABLE: ENV_TEST
+  services:
+    - name: docker:20.10.17-dind
+      alias: docker
+      command: [ "--tls=false" ]
+  before_script:
+    - !reference [ .before-script-secrets-anchor ]
+    - !reference [ .before-script-jwt-anchor ]
+  script:
+    - export DOCKER_BUILDKIT=0  # allows networking during build
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    - docker-compose -f docker-compose.test.yml up -d
+    - sleep 10
+    - |
+      docker exec -i telegram_bot bash -c "python -m pytest -vv --junitxml=junit.xml";
+      TEST_EXIT_CODE=$?;
+      docker cp backend:/usr/src/app/junit.xml backend/junit.xml || echo "junit.xml not found";
+      docker-compose -f docker-compose.test.yml down --volumes --remove-orphans --rmi all
+      exit $TEST_EXIT_CODE;
+  artifacts:
+    when: always
+    paths:
+      - telegram_bot/junit.xml
+    reports:
+      junit: telegram_bot/junit.xml
 #  only:
 #    changes:
-#      - backend/**/*
-#
-
-#test-telegram-bot-job:
-#  stage: test
-#  image: python:3.10
-#  needs:
-#    - job: install-telegram-bot-dependencies-job
-#      optional: true # if used cache
-#  variables:
-#    ENV_FILE_VARIABLE: ENV_TEST
-#  cache:
-#    key: "DEP-Bot-${CI_COMMIT_REF_SLUG}"
-#    paths:
-#      - telegram_bot/.venv
-#    policy: pull
-#  before_script:
-#    - *export-env-vars-script
-#  script:
-#    # start services in docker compose for testing because services in separate jobs cannot communicate between each other
-#    - echo "not implemented" && exit 1
-
-
-#test-network:
-#  stage: install
-#  variables:
-#    POSTGRES_HOST: 172.16.0.24
-#    POSTGRES_PORT: 5432
-#  before_script:
-#    - |
-#      apt-get update && apt-get install -y \
-#      netcat-openbsd \
-#      && apt-get clean \
-#      && rm -rf /var/lib/apt/lists/*
-#  script:
-#    - nc -zv $WS_HOST "$POSTGRES_PORT"
+#      - telegram_bot/**/*
