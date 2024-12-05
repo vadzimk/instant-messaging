@@ -15,6 +15,7 @@
 
 
 .before-script-install-packages-anchor: &install-packages-script
+  # Installs $PACKAGES by figuring out what package manager to use depending on the OS distro
   - |
     if [ -z ${PACKAGES} ]; then
       echo "ERROR: The PACKAGES variable is not set. Define it in the pipeline or job variables."
@@ -48,7 +49,7 @@
 
 
 .before-script-jwt-anchor: &export-jwt-keys-script
-  # create JWT keys and save in environment variables
+  # Creates JWT keys and save in environment variables
   - export PACKAGES="openssl"
   - *install-packages-script
   - export JWT_PRIVATE_KEY=$(openssl genpkey -algorithm RSA -outform PEM -pkeyopt rsa_keygen_bits:4096)
@@ -56,13 +57,14 @@
 
 
 .before-script-export-version-python-anchor: &export-version-py-script
+  # Exports variable PACKAGE_VERSION from version.py
   - export PACKAGE_VERSION=$(grep 'version' "${PATH_TO_DOCKER_CONTEXT}/version.py" | cut -d'"' -f2)
 
 
 .before-script-evaluate-base-image-name-and-export-latest: &export-latest-base-image-name-script
+  # Exports variable BASE_IMAGE that has tag replaced with latest
   # evaluate base image name with tag
   - BASE_IMAGE_W_VERSION=$(eval echo \${IMAGE_NAME_IMAGE_TAG_${SERVICE_NAME}_base})
   - echo "$BASE_IMAGE_W_VERSION"
   # replace package version with :latest
   - export BASE_IMAGE=$(echo "BASE_IMAGE_W_VERSION" | sed 's/:[^:]*$/:latest/') # latest
-  - echo $BASE_IMAGE

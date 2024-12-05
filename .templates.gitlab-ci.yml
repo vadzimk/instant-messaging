@@ -1,7 +1,5 @@
 .pgbackups-script-job-template:
-  # common configuration to create or drop db and user
-#  needs:
-#    - set-variables-from-terraform-artifact
+  # Common configuration to create or drop db and user
   variables:
     # must override empty variables in concrete jobs
     ENV_FILE_VARIABLE: ""
@@ -31,6 +29,7 @@
       "
 
 .build-image-job-template:
+  # Common configuration to build a docker image and push to the ci registry with tags
   image: docker:20.10.17
   variables:
     # using "docker" as the host is only possible if you alias the service below
@@ -40,7 +39,7 @@
     SERVICE_NAME: "" # should override
     PATH_TO_DOCKER_CONTEXT: "." # should override
     PATH_TO_DOCKERFILE: "" # should override
-    BASE_IMAGE: "" # should override, optional, base image to build from
+    BASE_IMAGE: "" # should override, optional, base image to build from (ARG in Dockerfile)
   services:
     - name: docker:20.10.17-dind
       alias: docker
@@ -77,6 +76,7 @@
 
 
 .test-in-docker-container-job-template:
+  # Common configuration to run pytest in docker container and save junit artifact
   image: docker:20.10.17
   variables:
     # using "docker" as the host is only possible if you alias the service below
@@ -111,6 +111,8 @@
     #      echo "Waiting for backend service to be healthy..."
     #      timeout 60 sh -c 'until [ "$(docker inspect --format="{{.State.Health.Status}}" backend)" == "healthy" ]; do sleep 2; done' || exit 1
     #    - echo "backend service is healthy, proceeding..."
+    - echo "$CONTAINER_NAME"
+    - docker container ls
     - |
       docker exec -i "$CONTAINER_NAME" bash -c "python -m pytest -vv --junitxml=junit.xml";
       TEST_EXIT_CODE=$?;
