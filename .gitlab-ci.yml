@@ -201,12 +201,15 @@ install-frontend-dependencies-job:
 
 run-lint-frontend-job:
   stage: lint
+  needs:
+    - install-frontend-dependencies-job
   image: node:22.2.0
   before_script:
     - cd frontend
     - corepack enable
     - pnpm config set store-dir .pnpm-store
   script:
+    - pnpm list eslint
     - pnpm run lint
   cache:
     key: "DEP-frontend-${CI_COMMIT_REF_SLUG}"
