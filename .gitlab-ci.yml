@@ -21,7 +21,7 @@ stages:
 #  - test
 #  - prepare-production-db
   - install-dependencies
-#  - lint
+  - lint
 #  - build
 #  - deploy
 
@@ -196,6 +196,22 @@ install-frontend-dependencies-job:
       when: never
     - when: always # Fallback to ensure job runs if cache is not found
 
+run-lint-frontend-job:
+  stage: lint
+  image: node:22.2.0
+  script:
+    - corepack enable
+    - cd frontend
+    - pnpm run lint
+  cache:
+    key: "DEP-frontend-${CI_COMMIT_REF_SLUG}"
+    paths:
+      - frontend/node_modules
+      - frontend/.pnpm-store
+    policy: pull
+#  only:
+#    changes:
+#      - frontend/**/*
 
 #build-prod-frontend-dist-job:
 #  stage: build
