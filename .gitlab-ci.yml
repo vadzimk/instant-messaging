@@ -189,6 +189,8 @@ test-backend-job:
 
 
 test-telegram-bot-job:
+  needs:
+    - test-backend-job
   stage: test
   image: docker:20.10.17
   variables:
