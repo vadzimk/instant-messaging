@@ -74,3 +74,49 @@
     reports:
       # In subsequent jobs, the environment variables defined in build.env are automatically available.
       dotenv: build.env # loaded in all subsequent jobs (must be relative to working directory of .gitlab-ci.yml)
+
+
+.test-in-docker-container-job-template:
+  stage: test
+  image: docker:20.10.17
+  variables:
+    # using "docker" as the host is only possible if you alias the service below
+    DOCKER_HOST: tcp://docker:2375
+    DOCKER_DRIVER: overlay2
+    DOCKER_TLS_CERTDIR: ""
+    ENV_FILE_VARIABLE: ENV_TEST
+    CONTAINER_NAME: "" # should override
+    DIRECTORY_TO_SAVE_JUNIT_ARTIFACT: ""
+  services:
+    - name: docker:20.10.17-dind
+      alias: docker
+      command: [ "--tls=false" ]
+  before_script:
+    - !reference [ .before-script-secrets-anchor ]
+    - !reference [ .before-script-jwt-anchor ]
+    - echo "$IMAGE_NAME_IMAGE_TAG_backend_test_service"
+    - echo "$IMAGE_NAME_IMAGE_TAG_telegram_bot_test_service"
+  script:
+    - export DOCKER_BUILDKIT=0  # allows networking during build
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    - docker-compose -f docker-compose.test.yml up -d
+    - sleep 10 # wait to init containers
+    #    - |
+    #      echo "Waiting for backend service to be healthy..."
+    #      timeout 60 sh -c 'until [ "$(docker inspect --format="{{.State.Health.Status}}" backend)" == "healthy" ]; do sleep 2; done' || exit 1
+    #    - echo "backend service is healthy, proceeding..."
+    - |
+      docker exec -i "$CONTAINER_NAME" bash -c "python -m pytest -vv --junitxml=junit.xml";
+      TEST_EXIT_CODE=$?;
+      docker cp "${CONTAINER_NAME}:/usr/src/app/junit.xml" "${DIRECTORY_TO_SAVE_JUNIT_ARTIFACT}/junit.xml" || echo "junit.xml not found";
+      docker-compose -f docker-compose.test.yml down --volumes --remove-orphans --rmi all
+      exit $TEST_EXIT_CODE;
+  artifacts:
+    when: always
+    paths:
+      - backend/junit.xml
+    reports:
+      junit: backend/junit.xml
+#  only:
+#    changes:
+#      - backend/**/*
