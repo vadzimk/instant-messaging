@@ -178,6 +178,7 @@ install-frontend-dependencies-job:
     - pnpm config set store-dir .pnpm-store
   script:
     - pnpm install --frozen-lockfile --prefer-offline
+    - pnpm run lint # TODO remove this line
   cache:
     key: "DEP-frontend-${CI_COMMIT_REF_SLUG}"
     paths:
