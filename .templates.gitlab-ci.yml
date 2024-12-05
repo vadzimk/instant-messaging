@@ -86,7 +86,7 @@
     DOCKER_TLS_CERTDIR: ""
     ENV_FILE_VARIABLE: ENV_TEST
     CONTAINER_NAME: "" # should override
-    DIRECTORY_TO_SAVE_JUNIT_ARTIFACT: ""
+    DIRECTORY_TO_SAVE_JUNIT_ARTIFACT: "" # should override
   services:
     - name: docker:20.10.17-dind
       alias: docker
@@ -94,8 +94,15 @@
   before_script:
     - !reference [ .before-script-secrets-anchor ]
     - !reference [ .before-script-jwt-anchor ]
-    - echo "$IMAGE_NAME_IMAGE_TAG_backend_test_service"
-    - echo "$IMAGE_NAME_IMAGE_TAG_telegram_bot_test_service"
+    # set variables for image names if test image build job was skipped and did not produce env artifact
+    - |
+      if [ -z "$IMAGE_NAME_IMAGE_TAG_backend_test_service" ]; then
+        export IMAGE_NAME_IMAGE_TAG_backend_test_service="${CI_REGISTRY_IMAGE}/backend_test_service:latest";
+      fi;
+    - |
+      if [ -z "$IMAGE_NAME_IMAGE_TAG_telegram_bot_test_service" ]; then
+        export IMAGE_NAME_IMAGE_TAG_telegram_bot_test_service="${CI_REGISTRY_IMAGE}/telegram_bot_test_service:latest";
+      fi;
   script:
     - export DOCKER_BUILDKIT=0  # allows networking during build
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY

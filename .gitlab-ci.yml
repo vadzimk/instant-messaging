@@ -15,36 +15,36 @@ variables:
 
 
 stages:
-  - export-variables
+#  - export-variables
   - prepare-test-db
   - build-base-test-images
   - build-test-images
   - test
 
-set-variables-from-terraform-artifact:
-  stage: export-variables
-  variables:
-    ARTIFACT_PROJECT_ID: "37029027"
-    BRANCH: "master"
-    JOB_NAME: "apply"
-    PACKAGES: "jq curl"
-    GIT_STRATEGY: none # no code will be checked out from repo
-  before_script:
-    - !reference [ .before-script-install-packages-anchor ]
-  script: # https://docs.gitlab.com/ee/api/job_artifacts.html#download-a-single-artifact-file-from-specific-tag-or-branch
-    # create variables
-    - |
-      curl --location -o ./ter_output.json \
-      --header "PRIVATE-TOKEN: ${GITLAB_JOB_ARTIFACTS_API_ACCESS_TOKEN}" \
-      -X GET https://gitlab.com/api/v4/projects/${ARTIFACT_PROJECT_ID}/jobs/artifacts/${BRANCH}/raw/ter_output.json?job=${JOB_NAME};
-    - |
-      {
-        echo WEBSERVER_PRIVATE_IP=$(cat ter_output.json | jq -r '."webserver-private_ip".value');
-        echo GITLAB_RUNNER_PRIVATE_IP=$(cat ter_output.json | jq -r '."gitlab-runner-private_ip".value');
-      } >> terraform_output.env
-  artifacts:
-    reports:
-      dotenv: terraform_output.env # its variables are available in all subsequent jobs as any other variables
+#set-variables-from-terraform-artifact:
+#  stage: export-variables
+#  variables:
+#    ARTIFACT_PROJECT_ID: "37029027"
+#    BRANCH: "master"
+#    JOB_NAME: "apply"
+#    PACKAGES: "jq curl"
+#    GIT_STRATEGY: none # no code will be checked out from repo
+#  before_script:
+#    - !reference [ .before-script-install-packages-anchor ]
+#  script: # https://docs.gitlab.com/ee/api/job_artifacts.html#download-a-single-artifact-file-from-specific-tag-or-branch
+#    # create variables
+#    - |
+#      curl --location -o ./ter_output.json \
+#      --header "PRIVATE-TOKEN: ${GITLAB_JOB_ARTIFACTS_API_ACCESS_TOKEN}" \
+#      -X GET https://gitlab.com/api/v4/projects/${ARTIFACT_PROJECT_ID}/jobs/artifacts/${BRANCH}/raw/ter_output.json?job=${JOB_NAME};
+#    - |
+#      {
+#        echo WEBSERVER_PRIVATE_IP=$(cat ter_output.json | jq -r '."webserver-private_ip".value');
+#        echo GITLAB_RUNNER_PRIVATE_IP=$(cat ter_output.json | jq -r '."gitlab-runner-private_ip".value');
+#      } >> terraform_output.env
+#  artifacts:
+#    reports:
+#      dotenv: terraform_output.env # its variables are available in all subsequent jobs as any other variables
 
 
 drop-test-postgres-db-job:
@@ -142,93 +142,104 @@ build-test-telegram-bot-image-job:
     changes:
       - telegram_bot/**/*
 
+#test-backend-job:
+#  stage: test
+#  image: docker:20.10.17
+#  variables:
+#    # using "docker" as the host is only possible if you alias the service below
+#    DOCKER_HOST: tcp://docker:2375
+#    DOCKER_DRIVER: overlay2
+#    DOCKER_TLS_CERTDIR: ""
+#    ENV_FILE_VARIABLE: ENV_TEST
+#  services:
+#    - name: docker:20.10.17-dind
+#      alias: docker
+#      command: [ "--tls=false" ]
+#  before_script:
+#    - !reference [ .before-script-secrets-anchor ]
+#    - !reference [ .before-script-jwt-anchor ]
+#    # set variables for image names if test image build job was skipped and did not produce env artifact
+#    - |
+#      if [ -z "$IMAGE_NAME_IMAGE_TAG_backend_test_service" ]; then
+#        IMAGE_NAME_IMAGE_TAG_backend_test_service="${CI_REGISTRY_IMAGE}/backend_test_service:latest";
+#      fi;
+#    - |
+#      if [ -z "$IMAGE_NAME_IMAGE_TAG_telegram_bot_test_service" ]; then
+#        IMAGE_NAME_IMAGE_TAG_telegram_bot_test_service="${CI_REGISTRY_IMAGE}/telegram_bot_test_service:latest";
+#      fi;
+#  script:
+#    - export DOCKER_BUILDKIT=0  # allows networking during build
+#    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+#    - docker-compose -f docker-compose.test.yml up -d
+#    - sleep 10 # wait to init containers
+#    #    - |
+#    #      echo "Waiting for backend service to be healthy..."
+#    #      timeout 60 sh -c 'until [ "$(docker inspect --format="{{.State.Health.Status}}" backend)" == "healthy" ]; do sleep 2; done' || exit 1
+#    #    - echo "backend service is healthy, proceeding..."
+#    - |
+#      docker exec -i backend bash -c "python -m pytest -vv --junitxml=junit.xml";
+#      TEST_EXIT_CODE=$?;
+#      docker cp backend:/usr/src/app/junit.xml backend/junit.xml || echo "junit.xml not found";
+#      docker-compose -f docker-compose.test.yml down --volumes --remove-orphans --rmi all
+#      exit $TEST_EXIT_CODE;
+#  artifacts:
+#    when: always
+#    paths:
+#      - backend/junit.xml
+#    reports:
+#      junit: backend/junit.xml
+##  only:
+##    changes:
+##      - backend/**/*
+
 test-backend-job:
-  stage: test
-  image: docker:20.10.17
+  extends: .test-in-docker-container-job-template
   variables:
-    # using "docker" as the host is only possible if you alias the service below
-    DOCKER_HOST: tcp://docker:2375
-    DOCKER_DRIVER: overlay2
-    DOCKER_TLS_CERTDIR: ""
-    ENV_FILE_VARIABLE: ENV_TEST
-  services:
-    - name: docker:20.10.17-dind
-      alias: docker
-      command: [ "--tls=false" ]
-  before_script:
-    - !reference [ .before-script-secrets-anchor ]
-    - !reference [ .before-script-jwt-anchor ]
-    # set variables for image names if test image build job was skipped and did not produce env artifact
-    - |
-      if [ -z "$IMAGE_NAME_IMAGE_TAG_backend_test_service" ]; then
-        IMAGE_NAME_IMAGE_TAG_backend_test_service="${CI_REGISTRY_IMAGE}/backend_test_service:latest";
-      fi;
-    - |
-      if [ -z "$IMAGE_NAME_IMAGE_TAG_telegram_bot_test_service" ]; then
-        IMAGE_NAME_IMAGE_TAG_telegram_bot_test_service="${CI_REGISTRY_IMAGE}/telegram_bot_test_service:latest";
-      fi;
-  script:
-    - export DOCKER_BUILDKIT=0  # allows networking during build
-    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
-    - docker-compose -f docker-compose.test.yml up -d
-    - sleep 10 # wait to init containers
-    #    - |
-    #      echo "Waiting for backend service to be healthy..."
-    #      timeout 60 sh -c 'until [ "$(docker inspect --format="{{.State.Health.Status}}" backend)" == "healthy" ]; do sleep 2; done' || exit 1
-    #    - echo "backend service is healthy, proceeding..."
-    - |
-      docker exec -i backend bash -c "python -m pytest -vv --junitxml=junit.xml";
-      TEST_EXIT_CODE=$?;
-      docker cp backend:/usr/src/app/junit.xml backend/junit.xml || echo "junit.xml not found";
-      docker-compose -f docker-compose.test.yml down --volumes --remove-orphans --rmi all
-      exit $TEST_EXIT_CODE;
-  artifacts:
-    when: always
-    paths:
-      - backend/junit.xml
-    reports:
-      junit: backend/junit.xml
-#  only:
-#    changes:
-#      - backend/**/*
-
-
+    CONTAINER_NAME: backend
+    DIRECTORY_TO_SAVE_JUNIT_ARTIFACT: backend
 
 test-telegram-bot-job:
   needs:
     - test-backend-job
-  stage: test
-  image: docker:20.10.17
+  extends: .test-in-docker-container-job-template
   variables:
-    # using "docker" as the host is only possible if you alias the service below
-    DOCKER_HOST: tcp://docker:2375
-    DOCKER_DRIVER: overlay2
-    DOCKER_TLS_CERTDIR: ""
-    ENV_FILE_VARIABLE: ENV_TEST
-  services:
-    - name: docker:20.10.17-dind
-      alias: docker
-      command: [ "--tls=false" ]
-  before_script:
-    - !reference [ .before-script-secrets-anchor ]
-    - !reference [ .before-script-jwt-anchor ]
-  script:
-    - export DOCKER_BUILDKIT=0  # allows networking during build
-    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
-    - docker-compose -f docker-compose.test.yml up -d
-    - sleep 10
-    - |
-      docker exec -i telegram_bot bash -c "python -m pytest -vv --junitxml=junit.xml";
-      TEST_EXIT_CODE=$?;
-      docker cp backend:/usr/src/app/junit.xml backend/junit.xml || echo "junit.xml not found";
-      docker-compose -f docker-compose.test.yml down --volumes --remove-orphans --rmi all
-      exit $TEST_EXIT_CODE;
-  artifacts:
-    when: always
-    paths:
-      - telegram_bot/junit.xml
-    reports:
-      junit: telegram_bot/junit.xml
-#  only:
-#    changes:
-#      - telegram_bot/**/*
+    CONTAINER_NAME: telegram_bot
+    DIRECTORY_TO_SAVE_JUNIT_ARTIFACT: telegram_bot
+
+
+
+#  stage: test
+#  image: docker:20.10.17
+#  variables:
+#    # using "docker" as the host is only possible if you alias the service below
+#    DOCKER_HOST: tcp://docker:2375
+#    DOCKER_DRIVER: overlay2
+#    DOCKER_TLS_CERTDIR: ""
+#    ENV_FILE_VARIABLE: ENV_TEST
+#  services:
+#    - name: docker:20.10.17-dind
+#      alias: docker
+#      command: [ "--tls=false" ]
+#  before_script:
+#    - !reference [ .before-script-secrets-anchor ]
+#    - !reference [ .before-script-jwt-anchor ]
+#  script:
+#    - export DOCKER_BUILDKIT=0  # allows networking during build
+#    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+#    - docker-compose -f docker-compose.test.yml up -d
+#    - sleep 10
+#    - |
+#      docker exec -i telegram_bot bash -c "python -m pytest -vv --junitxml=junit.xml";
+#      TEST_EXIT_CODE=$?;
+#      docker cp backend:/usr/src/app/junit.xml backend/junit.xml || echo "junit.xml not found";
+#      docker-compose -f docker-compose.test.yml down --volumes --remove-orphans --rmi all
+#      exit $TEST_EXIT_CODE;
+#  artifacts:
+#    when: always
+#    paths:
+#      - telegram_bot/junit.xml
+#    reports:
+#      junit: telegram_bot/junit.xml
+##  only:
+##    changes:
+##      - telegram_bot/**/*
