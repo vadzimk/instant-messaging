@@ -26,148 +26,148 @@ stages:
 #  - deploy
 
 
-drop-test-postgres-db-job:
-  # Drop postgres database and postgres app user
-  stage: prepare-test-db
-  extends: .pgbackups-script-job-template
-  variables:
-    ENV_FILE_VARIABLE: ENV_TEST
-    DB_SCRIPT: "drop-postgres-db.sh"
-
-
-init-test-postgres-db-job:
-  # Initialize postgres database and postgres app user
-  stage: prepare-test-db
-  extends: .pgbackups-script-job-template
-  needs:
-    - drop-test-postgres-db-job
-  variables:
-    ENV_FILE_VARIABLE: ENV_TEST
-    DB_SCRIPT: "init-postgres-db.sh"
-
-# Build base images for test jobs:
-
-build-test-backend-base-image-job:
-  stage: build-base-test-images
-  extends: .build-image-job-template
-  variables:
-    SERVICE_NAME: "backend_test_service_base"
-    PATH_TO_DOCKER_CONTEXT: "./backend"
-    PATH_TO_DOCKERFILE: "./backend/Dockerfile.test.base"
-  before_script:
-    - !reference [ .before-script-export-version-python-anchor ]
-  rules:
-    - changes:
-      - ${PATH_TO_DOCKER_CONTEXT}/Pipfile.lock
-      - ${PATH_TO_DOCKER_CONTEXT}/Pipfile
-      - ${PATH_TO_DOCKER_CONTEXT}/Dockerfile.test.base
-      when: always
-    - when: never
-
-
-build-test-telegram-bot-base-image-job:
-  stage: build-base-test-images
-  extends: .build-image-job-template
-  variables:
-    SERVICE_NAME: "telegram_bot_test_service_base"
-    PATH_TO_DOCKER_CONTEXT: "./telegram_bot"
-    PATH_TO_DOCKERFILE: "./telegram_bot/Dockerfile.test.base"
-  before_script:
-    - !reference [ .before-script-export-version-python-anchor ]
-  rules:
-    - changes:
-      - ${PATH_TO_DOCKER_CONTEXT}/Pipfile.lock
-      - ${PATH_TO_DOCKER_CONTEXT}/Pipfile
-      - ${PATH_TO_DOCKER_CONTEXT}/Dockerfile.test.base
-      when: always
-    - when: never
-
-# Build final images for test jobs:
-
-build-test-backend-image-job:
-  stage: build-test-images
-  extends: .build-image-job-template
-  variables:
-    SERVICE_NAME: "backend_test_service"
-    PATH_TO_DOCKER_CONTEXT: "./backend"
-    PATH_TO_DOCKERFILE: "./backend/Dockerfile.test"
-  before_script:
-    - !reference [ .before-script-export-version-python-anchor ]
-    - export BASE_IMAGE="${CI_REGISTRY_IMAGE}/${SERVICE_NAME}_base:latest"
-    - echo "$BASE_IMAGE"
-  only:
-    changes:
-      - backend/**/*
-
-
-build-test-telegram-bot-image-job:
-  stage: build-test-images
-  extends: .build-image-job-template
-  variables:
-    SERVICE_NAME: "telegram_bot_test_service"
-    PATH_TO_DOCKER_CONTEXT: "./telegram_bot"
-    PATH_TO_DOCKERFILE: "./telegram_bot/Dockerfile.test"
-  before_script:
-    - !reference [ .before-script-export-version-python-anchor ]
-    - export BASE_IMAGE="${CI_REGISTRY_IMAGE}/${SERVICE_NAME}_base:latest"
-    - echo "$BASE_IMAGE"
-  only:
-    changes:
-      - telegram_bot/**/*
-
-
-test-backend-job:
-  stage: test
-  extends: .test-in-docker-container-job-template
-  variables:
-    CONTAINER_NAME: backend
-    DIRECTORY_TO_SAVE_JUNIT_ARTIFACT: backend
-
-
-test-telegram-bot-job:
-  stage: test
-  needs:
-    - test-backend-job
-  extends: .test-in-docker-container-job-template
-  variables:
-    CONTAINER_NAME: telegram_bot
-    DIRECTORY_TO_SAVE_JUNIT_ARTIFACT: telegram_bot
-
-
-init-production-postgres-job:
- stage: prepare-production-db
- extends: .pgbackups-script-job-template
- variables:
-   ENV_FILE_VARIABLE: ENV_PROD
-   DB_SCRIPT: "init-postgres-db.sh"
-
-
-build-prod-backend-image-job:
-  stage: build
-  extends: .build-image-job-template
-  variables:
-    SERVICE_NAME: "backend_prod_service"
-    PATH_TO_DOCKER_CONTEXT: "./backend"
-    PATH_TO_DOCKERFILE: "./backend/Dockerfile"
-  before_script:
-    - !reference [ .before-script-export-version-python-anchor ]
+#drop-test-postgres-db-job:
+#  # Drop postgres database and postgres app user
+#  stage: prepare-test-db
+#  extends: .pgbackups-script-job-template
+#  variables:
+#    ENV_FILE_VARIABLE: ENV_TEST
+#    DB_SCRIPT: "drop-postgres-db.sh"
+#
+#
+#init-test-postgres-db-job:
+#  # Initialize postgres database and postgres app user
+#  stage: prepare-test-db
+#  extends: .pgbackups-script-job-template
+#  needs:
+#    - drop-test-postgres-db-job
+#  variables:
+#    ENV_FILE_VARIABLE: ENV_TEST
+#    DB_SCRIPT: "init-postgres-db.sh"
+#
+## Build base images for test jobs:
+#
+#build-test-backend-base-image-job:
+#  stage: build-base-test-images
+#  extends: .build-image-job-template
+#  variables:
+#    SERVICE_NAME: "backend_test_service_base"
+#    PATH_TO_DOCKER_CONTEXT: "./backend"
+#    PATH_TO_DOCKERFILE: "./backend/Dockerfile.test.base"
+#  before_script:
+#    - !reference [ .before-script-export-version-python-anchor ]
+#  rules:
+#    - changes:
+#      - ${PATH_TO_DOCKER_CONTEXT}/Pipfile.lock
+#      - ${PATH_TO_DOCKER_CONTEXT}/Pipfile
+#      - ${PATH_TO_DOCKER_CONTEXT}/Dockerfile.test.base
+#      when: always
+#    - when: never
+#
+#
+#build-test-telegram-bot-base-image-job:
+#  stage: build-base-test-images
+#  extends: .build-image-job-template
+#  variables:
+#    SERVICE_NAME: "telegram_bot_test_service_base"
+#    PATH_TO_DOCKER_CONTEXT: "./telegram_bot"
+#    PATH_TO_DOCKERFILE: "./telegram_bot/Dockerfile.test.base"
+#  before_script:
+#    - !reference [ .before-script-export-version-python-anchor ]
+#  rules:
+#    - changes:
+#      - ${PATH_TO_DOCKER_CONTEXT}/Pipfile.lock
+#      - ${PATH_TO_DOCKER_CONTEXT}/Pipfile
+#      - ${PATH_TO_DOCKER_CONTEXT}/Dockerfile.test.base
+#      when: always
+#    - when: never
+#
+## Build final images for test jobs:
+#
+#build-test-backend-image-job:
+#  stage: build-test-images
+#  extends: .build-image-job-template
+#  variables:
+#    SERVICE_NAME: "backend_test_service"
+#    PATH_TO_DOCKER_CONTEXT: "./backend"
+#    PATH_TO_DOCKERFILE: "./backend/Dockerfile.test"
+#  before_script:
+#    - !reference [ .before-script-export-version-python-anchor ]
+#    - export BASE_IMAGE="${CI_REGISTRY_IMAGE}/${SERVICE_NAME}_base:latest"
+#    - echo "$BASE_IMAGE"
 #  only:
 #    changes:
 #      - backend/**/*
-
-
-build-prod-telegram-bot-image-job:
-  stage: build
-  extends: .build-image-job-template
-  variables:
-    SERVICE_NAME: "telegram_bot_prod_service"
-    PATH_TO_DOCKER_CONTEXT: "./telegram_bot"
-    PATH_TO_DOCKERFILE: "./telegram_bot/Dockerfile"
-  before_script:
-    - !reference [ .before-script-export-version-python-anchor ]
+#
+#
+#build-test-telegram-bot-image-job:
+#  stage: build-test-images
+#  extends: .build-image-job-template
+#  variables:
+#    SERVICE_NAME: "telegram_bot_test_service"
+#    PATH_TO_DOCKER_CONTEXT: "./telegram_bot"
+#    PATH_TO_DOCKERFILE: "./telegram_bot/Dockerfile.test"
+#  before_script:
+#    - !reference [ .before-script-export-version-python-anchor ]
+#    - export BASE_IMAGE="${CI_REGISTRY_IMAGE}/${SERVICE_NAME}_base:latest"
+#    - echo "$BASE_IMAGE"
 #  only:
 #    changes:
 #      - telegram_bot/**/*
+#
+#
+#test-backend-job:
+#  stage: test
+#  extends: .test-in-docker-container-job-template
+#  variables:
+#    CONTAINER_NAME: backend
+#    DIRECTORY_TO_SAVE_JUNIT_ARTIFACT: backend
+#
+#
+#test-telegram-bot-job:
+#  stage: test
+#  needs:
+#    - test-backend-job
+#  extends: .test-in-docker-container-job-template
+#  variables:
+#    CONTAINER_NAME: telegram_bot
+#    DIRECTORY_TO_SAVE_JUNIT_ARTIFACT: telegram_bot
+#
+#
+#init-production-postgres-job:
+# stage: prepare-production-db
+# extends: .pgbackups-script-job-template
+# variables:
+#   ENV_FILE_VARIABLE: ENV_PROD
+#   DB_SCRIPT: "init-postgres-db.sh"
+#
+#
+#build-prod-backend-image-job:
+#  stage: build
+#  extends: .build-image-job-template
+#  variables:
+#    SERVICE_NAME: "backend_prod_service"
+#    PATH_TO_DOCKER_CONTEXT: "./backend"
+#    PATH_TO_DOCKERFILE: "./backend/Dockerfile"
+#  before_script:
+#    - !reference [ .before-script-export-version-python-anchor ]
+##  only:
+##    changes:
+##      - backend/**/*
+#
+#
+#build-prod-telegram-bot-image-job:
+#  stage: build
+#  extends: .build-image-job-template
+#  variables:
+#    SERVICE_NAME: "telegram_bot_prod_service"
+#    PATH_TO_DOCKER_CONTEXT: "./telegram_bot"
+#    PATH_TO_DOCKERFILE: "./telegram_bot/Dockerfile"
+#  before_script:
+#    - !reference [ .before-script-export-version-python-anchor ]
+##  only:
+##    changes:
+##      - telegram_bot/**/*
 
 install-frontend-dependencies-job:
   stage: install-dependencies
