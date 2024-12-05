@@ -232,9 +232,8 @@ build-prod-frontend-dist-job:
         - frontend/node_modules
         - frontend/.pnpm-store
       policy: pull
-    - key: "DEP-frontend-${CI_COMMIT_REF_SLUG}"
+    - key: "DIST-frontend-${CI_COMMIT_REF_SLUG}"
       paths:
-        - frontend/node_modules
-        - frontend/.pnpm-store
-      policy: pull
+        - frontend/dist
+      policy: push
 
