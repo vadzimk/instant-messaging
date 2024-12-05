@@ -175,7 +175,7 @@ install-frontend-dependencies-job:
   script:
     - corepack enable
     - cd frontend
-    - pnpm install --frozen-lockfile --offline
+    - pnpm install --frozen-lockfile --prefer-offline
   cache:
     key: "DEP-frontend-${CI_COMMIT_REF_SLUG}"
     paths:
