@@ -39,6 +39,7 @@ services:
       - 8003
     env_file:
       - .env # created in gitlab-ci from .env.test
+    restart: unless-stopped
 
   redis:
     image: redis
