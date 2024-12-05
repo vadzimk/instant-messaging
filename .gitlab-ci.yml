@@ -15,13 +15,15 @@ variables:
 
 
 stages:
-  - prepare-test-db
-  - build-base-test-images
-  - build-test-images
-  - test
-  - prepare-production-db
-  - build
-  - deploy
+#  - prepare-test-db
+#  - build-base-test-images
+#  - build-test-images
+#  - test
+#  - prepare-production-db
+  - install-dependencies
+#  - lint
+#  - build
+#  - deploy
 
 drop-test-postgres-db-job:
   # Drop postgres database and postgres app user
@@ -165,3 +167,36 @@ build-prod-telegram-bot-image-job:
 #  only:
 #    changes:
 #      - telegram_bot/**/*
+
+install-frontend-dependencies-job:
+  stage: install-dependencies
+  image: node:22.2.0
+  script:
+    - corepack enable
+    - cd frontend
+    - pnpm install --frozen-lockfile --offline
+  cache:
+    key: DEP-frontend-$CI_COMMIT_REF_SLUG
+    paths:
+      - frontend/node_modules
+      - frontend/.pnpm-store
+    policy: push
+  rules:
+    - if: $FLUSHCACHE == "true"
+      when: always
+    - if: $FLUSHCACHE == "false"
+      changes:
+        - frontend/pnpm-lock.yaml
+      when: always
+    - if: $FLUSHCACHE == "false"
+      exists:  # if cache is found
+        - frontend/node_modules
+        - frontend/.pnpm-store
+      when: never
+    - when: always # Fallback to ensure job runs if cache is not found
+
+
+build-prod-frontend-dist-job:
+  stage: build
+  image: node:22.2.0
+

@@ -32,7 +32,7 @@ ARG APP_USER_NAME=appuser
 # Create a non-root user and group
 RUN groupadd -r "$APP_USER_NAME" \
     && useradd -r -g "$APP_USER_NAME" -m "$APP_USER_NAME" \
-    && chown -R "$APP_USER_NAME" /usr/src/app \
+    && chown -R "$APP_USER_NAME" /usr/src/app
 
 COPY ./ ./
 
