@@ -172,9 +172,11 @@ stages:
 install-frontend-dependencies-job:
   stage: install-dependencies
   image: node:22.2.0
-  script:
-    - corepack enable
+  before_script:
     - cd frontend
+    - corepack enable
+    - pnpm config set store-dir .pnpm-store
+  script:
     - pnpm install --frozen-lockfile --prefer-offline
   cache:
     key: "DEP-frontend-${CI_COMMIT_REF_SLUG}"
@@ -199,9 +201,11 @@ install-frontend-dependencies-job:
 run-lint-frontend-job:
   stage: lint
   image: node:22.2.0
-  script:
-    - corepack enable
+  before_script:
     - cd frontend
+    - corepack enable
+    - pnpm config set store-dir .pnpm-store
+  script:
     - pnpm run lint
   cache:
     key: "DEP-frontend-${CI_COMMIT_REF_SLUG}"
@@ -213,7 +217,24 @@ run-lint-frontend-job:
 #    changes:
 #      - frontend/**/*
 
-#build-prod-frontend-dist-job:
-#  stage: build
-#  image: node:22.2.0
+build-prod-frontend-dist-job:
+  stage: build
+  image: node:22.2.0
+  before_script:
+    - cd frontend
+    - corepack enable
+    - pnpm config set store-dir .pnpm-store
+  script:
+    - pnpm run build
+  cache:
+    - key: "DEP-frontend-${CI_COMMIT_REF_SLUG}"
+      paths:
+        - frontend/node_modules
+        - frontend/.pnpm-store
+      policy: pull
+    - key: "DEP-frontend-${CI_COMMIT_REF_SLUG}"
+      paths:
+        - frontend/node_modules
+        - frontend/.pnpm-store
+      policy: pull
 
