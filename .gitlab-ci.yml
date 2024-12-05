@@ -22,7 +22,7 @@ stages:
 #  - prepare-production-db
   - install-dependencies
   - lint
-#  - build
+  - build
 #  - deploy
 
 
