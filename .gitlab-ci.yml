@@ -25,6 +25,7 @@ stages:
 #  - build
 #  - deploy
 
+
 drop-test-postgres-db-job:
   # Drop postgres database and postgres app user
   stage: prepare-test-db
@@ -176,7 +177,7 @@ install-frontend-dependencies-job:
     - cd frontend
     - pnpm install --frozen-lockfile --offline
   cache:
-    key: DEP-frontend-$CI_COMMIT_REF_SLUG
+    key: "DEP-frontend-${CI_COMMIT_REF_SLUG}"
     paths:
       - frontend/node_modules
       - frontend/.pnpm-store
@@ -196,7 +197,7 @@ install-frontend-dependencies-job:
     - when: always # Fallback to ensure job runs if cache is not found
 
 
-build-prod-frontend-dist-job:
-  stage: build
-  image: node:22.2.0
+#build-prod-frontend-dist-job:
+#  stage: build
+#  image: node:22.2.0
 
