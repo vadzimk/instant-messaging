@@ -193,12 +193,14 @@ build-test-telegram-bot-image-job:
 ##      - backend/**/*
 
 test-backend-job:
+  stage: test
   extends: .test-in-docker-container-job-template
   variables:
     CONTAINER_NAME: backend
     DIRECTORY_TO_SAVE_JUNIT_ARTIFACT: backend
 
 test-telegram-bot-job:
+  stage: test
   needs:
     - test-backend-job
   extends: .test-in-docker-container-job-template

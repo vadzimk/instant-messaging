@@ -1,7 +1,7 @@
 .pgbackups-script-job-template:
   # common configuration to create or drop db and user
-  needs:
-    - set-variables-from-terraform-artifact
+#  needs:
+#    - set-variables-from-terraform-artifact
   variables:
     # must override empty variables in concrete jobs
     ENV_FILE_VARIABLE: ""
@@ -77,7 +77,6 @@
 
 
 .test-in-docker-container-job-template:
-  stage: test
   image: docker:20.10.17
   variables:
     # using "docker" as the host is only possible if you alias the service below
