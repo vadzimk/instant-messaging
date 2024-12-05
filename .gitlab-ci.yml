@@ -19,8 +19,9 @@ stages:
   - build-base-test-images
   - build-test-images
   - test
-#  - prepare-production-db
-
+  - prepare-production-db
+  - build
+  - deploy
 
 drop-test-postgres-db-job:
   # Drop postgres database and postgres app user
@@ -128,15 +129,39 @@ test-telegram-bot-job:
   variables:
     CONTAINER_NAME: telegram_bot
     DIRECTORY_TO_SAVE_JUNIT_ARTIFACT: telegram_bot
-#  script:  # TODO remove this script override
-#    - docker exec -i "$CONTAINER_NAME" bash -c "python -m src.main";
-#    - docker-compose -f docker-compose.test.yml down --volumes --remove-orphans --rmi all
 
 
-# init-production-postgres-job:
-#   extends: .iniit-db-base
-#   stage: install
-#   variables:
-#     ENV_FILE_VARIABLE: ENV_PROD
+init-production-postgres-job:
+ stage: prepare-production-db
+ extends: .pgbackups-script-job-template
+ variables:
+   ENV_FILE_VARIABLE: ENV_PROD
+   DB_SCRIPT: "init-postgres-db.sh"
 
 
+build-prod-backend-image-job:
+  stage: build
+  extends: .build-image-job-template
+  variables:
+    SERVICE_NAME: "backend_prod_service"
+    PATH_TO_DOCKER_CONTEXT: "./backend"
+    PATH_TO_DOCKERFILE: "./backend/Dockerfile"
+  before_script:
+    - !reference [ .before-script-export-version-python-anchor ]
+#  only:
+#    changes:
+#      - backend/**/*
+
+
+build-prod-telegram-bot-image-job:
+  stage: build
+  extends: .build-image-job-template
+  variables:
+    SERVICE_NAME: "telegram_bot_prod_service"
+    PATH_TO_DOCKER_CONTEXT: "./telegram_bot"
+    PATH_TO_DOCKERFILE: "./telegram_bot/Dockerfile"
+  before_script:
+    - !reference [ .before-script-export-version-python-anchor ]
+#  only:
+#    changes:
+#      - telegram_bot/**/*

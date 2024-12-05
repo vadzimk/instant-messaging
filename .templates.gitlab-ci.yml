@@ -1,5 +1,5 @@
 .pgbackups-script-job-template:
-  # Common configuration to create or drop db and user
+  # Common configuration to run a custom script on a database (to create or drop db and user)
   variables:
     # must override empty variables in concrete jobs
     ENV_FILE_VARIABLE: ""
