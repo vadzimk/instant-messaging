@@ -23,7 +23,7 @@ stages:
   - install-dependencies
   - lint
   - build
-#  - deploy
+  - deploy
 
 
 #drop-test-postgres-db-job:
@@ -169,6 +169,7 @@ stages:
 ##    changes:
 ##      - telegram_bot/**/*
 
+
 install-frontend-dependencies-job:
   stage: install-dependencies
   image: node:22.2.0
@@ -199,6 +200,7 @@ install-frontend-dependencies-job:
       when: never
     - when: always # Fallback to ensure job runs if cache is not found
 
+
 run-lint-frontend-job:
   stage: lint
   needs:
@@ -221,8 +223,11 @@ run-lint-frontend-job:
 #    changes:
 #      - frontend/**/*
 
+
 build-prod-frontend-dist-job:
   stage: build
+  needs:
+    - install-dependencies
   image: node:22.2.0
   before_script:
     - cd frontend
@@ -241,3 +246,30 @@ build-prod-frontend-dist-job:
         - frontend/dist
       policy: push
 
+
+deploy-prod-frontend-job:
+  stage: deploy
+  needs:
+    - build-prod-frontend-dist-job
+  script:
+    - ls -l
+    - ls -hlta frontend
+    - chmod 400 $WS_KEY
+    - |
+      ssh -o StrictHostKeyChecking=no -i $WS_KEY ubuntu@$WS_HOST '
+        if [ ! -d /home/ubuntu/applications/share/nginx/html/messaging ];
+          then mkdir -p /home/ubuntu/applications/share/nginx/html/messaging;
+        fi;
+          sudo rm -fr /home/ubuntu/applications/share/nginx/html/messaging/*;
+      '
+    - |
+      scp -o StrictHostKeyChecking=no -i $WS_KEY \
+        -r frontend/dist/*  ubuntu@$WS_HOST:/home/ubuntu/applications/share/nginx/html/messaging/
+  cache:
+    - key: "DIST-frontend-${CI_COMMIT_REF_SLUG}"
+      paths:
+        - frontend/dist
+      policy: pull
+  environment:
+    name: development
+    url: https://instant-messaging.vadzimk.com
