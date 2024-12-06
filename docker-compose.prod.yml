@@ -6,8 +6,8 @@ services:
     image: "$IMAGE_NAME_IMAGE_TAG_backend_prod_service"
     env_file:
       - .env # created in gitlab-ci from .env.prod
-    expose:
-      - 8000
+    ports:
+      - "8000:8000"
     depends_on:
       - celery_worker
       - telegram_bot
