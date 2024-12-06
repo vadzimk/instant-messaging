@@ -180,7 +180,7 @@ deploy-prod-backend-job:
     PATH_APP: '/home/ubuntu/applications/instant-messaging'
     ENV_FILE_VARIABLE: ENV_PROD
   before_script:
-    - cat ${!ENV_FILE_VARIABLE} > .ENV_FILE  # resolve the value of the variable using indirect reference syntax
+    - cat "$ENV_FILE_VARIABLE" > .ENV_FILE  # resolve the value of the variable using indirect reference syntax
     - !reference [ .before-script-secrets-anchor]
     - !reference [ .before-script-jwt-anchor ]
   script:
