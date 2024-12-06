@@ -179,7 +179,6 @@ install-frontend-dependencies-job:
     - pnpm config set store-dir .pnpm-store
   script:
     - pnpm install --frozen-lockfile --prefer-offline
-    - pnpm run lint # TODO remove this line
   cache:
     key: "DEP-frontend-${CI_COMMIT_REF_SLUG}"
     paths:
@@ -203,8 +202,6 @@ install-frontend-dependencies-job:
 
 run-lint-frontend-job:
   stage: lint
-  needs:
-    - install-frontend-dependencies-job
   image: node:22.2.0
   before_script:
     - cd frontend
@@ -226,8 +223,6 @@ run-lint-frontend-job:
 
 build-prod-frontend-dist-job:
   stage: build
-  needs:
-    - install-dependencies
   image: node:22.2.0
   before_script:
     - cd frontend
@@ -249,8 +244,6 @@ build-prod-frontend-dist-job:
 
 deploy-prod-frontend-job:
   stage: deploy
-  needs:
-    - build-prod-frontend-dist-job
   script:
     - ls -l
     - ls -hlta frontend
