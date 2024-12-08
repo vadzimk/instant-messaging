@@ -196,12 +196,13 @@ deploy-prod-backend-job:
     - | # start containers
       ssh -o StrictHostKeyChecking=no -i $WS_KEY ubuntu@$WS_HOST "
         docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY && 
-        { cd \"$PATH_FRONT\" || exit; } &&
+        { cd \"$PATH_APP\" || exit; } &&
+        pwd &&
+        ls -htla &&
         set -o allexport &&
         source .ENV_FILE &&
         set +o allexport &&
-        rm .ENV_FILE
-        ls -htla &&
+        rm .ENV_FILE &&
         export JWT_PRIVATE_KEY=\"$JWT_PRIVATE_KEY\" &&
         export JWT_PUBLIC_KEY=\"$JWT_PUBLIC_KEY\" &&
         { docker network create common_network || true; } &&
