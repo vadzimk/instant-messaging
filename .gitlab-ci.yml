@@ -182,6 +182,7 @@ deploy-prod-backend-job:
   before_script:
     - cat $(eval echo \${$ENV_FILE_VARIABLE}) > .ENV_FILE  # resolve the value of the variable
     # get environment variables from the build.env artifact which are available after build jobs
+    - echo >> .ENV_FILE  # do not remove! Adds a newline if one doesn't already exist
     - echo "IMAGE_NAME_IMAGE_TAG_backend_prod_service=${IMAGE_NAME_IMAGE_TAG_backend_prod_service}" >> .ENV_FILE
     - echo "IMAGE_NAME_IMAGE_TAG_telegram_bot_prod_service=${IMAGE_NAME_IMAGE_TAG_telegram_bot_prod_service}" >> .ENV_FILE
     - !reference [ .before-script-secrets-anchor]
