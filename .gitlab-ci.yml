@@ -182,8 +182,8 @@ deploy-prod-backend-job:
   before_script:
     - cat $(eval echo \${$ENV_FILE_VARIABLE}) > .ENV_FILE  # resolve the value of the variable
     # get environment variables from the build.env artifact which are available after build jobs
-    - echo IMAGE_NAME_IMAGE_TAG_backend_prod_service="$IMAGE_NAME_IMAGE_TAG_backend_prod_service" >> .ENV_FILE
-    - echo IMAGE_NAME_IMAGE_TAG_telegram_bot_prod_service="$IMAGE_NAME_IMAGE_TAG_telegram_bot_prod_service" >> .ENV_FILE
+    - echo "IMAGE_NAME_IMAGE_TAG_backend_prod_service=${IMAGE_NAME_IMAGE_TAG_backend_prod_service}" >> .ENV_FILE
+    - echo "IMAGE_NAME_IMAGE_TAG_telegram_bot_prod_service=${IMAGE_NAME_IMAGE_TAG_telegram_bot_prod_service}" >> .ENV_FILE
     - !reference [ .before-script-secrets-anchor]
     - !reference [ .before-script-jwt-anchor ]
     - chmod 400 $WS_KEY
@@ -202,6 +202,7 @@ deploy-prod-backend-job:
         { cd \"$PATH_APP\" || exit; } &&
         pwd &&
         ls -htla &&
+        cat .ENV_FILE &&
         set -o allexport &&
         source .ENV_FILE &&
         set +o allexport &&
