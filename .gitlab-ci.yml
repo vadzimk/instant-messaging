@@ -183,6 +183,7 @@ deploy-prod-backend-job:
     - cat $(eval echo \${$ENV_FILE_VARIABLE}) > .ENV_FILE  # resolve the value of the variable
     - !reference [ .before-script-secrets-anchor]
     - !reference [ .before-script-jwt-anchor ]
+    - chmod 400 $WS_KEY
   script:
     - | # create app directory if not exists
       ssh -o StrictHostKeyChecking=no -i $WS_KEY ubuntu@$WS_HOST \
