@@ -1,4 +1,4 @@
-version: "3.8"
+#version: "3.8"
 # redis and postgres services are coming form common_db on webhost
 
 services:
@@ -6,7 +6,7 @@ services:
     container_name: messaging_backend
     image: "${IMAGE_NAME_IMAGE_TAG_backend_prod_service}"
     env_file:
-      - .env # created in gitlab-ci from .env.prod
+      - .ENV_FILE # created in gitlab-ci from .env.prod
     ports:
       - "8000:8000"
     depends_on:
@@ -17,7 +17,7 @@ services:
       JWT_PUBLIC_KEY: "${JWT_PUBLIC_KEY}"
       JWT_PRIVATE_KEY: "${JWT_PRIVATE_KEY}"
     healthcheck:
-      test: ['CMD', 'curl', '-f', 'http://localhost:8000/health']
+      test: [ 'CMD', 'curl', '-f', 'http://localhost:8000/health' ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -27,9 +27,9 @@ services:
   celery_worker:
     container_name: messaging_celery_worker
     image: "${IMAGE_NAME_IMAGE_TAG_backend_prod_service}"
-    entrypoint: ["celery", "-A", "src.celery_app.worker.celery", "worker", "--loglevel=info"]
+    entrypoint: [ "celery", "-A", "src.celery_app.worker.celery", "worker", "--loglevel=info" ]
     env_file:
-      - .env # created in gitlab-ci from .env.prod
+      - .ENV_FILE # created in gitlab-ci from .env.prod
     expose:
       - 8000
     restart: unless-stopped
@@ -42,7 +42,7 @@ services:
     expose:
       - 8003
     env_file:
-      - .env # created in gitlab-ci from .env.prod
+      - .ENV_FILE # created in gitlab-ci from .env.prod
     restart: unless-stopped
     networks:
       - common_network
