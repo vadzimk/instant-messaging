@@ -212,8 +212,8 @@ deploy-prod-backend-job:
         export JWT_PUBLIC_KEY=\"$JWT_PUBLIC_KEY\" &&
         { docker network create common_network || true; } &&
         docker image prune --all --force &&
-        docker-compose -f docker-compose.prod.yml down &&
-        docker-compose -f docker-compose.prod.yml up -d
+        docker compose -f docker-compose.prod.yml down &&
+        docker compose -f docker-compose.prod.yml up -d
       ";
 
 #install-frontend-dependencies-job:
