@@ -6,6 +6,7 @@ from .user_schema import *
 from .contact_schema import *
 from .message_schema import *
 from .telegram_schema import *
+from .health_schema import *
 # if you add more modules remember to add an import here!!!!
 
 

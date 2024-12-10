@@ -12,6 +12,7 @@ def load_env():
         print("ENV=development not set. Will expect environment variables set in the shell")
         pass
     else:
-        print("Loading environment variables")
-        load_dotenv(find_dotenv('.env.dev'))
+        env_filename = '.env.dev'
+        print(f"Loading environment variables from file {env_filename}")
+        load_dotenv(find_dotenv(env_filename))
 

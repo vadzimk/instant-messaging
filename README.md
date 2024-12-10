@@ -27,6 +27,7 @@
   - [x] make nginx reverse-proxy service
   - [x] make telegram_bot docker image and service
   - [x] make celery_worker service
+  - [x] create gitlab-ci pipeline and deploy to OCI hosting
 
 ## System design considerations
 - Repository pattern
@@ -37,7 +38,7 @@
 For telegram notifications to be working you need to provide your own TELEGRAM_BOT_TOKEN environment variable in `telegram/.env.demo` but you can run demo without it.
 
 ```shell
-git clone https://gitlab.com/telei/instant-messaging.git && \
+git clone https://github.com/vadzimk/instant-messaging.git && \
 cd instant-messaging && \
 make demo.up
 ```
