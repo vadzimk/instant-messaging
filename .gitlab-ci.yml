@@ -45,42 +45,42 @@ init-test-postgres-db-job:
     ENV_FILE_VARIABLE: ENV_TEST
     DB_SCRIPT: "init-postgres-db.sh"
 
-# Build base images for test jobs:
-
-build-test-backend-base-image-job:
-  stage: build-base-test-images
-  extends: .build-image-job-template
-  variables:
-    SERVICE_NAME: "backend_test_service_base"
-    PATH_TO_DOCKER_CONTEXT: "./backend"
-    PATH_TO_DOCKERFILE: "./backend/Dockerfile.test.base"
-  before_script:
-    - !reference [ .before-script-export-version-python-anchor ]
-  rules:
-    - changes:
-      - ${PATH_TO_DOCKER_CONTEXT}/Pipfile.lock
-      - ${PATH_TO_DOCKER_CONTEXT}/Pipfile
-      - ${PATH_TO_DOCKER_CONTEXT}/Dockerfile.test.base
-      when: always
-    - when: never  # downstream job shall get image with tag latest from the ci-registry
-
-
-build-test-telegram-bot-base-image-job:
-  stage: build-base-test-images
-  extends: .build-image-job-template
-  variables:
-    SERVICE_NAME: "telegram_bot_test_service_base"
-    PATH_TO_DOCKER_CONTEXT: "./telegram_bot"
-    PATH_TO_DOCKERFILE: "./telegram_bot/Dockerfile.test.base"
-  before_script:
-    - !reference [ .before-script-export-version-python-anchor ]
-  rules:
-    - changes:
-      - ${PATH_TO_DOCKER_CONTEXT}/Pipfile.lock
-      - ${PATH_TO_DOCKER_CONTEXT}/Pipfile
-      - ${PATH_TO_DOCKER_CONTEXT}/Dockerfile.test.base
-      when: always
-    - when: never # downstream job shall get image with tag latest from the ci-registry
+## Build base images for test jobs:
+#
+#build-test-backend-base-image-job:
+#  stage: build-base-test-images
+#  extends: .build-image-job-template
+#  variables:
+#    SERVICE_NAME: "backend_test_service_base"
+#    PATH_TO_DOCKER_CONTEXT: "./backend"
+#    PATH_TO_DOCKERFILE: "./backend/Dockerfile.test.base"
+#  before_script:
+#    - !reference [ .before-script-export-version-python-anchor ]
+#  rules:
+#    - changes:
+#      - ${PATH_TO_DOCKER_CONTEXT}/Pipfile.lock
+#      - ${PATH_TO_DOCKER_CONTEXT}/Pipfile
+#      - ${PATH_TO_DOCKER_CONTEXT}/Dockerfile.test.base
+#      when: always
+#    - when: never  # downstream job shall get image with tag latest from the ci-registry
+#
+#
+#build-test-telegram-bot-base-image-job:
+#  stage: build-base-test-images
+#  extends: .build-image-job-template
+#  variables:
+#    SERVICE_NAME: "telegram_bot_test_service_base"
+#    PATH_TO_DOCKER_CONTEXT: "./telegram_bot"
+#    PATH_TO_DOCKERFILE: "./telegram_bot/Dockerfile.test.base"
+#  before_script:
+#    - !reference [ .before-script-export-version-python-anchor ]
+#  rules:
+#    - changes:
+#      - ${PATH_TO_DOCKER_CONTEXT}/Pipfile.lock
+#      - ${PATH_TO_DOCKER_CONTEXT}/Pipfile
+#      - ${PATH_TO_DOCKER_CONTEXT}/Dockerfile.test.base
+#      when: always
+#    - when: never # downstream job shall get image with tag latest from the ci-registry
 
 # Build final images for test jobs:
 
