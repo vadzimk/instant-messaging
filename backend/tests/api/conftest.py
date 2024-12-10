@@ -172,8 +172,8 @@ async def socketio_client_no_auth() -> AsyncGenerator[socketio.AsyncSimpleClient
 
 
 @pytest.fixture
-async def send_message_u1_u2(socketio_client_w_auth_u1, signup_user2_response) -> AsyncGenerator[
-    Tuple[p.SioResponseSchema, str], None]:
+async def send_message_u1_u2(
+        socketio_client_w_auth_u1, signup_user2_response) -> AsyncGenerator[Tuple[p.SioResponseSchema, str], None]:
     message_content = f'hello from user {user1.email}'
     user_to_id = signup_user2_response.json().get('id')
     assert user_to_id is not None

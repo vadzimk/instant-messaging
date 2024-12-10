@@ -27,7 +27,7 @@
   - [x] make nginx reverse-proxy service
   - [x] make telegram_bot docker image and service
   - [x] make celery_worker service
-  - [ ] create gitlab-ci pipeline and deploy to OCI hosting
+  - [x] create gitlab-ci pipeline and deploy to OCI hosting
 
 ## System design considerations
 - Repository pattern

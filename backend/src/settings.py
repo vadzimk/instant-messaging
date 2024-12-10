@@ -1,3 +1,4 @@
+import logging
 import os
 from typing import Optional
 
@@ -29,7 +30,7 @@ class ServerSettings(BaseSettings):
     JWT_SCOPE: str = 'openid'
     JWT_PRIVATE_KEY: Optional[str] = None
     JWT_PUBLIC_KEY: Optional[str] = None
-
+    LOG_LEVEL: str = logging.DEBUG
 
 def configure_server_settings():
     """ Configures Server settings
