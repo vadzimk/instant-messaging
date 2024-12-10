@@ -9,8 +9,9 @@ from src.api.health import router as health_router
 
 from src.middleware.catch_exceptions import CatchExceptionsMiddleware
 from src.utils import setup_logging
+from settings import server_settings
 
-setup_logging(logging.INFO)
+setup_logging(server_settings.LOG_LEVEL)
 
 logger = logging.getLogger(__name__)
 app = FastAPI(debug=True, openapi_url='/openapi.json', docs_url='/docs')
