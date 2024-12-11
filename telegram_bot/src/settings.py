@@ -15,6 +15,8 @@ class ServerSettings(BaseSettings):
     WEB_APP_PORT: int = 8003  # aiohttp port
     BACKEND_API_HOST: str = 'localhost'  # fastapi host
     BACKEND_API_PORT: int = 8000  # fastapi port
+    WEBHOOK_URL_BASE: str = 'https://instant-messaging.vadzimk.com'
+    ENV: str = 'production'
 
 
 def configure_server_settings():

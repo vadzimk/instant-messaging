@@ -2,6 +2,7 @@ import logging
 
 from aiohttp import web
 
+from src.routers import dp
 from src.settings import bot
 
 logger = logging.getLogger(__name__)
@@ -21,3 +22,10 @@ async def notification_handler(request):
     except Exception as exc:
         logger.error('Failed to send message: ', str(exc))
         return web.json_response({'error': "Failed to send message"}, status=500)
+
+
+async def webhook_handler(request: web.Request):
+    """ Handle incoming updates from Telegram """
+    update = await request.json()
+    await dp.feed_webhook_update(bot, update)
+    return web.Response(text='OK')
