@@ -29,7 +29,8 @@ redis_manager = socketio.AsyncRedisManager(
 sio = socketio.AsyncServer(
     async_mode='asgi',
     cors_allowed_origins=[],  # empty list to disable cors handling, bc fastapi cors middleware is in conflict
-    client_manager=redis_manager
+    client_manager=redis_manager,
+    logger=True, engineio_logger=True  # TODO remove logging args after debugging
 )
 
 if os.getenv('ENV') == 'development':

@@ -125,7 +125,7 @@ async def create_u2_contact_for_u1_response(client_with_auth_user1, signup_user2
 @pytest.fixture
 async def socketio_client_w_auth_u1(login_user1_response) -> AsyncGenerator[socketio.AsyncSimpleClient, None]:
     access_token = login_user1_response.json().get("access_token")
-    client = socketio.AsyncSimpleClient()
+    client = socketio.AsyncSimpleClient(logger=True, engineio_logger=True)  # TODO remove debugging args after debugging
     await client.connect(baseUrl, auth={"token": access_token})
     yield client
     await client.disconnect()
