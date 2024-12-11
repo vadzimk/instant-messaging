@@ -85,7 +85,8 @@ pnpm run dev
 ```
 
 ## Database ERD relationship model
-shows actual ORM relationships only, all columns are not shown  
+Using RDBMS only in demo purposes, messages should be stored in key-value store such as Cassandra.  
+Shows actual ORM relationships only, all columns are not shown.  
 ![ERD](backend/migrations/diagrams/ERD_contacts_association_object_step2.jpg)
 
 ## Deployment diagram

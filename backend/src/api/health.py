@@ -1,6 +1,5 @@
 import logging
 
-
 from fastapi import APIRouter, HTTPException
 from sqlalchemy import text
 from starlette import status
@@ -16,11 +15,10 @@ logger = logging.getLogger(__name__)
 
 @router.get('', response_model=GetHealthSchema, status_code=status.HTTP_200_OK)
 async def health_check():
-    postgres = {
-        "connected": False,
-        "error": None
-    }
+    postgres = {"connected": False, "error": None}
+    redis = {"connected": False, "error": None}
 
+    # check postgres connectivity
     try:
         async with engine.connect() as conn:
             await conn.execute(text('SELECT 1'))
@@ -28,11 +26,7 @@ async def health_check():
     except Exception as err:
         postgres['error'] = str(err)
 
-    redis = {
-        "connected": False,
-        "error": None
-    }
-
+    # check postgres connectivity
     try:
         await redis_manager.redis.ping()
         redis['connected'] = True
