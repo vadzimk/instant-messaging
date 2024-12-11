@@ -86,6 +86,7 @@
     ENV_FILE_VARIABLE: ENV_TEST
     CONTAINER_NAME: "" # should override
     DIRECTORY_TO_SAVE_JUNIT_ARTIFACT: "" # should override
+    PYTEST_ARGS: "" # should override
   services:
     - name: docker:20.10.17-dind
       alias: docker
@@ -115,7 +116,7 @@
     - docker container ls
   script:
     - |
-      docker exec -i "$CONTAINER_NAME" bash -c "python -m pytest -vv --junitxml=junit.xml";
+      docker exec -i "$CONTAINER_NAME" bash -c "python -m pytest --junitxml=junit.xml -vv ${PYTEST_ARGS}";
       TEST_EXIT_CODE=$?;
       docker cp "${CONTAINER_NAME}:/usr/src/app/junit.xml" "${DIRECTORY_TO_SAVE_JUNIT_ARTIFACT}/junit.xml" || echo "junit.xml not found";
       docker-compose -f docker-compose.test.yml down --volumes --remove-orphans --rmi all

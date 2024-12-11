@@ -123,6 +123,7 @@ test-backend-job:
   variables:
     CONTAINER_NAME: backend
     DIRECTORY_TO_SAVE_JUNIT_ARTIFACT: backend
+    PYTEST_ARGS: "-s 'tests/api/test_api.py::test_get_messages'" # TODO remove after debugging
 
 
 test-telegram-bot-job:
