@@ -22,7 +22,7 @@ web_app.router.add_post(WEBHOOK_PATH, webhook_handler)
 
 async def start_bot():
     """ set webhook on telegram server in production """
-    if server_settings.ENV == 'development':
+    if server_settings.ENV != 'production':
         await bot.delete_webhook(drop_pending_updates=True)
         await dp.start_polling(bot)
     else:
