@@ -7,7 +7,7 @@ ENV PYTHONFAULTHANDLER=1 \
     PYTHONUNBUFFERED=1
 
 RUN apt-get update &&\
-    apt-get install -y --no-install-recommends gcc libffi-dev g++ && \
+    apt-get install -y --no-install-recommends gcc libffi-dev g++ curl jq && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
 
