@@ -19,12 +19,19 @@ web_app = web.Application()
 web_app.router.add_post('/notification', notification_handler)
 web_app.router.add_post(WEBHOOK_PATH, webhook_handler)
 
+is_polling = False
+
 
 async def start_bot():
     """ set webhook on telegram server in production """
+    global is_polling
     if server_settings.ENV != 'production':
         await bot.delete_webhook(drop_pending_updates=True)
-        await dp.start_polling(bot)
+        try:
+            await dp.start_polling(bot)
+            is_polling = True
+        finally:
+            is_polling = False
     else:
         webhook_url = f'{server_settings.WEBHOOK_URL_BASE}/{WEBHOOK_PATH}'
         await bot.set_webhook(webhook_url)
@@ -45,11 +52,24 @@ async def start_server():
     logger.info(f'Aiohttp server started on port {server_settings.WEB_APP_PORT}')
 
 
+async def stop_bot():
+    """ close bots aiohttp session """
+    await bot.session.close()
+
+
+async def stop_dispatcher():
+    if is_polling:
+        await dp.stop_polling()
+    await dp.storage.close()
+
+
 async def main():
-    bot_task = asyncio.create_task(start_bot())
-    server_task = asyncio.create_task(start_server())
-    await bot_task
-    await server_task
+    try:
+        await asyncio.create_task(start_bot())
+        await asyncio.create_task(start_server())
+    finally:  # cleanup on exit
+        await stop_dispatcher()
+        await stop_bot()
 
 
 if __name__ == '__main__':

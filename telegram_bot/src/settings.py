@@ -1,3 +1,4 @@
+import logging
 import os
 
 from aiogram import Bot
@@ -17,6 +18,7 @@ class ServerSettings(BaseSettings):
     BACKEND_API_PORT: int = 8000  # fastapi port
     WEBHOOK_URL_BASE: str = 'https://instant-messaging.vadzimk.com'
     ENV: str = 'production'
+    LOG_LEVEL: int = logging.INFO
 
 
 def configure_server_settings():
