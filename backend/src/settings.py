@@ -31,6 +31,7 @@ class ServerSettings(BaseSettings):
     JWT_PRIVATE_KEY: Optional[str] = None
     JWT_PUBLIC_KEY: Optional[str] = None
     LOG_LEVEL: int = logging.INFO
+    LOG_ROTATION: str = "200 MB"
 
 
 def configure_server_settings():

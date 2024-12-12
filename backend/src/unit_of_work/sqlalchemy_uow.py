@@ -1,11 +1,10 @@
-import logging
 from abc import ABC, abstractmethod
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.repositories.repos import UserRepository, MessageRepository, ContactRepository
 
-logger = logging.getLogger(__name__)
+from src.logger import logger
 
 
 class AbstractUnitOfWork(ABC):

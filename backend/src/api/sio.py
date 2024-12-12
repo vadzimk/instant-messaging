@@ -20,7 +20,7 @@ from src.services.user_service import UserService
 from src.unit_of_work.sqlalchemy_uow import SqlAlchemyUnitOfWork
 from src import exceptions as e
 
-logger = logging.getLogger(__name__)
+from src.logger import logger
 
 redis_manager = socketio.AsyncRedisManager(
     url=f'redis://{server_settings.REDIS_HOST}:{server_settings.REDIS_PORT}/{server_settings.REDIS_DB}')

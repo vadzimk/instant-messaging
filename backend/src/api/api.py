@@ -1,4 +1,3 @@
-import logging
 import uuid
 from typing import Annotated
 
@@ -14,7 +13,7 @@ from src.db import models as m
 from src import schemas as p
 
 router = APIRouter()
-logger = logging.getLogger(__name__)
+from src.logger import logger
 
 
 @router.post('/users', response_model=p.GetUserSchema, status_code=status.HTTP_201_CREATED)

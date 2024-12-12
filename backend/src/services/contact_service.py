@@ -7,7 +7,7 @@ from src.unit_of_work.sqlalchemy_uow import SqlAlchemyUnitOfWork
 from src import schemas as p
 from src.db import models as m
 
-logger = logging.getLogger(__name__)
+from src.logger import logger
 
 
 class ContactService:

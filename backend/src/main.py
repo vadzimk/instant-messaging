@@ -1,4 +1,3 @@
-import logging
 import socketio
 from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
@@ -8,12 +7,9 @@ from src.api.telegram import router as telegram_router
 from src.api.health import router as health_router
 
 from src.middleware.catch_exceptions import CatchExceptionsMiddleware
-from src.settings import server_settings
-from src.utils import setup_logging
+from src.logger import logger
 
-setup_logging(server_settings.LOG_LEVEL)
 
-logger = logging.getLogger(__name__)
 app = FastAPI(debug=True, openapi_url='/openapi.json', docs_url='/docs')
 
 # == first middleware is executed first on responses ==

@@ -13,7 +13,7 @@ from cryptography.x509 import load_pem_x509_certificate
 from src.settings import server_settings
 from src import exceptions as e
 
-logger = logging.getLogger(__name__)
+from src.logger import logger
 
 pwd_context = CryptContext(schemes=['bcrypt'], deprecated='auto')
 DEV_KEYS_DIR = Path(__file__).parent.parent.parent / 'jwt_keys'

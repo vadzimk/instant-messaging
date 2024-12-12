@@ -1,4 +1,3 @@
-import logging
 
 from fastapi import APIRouter
 from starlette import status
@@ -7,7 +6,7 @@ from src import schemas as p
 from src.api.dependencies import UserServiceDep
 
 router = APIRouter()
-logger = logging.getLogger(__name__)
+from src.logger import logger
 
 
 @router.post('/subscriptions', status_code=status.HTTP_204_NO_CONTENT)

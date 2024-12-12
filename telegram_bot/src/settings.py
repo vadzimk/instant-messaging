@@ -19,6 +19,7 @@ class ServerSettings(BaseSettings):
     WEBHOOK_URL_BASE: str = 'https://instant-messaging.vadzimk.com'
     ENV: str = 'production'
     LOG_LEVEL: int = logging.INFO
+    LOG_ROTATION: str = "200 MB"
 
 
 def configure_server_settings():

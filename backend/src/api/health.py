@@ -1,16 +1,13 @@
-import logging
-
 from fastapi import APIRouter, HTTPException
 from sqlalchemy import text
 from starlette import status
-from starlette.responses import JSONResponse
 
 from src.api.sio import redis_manager
 from src.db.session import engine
 from src.schemas import GetHealthSchema
 
 router = APIRouter()
-logger = logging.getLogger(__name__)
+from src.logger import logger
 
 
 @router.get('', response_model=GetHealthSchema, status_code=status.HTTP_200_OK)

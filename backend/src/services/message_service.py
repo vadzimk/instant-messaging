@@ -6,8 +6,7 @@ from src.repositories.repos import MessageRepository
 from src.unit_of_work.sqlalchemy_uow import AbstractUnitOfWork, SqlAlchemyUnitOfWork
 from src.db import models as m
 from src import exceptions as e
-
-logger = logging.getLogger()
+from src.logger import logger
 
 
 class MessageService:

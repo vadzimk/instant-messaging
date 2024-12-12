@@ -19,6 +19,7 @@ python-socketio = {extras = ["asyncio_client", "asyncio"], version = "*"}
 redis = "*"
 pydantic-settings = "*"
 celery = "*"
+loguru = "*"
 
 [dev-packages]
 jupyter = "*"

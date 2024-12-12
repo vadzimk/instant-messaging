@@ -8,7 +8,7 @@ from src.repositories.repos import UserRepository
 from src.unit_of_work.sqlalchemy_uow import SqlAlchemyUnitOfWork
 from src import schemas as p
 
-logger = logging.getLogger(__name__)
+from src.logger import logger
 
 
 # service classes can reference any repository that is why I do a commit inside service class itself

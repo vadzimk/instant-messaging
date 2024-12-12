@@ -1,4 +1,3 @@
-import logging
 from typing import Annotated
 
 from src.services.auth import decode_and_validate_token
@@ -16,7 +15,7 @@ from src.exceptions import CouldNotValidateCredentials
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl='/api/users/login')
 
-logger = logging.getLogger(__name__)
+from src.logger import logger
 
 
 def get_current_user_id(token: Annotated[str, Depends(oauth2_scheme)]) -> str:

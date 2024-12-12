@@ -2,7 +2,6 @@
 # https://github.com/fastapi/fastapi/issues/2750#issuecomment-772976371
 # use this custom middleware instead
 
-import logging
 from starlette import status
 from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
 from starlette.requests import Request
@@ -13,7 +12,7 @@ from starlette.responses import Response
 
 from src.settings import server_settings
 
-logger = logging.getLogger(__name__)
+from src.logger import logger
 
 
 async def custom_exception_handler(request: Request, exc: Exception):
