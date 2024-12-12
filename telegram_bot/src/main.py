@@ -6,11 +6,9 @@ from aiohttp import web
 
 from src.routers import dp
 from src.settings import bot, server_settings
-from src.utils import setup_logging
 from src.api import notification_handler, webhook_handler
 
-setup_logging(logging.INFO)
-logger = logging.getLogger(__name__)
+from src.logger import logger
 
 WEBHOOK_HEX = secrets.token_hex(32)
 WEBHOOK_PATH = f'/webhook/{WEBHOOK_HEX}'

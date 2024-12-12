@@ -1,11 +1,9 @@
-import logging
-
 from aiohttp import web
 
 from src.routers import dp
 from src.settings import bot
 
-logger = logging.getLogger(__name__)
+from src.logger import logger
 
 
 async def notification_handler(request):
