@@ -13,8 +13,7 @@ logger.add(
     level=LOG_LEVEL,
     format="<green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green> | "
            "<level>{level: <8}</level> | "
-           "<cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> - <level>{message}</level>"
-           " - {extra}",
+           "<cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> - <level>{message}</level>",
 )
 
 
@@ -32,7 +31,13 @@ class InterceptHandler(logging.Handler):
             frame = frame.f_back
             depth += 1
 
-        logger.opt(depth=depth, exception=record.exc_info).log(level, record.getMessage())
+        message = record.getMessage()
+        extra_data = record.__dict__.get('extra', {})
+
+        if extra_data:
+            logger.opt(depth=depth, exception=record.exc_info).log(level, f"{message} - {extra_data}")
+        else:
+            logger.opt(depth=depth, exception=record.exc_info).log(level, message)
 
 
 # The trick here is to call the basicConfig method from the standard logging module
