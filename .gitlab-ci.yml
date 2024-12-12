@@ -56,13 +56,13 @@ build-test-backend-base-image-job:
     PATH_TO_DOCKERFILE: "./backend/Dockerfile.test.base"
   before_script:
     - !reference [ .before-script-export-version-python-anchor ]
-  rules:
-    - changes:
-      - ./backend/Pipfile.lock
-      - ./backend/Pipfile
-      - ./backend/Dockerfile.test.base
-      when: always
-    - when: never  # downstream job shall get image with tag latest from the ci-registry
+#  rules:
+#    - changes:
+#      - ./backend/Pipfile.lock
+#      - ./backend/Pipfile
+#      - ./backend/Dockerfile.test.base
+#      when: always
+#    - when: never  # downstream job shall get image with tag latest from the ci-registry
 
 
 build-test-telegram-bot-base-image-job:
@@ -74,13 +74,13 @@ build-test-telegram-bot-base-image-job:
     PATH_TO_DOCKERFILE: "./telegram_bot/Dockerfile.test.base"
   before_script:
     - !reference [ .before-script-export-version-python-anchor ]
-  rules:
-    - changes:
-      - ./telegram_bot/Pipfile.lock
-      - ./telegram_bot/Pipfile
-      - ./telegram_bot/Dockerfile.test.base
-      when: always
-    - when: never # downstream job shall get image with tag latest from the ci-registry
+#  rules:
+#    - changes:
+#      - ./telegram_bot/Pipfile.lock
+#      - ./telegram_bot/Pipfile
+#      - ./telegram_bot/Dockerfile.test.base
+#      when: always
+#    - when: never # downstream job shall get image with tag latest from the ci-registry
 
 # Build final images for test jobs:
 
