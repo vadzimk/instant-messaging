@@ -23,6 +23,6 @@ USER "$APP_USER_NAME"
 ENV ENV=test
 
 # for debugging only
-#CMD ["tail", "-f", "/dev/null"]
-ENTRYPOINT "./docker-entrypoint.sh"
+CMD ["tail", "-f", "/dev/null"]
+#ENTRYPOINT "./docker-entrypoint.sh"
 

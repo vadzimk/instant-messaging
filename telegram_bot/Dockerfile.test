@@ -22,5 +22,5 @@ USER "$APP_USER_NAME"
 ENV ENV=test
 
 # for debugging only
-#CMD ["tail", "-f", "/dev/null"]
-ENTRYPOINT ["python", "-m", "src.main"]
+CMD ["tail", "-f", "/dev/null"]
+#ENTRYPOINT ["python", "-m", "src.main"]
