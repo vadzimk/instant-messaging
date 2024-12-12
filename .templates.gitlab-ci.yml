@@ -114,8 +114,8 @@
     #    - echo "backend service is healthy, proceeding..."
     - echo "$CONTAINER_NAME"
     - docker container ls
-    - docker exec -i telegram_bot bash -c "python -m src.main" # TODO remove after debugging
-    - docker exec -i backend bash -c "./docker-entrypoint.sh" # TODO remove after debugging
+#    - docker exec -i telegram_bot bash -c "python -m src.main" # TODO remove after debugging
+#    - docker exec -i backend bash -c "./docker-entrypoint.sh" # TODO remove after debugging
   script:
     - |
       docker exec -i "$CONTAINER_NAME" bash -c "python -m pytest --junitxml=junit.xml -vv ${PYTEST_ARGS}";
