@@ -9,6 +9,8 @@ services:
       - .ENV_FILE # created in gitlab-ci from .env.prod
     expose:
       - 8000
+    volumes:
+      - ./backend_logs/:/usr/src/app/logs/
     depends_on:
       - celery_worker
       - telegram_bot
@@ -35,6 +37,8 @@ services:
     restart: unless-stopped
     networks:
       - common_network
+    volumes:
+      - ./celery_logs/:/usr/src/app/logs/
 
   telegram_bot:
     container_name: messaging_telegram_bot
@@ -46,6 +50,8 @@ services:
     restart: unless-stopped
     networks:
       - common_network
+    volumes:
+      - ./bot_logs/:/usr/src/app/logs/
 
 networks:
   common_network:
