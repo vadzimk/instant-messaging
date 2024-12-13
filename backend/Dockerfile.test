@@ -14,6 +14,10 @@ RUN groupadd -r "$APP_USER_NAME" \
 
 COPY ./ ./
 
+# set permissions for the logs directory
+RUN mkdir -p /usr/src/app/logs
+RUN chown -R "$APP_USER_NAME":"$APP_USER_NAME" /usr/src/app/logs
+
 RUN chmod +x wait-for-postgres.sh docker-entrypoint.sh
 EXPOSE 8000
 

@@ -27,6 +27,7 @@ COPY --from=dependencies /usr/src/app/.venv/ /usr/src/app/.venv/
 # Set the PATH to include the virtualenv's bin
 ENV PATH="/usr/src/app/.venv/bin:$PATH"
 
+
 # set default username
 ARG APP_USER_NAME=appuser
 # Create a non-root user and group
@@ -35,6 +36,10 @@ RUN groupadd -r "$APP_USER_NAME" \
     && chown -R "$APP_USER_NAME" /usr/src/app
 
 COPY ./ ./
+
+# set permissions for the logs directory
+RUN mkdir -p /usr/src/app/logs
+RUN chown -R "$APP_USER_NAME":"$APP_USER_NAME" /usr/src/app/logs
 
 EXPOSE 8003
 

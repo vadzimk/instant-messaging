@@ -35,8 +35,13 @@ RUN groupadd -r "$APP_USER_NAME" \
 COPY ./ ./
 RUN rm -rf tests # for production
 
+# set permissions for the logs directory
+RUN mkdir -p /usr/src/app/logs
+RUN chown -R "$APP_USER_NAME":"$APP_USER_NAME" /usr/src/app/logs
+
 RUN chmod +x wait-for-postgres.sh docker-entrypoint.sh
 EXPOSE 8000
+
 
 # Switch to the non-root user
 USER "$APP_USER_NAME"
