@@ -2,12 +2,12 @@ from unittest.mock import patch
 
 import pytest
 
-from src.main import web_app
+from src.main import server
 
 
 @pytest.fixture
 async def cli(aiohttp_client):
-    return await aiohttp_client(web_app)
+    return await aiohttp_client(server.web_app)
 
 
 async def test_notification_handler_can_send_message(cli):
@@ -16,7 +16,7 @@ async def test_notification_handler_can_send_message(cli):
         'content': 'Hello, this is a test message'
     }
 
-    with patch('src.main.bot.send_message') as mock_send_message:
+    with patch('src.main.server.bot.send_message') as mock_send_message:
         mock_send_message.return_value = None  # will return None
         response = await cli.post('/notification', json=test_data)
 

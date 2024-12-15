@@ -1,7 +1,5 @@
 import asyncio
 import logging
-import secrets
-
 from aiogram import Bot, Dispatcher
 from aiogram.webhook.aiohttp_server import SimpleRequestHandler, setup_application
 from aiohttp import web
@@ -12,78 +10,71 @@ from src.api import notification_handler, webhook_handler
 
 from src.logger import logger
 
-# WEBHOOK_HEX = secrets.token_hex(32)
-# WEBHOOK_PATH = f'/webhook/{WEBHOOK_HEX}'
-WEBHOOK_PATH = f'/webhook'
 
-web_app = web.Application()
-web_app.router.add_post('/notification', notification_handler)
-web_app.router.add_post(WEBHOOK_PATH, webhook_handler)
+class TelegramBotServer:
+    WEBHOOK_PATH = f'/webhook'
+    WEB_APP_HOST = '0.0.0.0'
 
-bot = Bot(token=server_settings.TELEGRAM_BOT_TOKEN)
-dp = Dispatcher()
+    def __init__(self):
+        self.web_app = web.Application()
+        self.bot = Bot(token=server_settings.TELEGRAM_BOT_TOKEN)
+        self.dp = Dispatcher()
 
-dp['dp'] = dp
+        self._configure_app()
 
-dp.include_router(tg_router)
-web_app['bot'] = bot
+    def _configure_app(self):
+        """ Configure web app and bot dispatcher """
+        self.web_app.router.add_post('/notification', notification_handler)
+        self.dp['dp'] = self.dp
+        self.dp.include_router(tg_router)
+        self.web_app['bot'] = self.bot
+        self.web_app['dp'] = self.dp
 
-web_app['dp'] = dp
+    async def start_polling(self):
+        """ start polling telegram server for messages for development environment """
+        self.web_app.router.add_post(self.WEBHOOK_PATH, webhook_handler)
+        await self.bot.delete_webhook(drop_pending_updates=True)
+        await self.dp.start_polling(self.bot)
 
-is_polling = False
-
-
-async def start_bot():
-    """ set webhook on telegram server in production """
-    global is_polling
-    if server_settings.ENV != 'production':
-        await bot.delete_webhook(drop_pending_updates=True)
-        try:
-            await dp.start_polling(bot)
-            is_polling = True
-        finally:
-            is_polling = False
-    else:
-        SimpleRequestHandler(dispatcher=dp, bot=bot).register(web_app, path=WEBHOOK_PATH)
-        setup_application(web_app, dp, bot=bot)
-        webhook_url = f'{server_settings.WEBHOOK_URL_BASE}/{WEBHOOK_PATH}'
-        await bot.set_webhook(webhook_url)
+    async def register_webhook(self):
+        """ register webhook for production environment """
+        SimpleRequestHandler(dispatcher=dp, bot=self.bot).register(self.web_app, path=self.WEBHOOK_PATH)
+        setup_application(self.web_app, self.dp, bot=self.bot)
+        webhook_url = f'{server_settings.WEBHOOK_URL_BASE}{self.WEBHOOK_PATH}'
+        await self.bot.set_webhook(webhook_url)
         logging.info(f'Webhook set to {webhook_url}')
-    logging.info(f'Bot started')
+
+    async def stop_bot(self):
+        """ stop bot session """
+        await self.bot.session.close()
+
+    async def stop_dispatcher(self):
+        """ stop dispatcher storage """
+        await self.dp.storage.close()
+
+    async def start_server(self):
+        """ start aiohttp server """
+        runner = web.AppRunner(self.web_app)
+        await runner.setup()
+        site = web.TCPSite(runner, self.WEB_APP_HOST, server_settings.WEB_APP_PORT)
+        await site.start()
+
+    async def start(self):
+        """ main entrypoint to start server """
+        try:
+            if server_settings.ENV != 'production':
+                await self.start_polling()
+            else:  # production
+                await self.register_webhook()
+
+            await self.start_server()
+        finally:  # cleanup on exit
+            await self.stop_dispatcher()
+            await self.stop_bot()
+            await self.web_app.shutdown()
 
 
-async def start_server():
-    """ start aiohttp web server """
-    runner = web.AppRunner(web_app)
-    await runner.setup()
-    site = web.TCPSite(
-        runner,
-        host="0.0.0.0",
-        port=server_settings.WEB_APP_PORT
-    )
-    await site.start()
-    logger.info(f'Aiohttp server started on port {server_settings.WEB_APP_PORT}')
-
-
-async def stop_bot():
-    """ close bots aiohttp session """
-    await bot.session.close()
-
-
-async def stop_dispatcher():
-    if is_polling:
-        await dp.stop_polling()
-    await dp.storage.close()
-
-
-async def main():
-    try:
-        await asyncio.create_task(start_bot())
-        await asyncio.create_task(start_server())
-    finally:  # cleanup on exit
-        await stop_dispatcher()
-        await stop_bot()
-
+server = TelegramBotServer()
 
 if __name__ == '__main__':
-    asyncio.run(main())
+    asyncio.run(server.start())
