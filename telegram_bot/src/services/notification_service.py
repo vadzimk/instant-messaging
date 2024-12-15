@@ -1,10 +1,8 @@
-import logging
-
 import aiohttp
 
 from src.settings import server_settings
 
-logger = logging.getLogger(__name__)
+from src.logger import logger
 
 
 class NotificationService:

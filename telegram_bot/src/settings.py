@@ -1,7 +1,6 @@
 import logging
 import os
 
-from aiogram import Bot
 from dotenv import load_dotenv, find_dotenv
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -18,7 +17,7 @@ class ServerSettings(BaseSettings):
     BACKEND_API_PORT: int = 8000  # fastapi port
     WEBHOOK_URL_BASE: str = 'https://instant-messaging.vadzimk.com'
     ENV: str = 'production'
-    LOG_LEVEL: int = logging.INFO
+    LOG_LEVEL: int = logging.INFO  # 20, DEBUG=10
     LOG_ROTATION: str = "200 MB"
 
 
@@ -36,5 +35,3 @@ def configure_server_settings():
 
 
 server_settings = configure_server_settings()
-
-bot = Bot(token=server_settings.TELEGRAM_BOT_TOKEN)

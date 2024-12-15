@@ -52,6 +52,7 @@ services:
       - common_network
     volumes:
       - ./bot_logs/:/usr/src/app/logs/
+      - ./telegram_bot/:/usr/src/app/ # TODO remove after debugging
 
 networks:
   common_network:

@@ -5,7 +5,6 @@ from loguru import logger
 
 from src.settings import server_settings
 
-
 logger.remove()
 
 # Add console logging
@@ -59,9 +58,9 @@ logging.basicConfig(handlers=[InterceptHandler()], level=0, force=True)
 # if the above is not sufficient
 # as in uvicorn, which defines two main loggers: uvicorn.error and uvicorn.access.
 # By retrieving those loggers and changing their handler, we force them to go through Loguru as well.
-for logger_name in ['aiohttp.server', 'aiohttp.access', 'aiohttp.client', 'kafka']:
+for logger_name in ['aiohttp.server', 'aiohttp.access', 'aiohttp.client', 'aiogram']:
     dependency_logger = logging.getLogger(logger_name)
     dependency_logger.propagate = False
     dependency_logger.handlers = [InterceptHandler()]
 
-__all__ = ['logger'] # make these variables available when importing this module
+__all__ = ['logger']  # make these variables available when importing this module

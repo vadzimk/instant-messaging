@@ -1,17 +1,17 @@
-from aiogram import types, Dispatcher
+from aiogram import types, Router
 from aiogram.filters import CommandStart
 
 from src.services.notification_service import NotificationService
 
-dp = Dispatcher()  # must register messages before start polling
+tg_router = Router()
 
 
-@dp.message(CommandStart())
+@tg_router.message(CommandStart())
 async def start(message: types.Message):
     await message.answer("Reply with your email to register for notifications")
 
 
-@dp.message()
+@tg_router.message()
 async def capture_email(message: types.Message):
     tg_user_id = message.from_user.id
     email = message.text
