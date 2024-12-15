@@ -38,7 +38,7 @@ class TelegramBotServer:
 
     async def register_webhook(self):
         """ register webhook for production environment """
-        SimpleRequestHandler(dispatcher=dp, bot=self.bot).register(self.web_app, path=self.WEBHOOK_PATH)
+        SimpleRequestHandler(dispatcher=self.dp, bot=self.bot).register(self.web_app, path=self.WEBHOOK_PATH)
         setup_application(self.web_app, self.dp, bot=self.bot)
         webhook_url = f'{server_settings.WEBHOOK_URL_BASE}{self.WEBHOOK_PATH}'
         await self.bot.set_webhook(webhook_url)
