@@ -1,7 +1,8 @@
 import asyncio
 import logging
+import signal
+
 from aiogram import Bot, Dispatcher
-from aiogram.webhook.aiohttp_server import SimpleRequestHandler, setup_application
 from aiohttp import web
 
 from src.routers import tg_router
@@ -25,21 +26,20 @@ class TelegramBotServer:
     def _configure_app(self):
         """ Configure web app and bot dispatcher """
         self.web_app.router.add_post('/notification', notification_handler)
+        self.web_app.router.add_post(self.WEBHOOK_PATH, webhook_handler)
         self.dp['dp'] = self.dp
         self.dp.include_router(tg_router)
         self.web_app['bot'] = self.bot
         self.web_app['dp'] = self.dp
+        logger.info('web_app configured')
 
     async def start_polling(self):
         """ start polling telegram server for messages for development environment """
-        self.web_app.router.add_post(self.WEBHOOK_PATH, webhook_handler)
         await self.bot.delete_webhook(drop_pending_updates=True)
         await self.dp.start_polling(self.bot)
 
     async def register_webhook(self):
         """ register webhook for production environment """
-        SimpleRequestHandler(dispatcher=self.dp, bot=self.bot).register(self.web_app, path=self.WEBHOOK_PATH)
-        setup_application(self.web_app, self.dp, bot=self.bot)
         webhook_url = f'{server_settings.WEBHOOK_URL_BASE}{self.WEBHOOK_PATH}'
         await self.bot.set_webhook(webhook_url)
         logging.info(f'Webhook set to {webhook_url}')
@@ -52,29 +52,42 @@ class TelegramBotServer:
         """ stop dispatcher storage """
         await self.dp.storage.close()
 
-    async def start_server(self):
+    async def start_aiohttp_server(self):
         """ start aiohttp server """
+        logger.info('starting server')
         runner = web.AppRunner(self.web_app)
         await runner.setup()
         site = web.TCPSite(runner, self.WEB_APP_HOST, server_settings.WEB_APP_PORT)
         await site.start()
+        logger.info('server started')
 
-    async def start(self):
+    async def run(self):
         """ main entrypoint to start server """
         try:
+            await self.start_aiohttp_server()
             if server_settings.ENV != 'production':
                 await self.start_polling()
             else:  # production
                 await self.register_webhook()
 
-            await self.start_server()
+                # set interrupt signals for the event loop and wait forever for interrupt
+                stop_event = asyncio.Event()
+
+                def handle_stop_signal():
+                    logger.info('Received shutdown signal')
+                    stop_event.set()
+
+                loop = asyncio.get_running_loop()
+                loop.add_signal_handler(signal.SIGINT, handle_stop_signal)
+                loop.add_signal_handler(signal.SIGTERM, handle_stop_signal)
+                await stop_event.wait()  # keep event loop running for the aiohttp server
         finally:  # cleanup on exit
             await self.stop_dispatcher()
             await self.stop_bot()
-            await self.web_app.shutdown()
+            await self.web_app.cleanup()
 
 
 server = TelegramBotServer()
 
 if __name__ == '__main__':
-    asyncio.run(server.start())
+    asyncio.run(server.run())

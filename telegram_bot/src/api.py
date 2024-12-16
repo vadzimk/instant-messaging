@@ -23,9 +23,12 @@ async def notification_handler(request: web.Request):
 
 async def webhook_handler(request: web.Request):
     """ Handle incoming updates from Telegram """
-    bot = request.app['bot']
-    dp = request.app['dp']
+    try:
+        bot = request.app['bot']
+        dp = request.app['dp']
 
-    update = await request.json()
-    await dp.feed_webhook_update(bot, update)
-    return web.Response(text='OK')
+        update = await request.json()
+        await dp.feed_webhook_update(bot, update)
+        return web.Response(text='OK', status=200)
+    except Exception as e:
+        return web.Response(status=500)
