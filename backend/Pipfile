@@ -26,6 +26,8 @@ jupyter = "*"
 pytest-asyncio = "*"
 pytest-mock = "*"
 pytest = "*"
+coverage = "*"
+pytest-cov = "*"
 
 [requires]
 python_version = "3.10"

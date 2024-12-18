@@ -14,7 +14,13 @@ docker.up.dev:
 	docker-compose -f docker-compose.dev.yml up -d
 
 backend.test:
-	ENV=development pipenv run python -m pytest -vv -s
+	ENV=development pipenv run pytest -vv -s
+
+backend.coverage:
+	ENV=development pipenv run pytest -v --cov=src --cov-report=term-missing
+
+backend.coverage.report:
+	coverage report --show-missing
 
 backend.dev:
 	ENV=development pipenv run uvicorn src.main:app --reload

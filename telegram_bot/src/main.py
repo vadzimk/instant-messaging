@@ -53,7 +53,7 @@ class TelegramBotServer:
         await self.dp.storage.close()
 
     async def start_aiohttp_server(self):
-        """ start aiohttp server """
+        """ starts aiohttp server, but does not keep event loop running forever """
         logger.info('starting server')
         runner = web.AppRunner(self.web_app)
         await runner.setup()
