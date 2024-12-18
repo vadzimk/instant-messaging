@@ -19,7 +19,7 @@ services:
       JWT_PUBLIC_KEY: "${JWT_PUBLIC_KEY}"
       JWT_PRIVATE_KEY: "${JWT_PRIVATE_KEY}"
     healthcheck:
-      test:  ["CMD-SHELL", "curl -s http://localhost:8000/health | jq .is_healthy == true"]
+      test:  ["CMD-SHELL", "curl -s http://localhost:8000/health | jq '.is_healthy == true'"]
       interval: 10s
       timeout: 5s
       retries: 5
